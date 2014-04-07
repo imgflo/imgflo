@@ -62,32 +62,45 @@ int main(int argc, char *argv[]) {
     g_assert(connections);
     for (int i=0; i<json_array_get_length(connections); i++) {
         JsonObject *conn = json_array_get_object_element(connections, i);
-        JsonObject *src = json_object_get_object_member(conn, "src");
-        JsonObject *tgt = json_object_get_object_member(conn, "tgt");
 
-        const gchar *src_proc = json_object_get_string_member(src, "process");
-        const gchar *src_port = json_object_get_string_member(src, "port");
+        JsonObject *tgt = json_object_get_object_member(conn, "tgt");
         const gchar *tgt_proc = json_object_get_string_member(tgt, "process");
         const gchar *tgt_port = json_object_get_string_member(tgt, "port");
-
-        fprintf(stdout, "%s %s -> %s %s\n", src_proc, src_port,
-                                            tgt_port, tgt_proc);
-
-        GeglNode *s = g_hash_table_lookup(node_map, src_proc);
         GeglNode *t = g_hash_table_lookup(node_map, tgt_proc);
 
-        gegl_node_connect_to(s, src_port, t, tgt_port);
+        JsonNode *srcnode = json_object_get_member(conn, "src");
+        if (srcnode) {
+            // Connection
+            JsonObject *src = json_object_get_object_member(conn, "src");
+            const gchar *src_proc = json_object_get_string_member(src, "process");
+            const gchar *src_port = json_object_get_string_member(src, "port");
+
+            fprintf(stdout, "%s %s -> %s %s\n", src_proc, src_port,
+                                                tgt_port, tgt_proc);
+
+            GeglNode *s = g_hash_table_lookup(node_map, src_proc);
+            gegl_node_connect_to(s, src_port, t, tgt_port);
+
+        } else {
+            // IIP
+            JsonNode *datanode = json_object_get_member(conn, "data");
+            GValue value = G_VALUE_INIT;
+            g_assert(JSON_NODE_HOLDS_VALUE(datanode));
+            json_node_get_value(datanode, &value);
+
+            // TODO: print IIP
+            // TODO: convert values when needed. Maybe lookup paramspec?
+            fprintf(stdout, "'%s' -> %s %s\n", " ", tgt_port, tgt_proc);
+            gegl_node_set_property(t, tgt_port, &value);
+            g_value_unset(&value);
+        }
+
     }
 
 
     fprintf(stdout, "Processing\n");
+    // FIXME: determine last node automatically
     GeglNode *last = g_hash_table_lookup(node_map, "out");
-    GeglNode *first = g_hash_table_lookup(node_map, "in");
-    GeglNode *filter = g_hash_table_lookup(node_map, "f");
-    gegl_node_set(filter, "width", 200.0, NULL);
-    gegl_node_set(filter, "height", 200.0, NULL);
-    gegl_node_set(first, "path", "examples/grid-toastybob.jpg", NULL);
-    gegl_node_set(last, "path", "out.png", NULL);
     gegl_node_process(last);
 
     g_object_unref(graph);

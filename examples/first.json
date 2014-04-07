@@ -30,6 +30,34 @@
         "process": "out",
         "port": "input"
       }
+    },
+    {
+      "data": 200,
+      "tgt": {
+        "process": "f",
+        "port": "width"
+      }
+    },
+    {
+      "data": 200,
+      "tgt": {
+        "process": "f",
+        "port": "height"
+      }
+    }
+    {
+      "data": "examples/grid-toastybob.jpg",
+      "tgt": {
+        "process": "in",
+        "port": "path"
+      }
+    },
+    {
+      "data": "out.png",
+      "tgt": {
+        "process": "out",
+        "port": "path"
+      }
     }
   ]
 }
