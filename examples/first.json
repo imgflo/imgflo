@@ -1,0 +1,35 @@
+{
+  "processes": {
+    "in": {
+      "component": "Load"
+    },
+    "f": {
+      "component": "Crop"
+    },
+    "out": {
+      "component": "Display"
+    }
+  },
+  "connections": [
+    {
+      "src": {
+        "process": "in",
+        "port": "out"
+      },
+      "tgt": {
+        "process": "f",
+        "port": "in"
+      }
+    },
+    {
+      "src": {
+        "process": "f",
+        "port": "out"
+      },
+      "tgt": {
+        "process": "out",
+        "port": "in"
+      }
+    }
+  ]
+}

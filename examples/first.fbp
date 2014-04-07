@@ -1,0 +1,2 @@
+in(Load) OUT -> IN f(Crop)
+f() OUT -> IN out(Display)
