@@ -31,6 +31,10 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    GHashTable *node_map = g_hash_table_new(g_str_hash, g_str_equal);
+
+    GeglNode *graph = gegl_node_new();
+
     JsonNode *rootnode = json_parser_get_root(parser);
     g_assert(JSON_NODE_HOLDS_OBJECT(rootnode));
     JsonObject *root = json_node_get_object(rootnode);
@@ -45,6 +49,10 @@ int main(int argc, char *argv[]) {
         JsonObject *proc = json_object_get_object_member(processes, name);
         const gchar *op = json_object_get_string_member(proc, "component");
         fprintf(stdout, "%s(%s)\n", name, op);
+
+        GeglNode *n = gegl_node_new_child(graph, "operation", op, NULL);
+        g_assert(n);
+        g_hash_table_insert(node_map, (gpointer)name, (gpointer)n);
     }
 
     //g_free(process_names); crashes??
@@ -64,7 +72,26 @@ int main(int argc, char *argv[]) {
 
         fprintf(stdout, "%s %s -> %s %s\n", src_proc, src_port,
                                             tgt_port, tgt_proc);
+
+        GeglNode *s = g_hash_table_lookup(node_map, src_proc);
+        GeglNode *t = g_hash_table_lookup(node_map, tgt_proc);
+
+        gegl_node_connect_to(s, src_port, t, tgt_port);
     }
+
+
+    fprintf(stdout, "Processing\n");
+    GeglNode *last = g_hash_table_lookup(node_map, "out");
+    GeglNode *first = g_hash_table_lookup(node_map, "in");
+    GeglNode *filter = g_hash_table_lookup(node_map, "f");
+    gegl_node_set(filter, "width", 200.0, NULL);
+    gegl_node_set(filter, "height", 200.0, NULL);
+    gegl_node_set(first, "path", "examples/grid-toastybob.jpg", NULL);
+    gegl_node_set(last, "path", "out.png", NULL);
+    gegl_node_process(last);
+
+    g_object_unref(graph);
+    g_hash_table_destroy(node_map);
 
     gegl_exit();
 

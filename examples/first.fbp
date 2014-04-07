@@ -1,2 +1,3 @@
-in(Load) OUT -> IN f(Crop)
-f() OUT -> IN out(Display)
+# FIXME: support : and - in component names
+in(gegl:load) OUTPUT -> INPUT f(gegl:crop)
+f() OUTPUT -> INPUT out(gegl:sdl-display)

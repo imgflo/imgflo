@@ -1,34 +1,34 @@
 {
   "processes": {
     "in": {
-      "component": "Load"
+      "component": "gegl:load"
     },
     "f": {
-      "component": "Crop"
+      "component": "gegl:crop"
     },
     "out": {
-      "component": "Display"
+      "component": "gegl:png-save"
     }
   },
   "connections": [
     {
       "src": {
         "process": "in",
-        "port": "out"
+        "port": "output"
       },
       "tgt": {
         "process": "f",
-        "port": "in"
+        "port": "input"
       }
     },
     {
       "src": {
         "process": "f",
-        "port": "out"
+        "port": "output"
       },
       "tgt": {
         "process": "out",
-        "port": "in"
+        "port": "input"
       }
     }
   ]
