@@ -10,30 +10,33 @@ gcc -o main main.c -std=c99 `pkg-config --libs --cflags gegl-0.3 json-glib-1.0` 
 #include <gegl.h>
 #include <json-glib/json-glib.h>
 
+// GOAL: get JSON serialization support upstream, support building meta-operations with it
+
+typedef struct {
+    GeglNode *top;
+    GHashTable *node_map;
+} Graph;
 
 
-int main(int argc, char *argv[]) {
+Graph *
+graph_new() {
+    Graph *self = g_new(Graph, 1);
+    self->top = gegl_node_new();
+    self->node_map = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+    return self;
+}
 
-    gegl_init(0, NULL);
+void
+graph_free(Graph *self) {
 
-    guint no_ops = 0;
-    gchar **operation_names = gegl_list_operations(&no_ops);
+    g_object_unref(self->top);
+    g_hash_table_destroy(self->node_map);
 
-    for (int i=0; i<no_ops; i++) {
-        //fprintf(stdout, "%d: %s\n", i, operation_names[i]);
-    }
+    g_free(self);
+}
 
-
-    JsonParser *parser = json_parser_new();
-    gboolean success = json_parser_load_from_file(parser, "./examples/first.json", NULL);
-    if (!success) {
-        fprintf(stderr, "Failed to load file!\n");
-        return 1;
-    }
-
-    GHashTable *node_map = g_hash_table_new(g_str_hash, g_str_equal);
-
-    GeglNode *graph = gegl_node_new();
+void
+graph_load_json(Graph *self, JsonParser *parser) {
 
     JsonNode *rootnode = json_parser_get_root(parser);
     g_assert(JSON_NODE_HOLDS_OBJECT(rootnode));
@@ -50,9 +53,9 @@ int main(int argc, char *argv[]) {
         const gchar *op = json_object_get_string_member(proc, "component");
         fprintf(stdout, "%s(%s)\n", name, op);
 
-        GeglNode *n = gegl_node_new_child(graph, "operation", op, NULL);
+        GeglNode *n = gegl_node_new_child(self->top, "operation", op, NULL);
         g_assert(n);
-        g_hash_table_insert(node_map, (gpointer)name, (gpointer)n);
+        g_hash_table_insert(self->node_map, (gpointer)g_strdup(name), (gpointer)n);
     }
 
     //g_free(process_names); crashes??
@@ -66,7 +69,7 @@ int main(int argc, char *argv[]) {
         JsonObject *tgt = json_object_get_object_member(conn, "tgt");
         const gchar *tgt_proc = json_object_get_string_member(tgt, "process");
         const gchar *tgt_port = json_object_get_string_member(tgt, "port");
-        GeglNode *t = g_hash_table_lookup(node_map, tgt_proc);
+        GeglNode *t = g_hash_table_lookup(self->node_map, tgt_proc);
 
         JsonNode *srcnode = json_object_get_member(conn, "src");
         if (srcnode) {
@@ -78,7 +81,8 @@ int main(int argc, char *argv[]) {
             fprintf(stdout, "%s %s -> %s %s\n", src_proc, src_port,
                                                 tgt_port, tgt_proc);
 
-            GeglNode *s = g_hash_table_lookup(node_map, src_proc);
+            GeglNode *s = g_hash_table_lookup(self->node_map, src_proc);
+            g_assert(s);
             gegl_node_connect_to(s, src_port, t, tgt_port);
 
         } else {
@@ -94,17 +98,52 @@ int main(int argc, char *argv[]) {
             gegl_node_set_property(t, tgt_port, &value);
             g_value_unset(&value);
         }
+    }
+}
 
+gboolean
+graph_load_json_file(Graph *self, const gchar *path, GError **error) {
+
+    JsonParser *parser = json_parser_new();
+
+    gboolean success = json_parser_load_from_file(parser, path, error);
+    if (success) {
+        graph_load_json(self, parser);
     }
 
+    g_object_unref(parser);
+    return success;
+}
+
+void print_available_ops() {
+    guint no_ops = 0;
+    gchar **operation_names = gegl_list_operations(&no_ops);
+
+    for (int i=0; i<no_ops; i++) {
+        fprintf(stdout, "%d: %s\n", i, operation_names[i]);
+    }
+}
+
+int main(int argc, char *argv[]) {
+
+    gegl_init(0, NULL);
+
+    //print_available_ops();
+
+    Graph *graph = graph_new();
+
+    if (!graph_load_json_file(graph, "./examples/first.json", NULL)) {
+        fprintf(stderr, "Failed to load file!\n");
+        return 1;
+    }
 
     fprintf(stdout, "Processing\n");
     // FIXME: determine last node automatically
-    GeglNode *last = g_hash_table_lookup(node_map, "out");
+    GeglNode *last = g_hash_table_lookup(graph->node_map, "out");
+    g_assert(last);
     gegl_node_process(last);
 
-    g_object_unref(graph);
-    g_hash_table_destroy(node_map);
+    graph_free(graph);
 
     gegl_exit();
 
