@@ -43,7 +43,7 @@ libsoup: env
 
 dependencies: gegl babl libsoup
 
-# FIXME: add tests
-check: run
+check:
+	npm test
 
 .PHONY=all noflo-gegl run

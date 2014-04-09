@@ -2,3 +2,4 @@ bin/noflo-gegl
 install/
 *~
 out.png
+node_modules

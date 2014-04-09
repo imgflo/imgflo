@@ -39,7 +39,7 @@
       }
     },
     {
-      "data": "out.png",
+      "data": "testtemp/out.png",
       "tgt": {
         "process": "out",
         "port": "path"
