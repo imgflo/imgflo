@@ -4,3 +4,6 @@
 [submodule "thirdparty/babl"]
 	path = thirdparty/babl
 	url = git://git.gnome.org/babl
+[submodule "thirdparty/libsoup"]
+	path = thirdparty/libsoup
+	url = git@github.com:jonnor/libsoup.git

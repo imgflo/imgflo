@@ -27,7 +27,11 @@ gegl: babl env
 	cd thirdparty/gegl && $(PREFIX)/env.sh ./autogen.sh --prefix=$(PREFIX)
 	cd thirdparty/gegl && $(PREFIX)/env.sh make -j4 install
 
-dependencies: gegl babl
+libsoup: env
+	cd thirdparty/libsoup && $(PREFIX)/env.sh ./autogen.sh --prefix=$(PREFIX)
+	cd thirdparty/libsoup && $(PREFIX)/env.sh make -j4 install
+
+dependencies: gegl babl libsoup
 
 # FIXME: add tests
 check: run
