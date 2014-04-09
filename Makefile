@@ -4,6 +4,9 @@ PREFIX=$(shell echo `pwd`/install)
 DEPS=`pkg-config --libs --cflags gegl-0.3 json-glib-1.0`
 FLAGS=-Wall -Werror -std=c99
 
+GLIB_MAJOR=2.38
+GLIB_VERSION=2.38.2
+
 all: run
 
 run: install
@@ -21,10 +24,10 @@ env:
 	chmod +x $(PREFIX)/env.sh
 
 glib: env
-	cd thirdparty && wget http://ftp.gnome.org/pub/gnome/sources/glib/2.36/glib-2.36.4.tar.xz
-	cd thirdparty && tar -xf glib-2.36.4.tar.xz
-	cd thirdparty/glib-2.36.4 && $(PREFIX)/env.sh ./autogen.sh --prefix=$(PREFIX)
-	cd thirdparty/glib-2.36.4 && $(PREFIX)/env.sh make -j4 install
+	cd thirdparty && wget http://ftp.gnome.org/pub/gnome/sources/glib/$(GLIB_MAJOR)/glib-$(GLIB_VERSION).tar.xz
+	cd thirdparty && tar -xf glib-$(GLIB_VERSION).tar.xz
+	cd thirdparty/glib-$(GLIB_VERSION) && $(PREFIX)/env.sh ./autogen.sh --prefix=$(PREFIX)
+	cd thirdparty/glib-$(GLIB_VERSION) && $(PREFIX)/env.sh make -j4 install
 
 babl: env
 	cd thirdparty/babl && $(PREFIX)/env.sh ./autogen.sh --prefix=$(PREFIX)
