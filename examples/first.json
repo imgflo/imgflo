@@ -46,14 +46,14 @@
       }
     },
     {
-      "data": 200,
+      "data": "200",
       "tgt": {
         "process": "f",
         "port": "width"
       }
     },
     {
-      "data": 200,
+      "data": "200",
       "tgt": {
         "process": "f",
         "port": "height"

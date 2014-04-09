@@ -1,8 +1,6 @@
-# FIXME: support : and - in component names
 in(gegl/load) OUTPUT -> INPUT f(gegl/crop)
 f() OUTPUT -> INPUT out(gegl/png-save)
 
-# FIXME: convert string to numbers on demand
 'examples/grid-toastybob.jpg' -> PATH in
 'out.png' -> PATH out
 '200' -> WIDTH f, '200' -> HEIGHT f
