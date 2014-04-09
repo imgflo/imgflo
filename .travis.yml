@@ -1,0 +1,12 @@
+language: node_js
+node_js:
+  - "0.10"
+
+before_install:
+    - sudo apt-get update -qq
+    - sudo apt-get build-dep gegl
+    - git submodule update --init --recursive
+
+script:
+    - make dependencies
+    - make check

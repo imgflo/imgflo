@@ -1,0 +1,6 @@
+[submodule "thirdparty/gegl"]
+	path = thirdparty/gegl
+	url = git://git.gnome.org/gegl
+[submodule "thirdparty/babl"]
+	path = thirdparty/babl
+	url = git://git.gnome.org/babl

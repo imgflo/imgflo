@@ -1,14 +1,35 @@
 
+#PREFIX=/opt/noflo-gegl
+PREFIX=$(shell echo `pwd`/install)
 DEPS=`pkg-config --libs --cflags gegl-0.3 json-glib-1.0`
 FLAGS=-Wall -Werror -std=c99
 
 all: run
 
-run: noflo-gegl
-	./bin/noflo-gegl
+run: install
+	$(PREFIX)/env.sh ./bin/noflo-gegl
+
+install: noflo-gegl
+	cp ./bin/noflo-gegl $(PREFIX)/bin/
 
 noflo-gegl:
 	gcc -o ./bin/noflo-gegl bin/noflo-gegl.c -I. $(FLAGS) $(DEPS)
 
+env:
+	sed -e 's|@PREFIX@|$(PREFIX)|' env.sh.in > $(PREFIX)/env.sh
+	chmod +x $(PREFIX)/env.sh
+
+babl: env
+	cd thirdparty/babl && $(PREFIX)/env.sh ./autogen.sh --prefix=$(PREFIX)
+	cd thirdparty/babl && $(PREFIX)/env.sh make -j4 install
+
+gegl: babl env
+	cd thirdparty/gegl && $(PREFIX)/env.sh ./autogen.sh --prefix=$(PREFIX)
+	cd thirdparty/gegl && $(PREFIX)/env.sh make -j4 install
+
+dependencies: gegl babl
+
+# FIXME: add tests
+check: run
 
 .PHONY=all noflo-gegl run
