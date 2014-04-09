@@ -46,6 +46,39 @@ graph_free(Graph *self) {
 }
 
 void
+graph_add_iip(Graph *self, const gchar *node, const gchar *port, GValue *value) {
+
+    const gchar *iip = G_VALUE_HOLDS_STRING(value) ? g_value_get_string(value) : "IIP";
+    GeglNode *t = g_hash_table_lookup(self->node_map, node);
+
+    GParamSpec *paramspec = gegl_node_find_property(t, port);
+    if (paramspec) {
+        GType value_type = G_VALUE_TYPE(value);
+        GType target_type = G_PARAM_SPEC_VALUE_TYPE(paramspec);
+
+        if (g_type_is_a(value_type, target_type)) {
+            // No conversion needed
+            gegl_node_set_property(t, port, value);
+        } else {
+            // TODO: attempt generic GValue transforms here?
+            if (G_IS_PARAM_SPEC_DOUBLE(paramspec)) {
+                gdouble d = g_ascii_strtod (iip, NULL);
+                if (d != 0.0) {
+                    gegl_node_set(t, port, d, NULL);
+                }
+            } else {
+                fprintf(stderr, "target_type=%s value_type=%s\n",
+                        g_type_name(target_type), g_type_name(value_type));
+                fprintf(stderr, "Unable to convert value for property '%s' of node '%s'\n",
+                        port, node);
+            }
+        }
+    } else {
+        fprintf(stderr, "Node '%s' has no property '%s'\n", node, port);
+    }
+}
+
+void
 graph_load_json(Graph *self, JsonParser *parser) {
 
     JsonNode *rootnode = json_parser_get_root(parser);
@@ -108,33 +141,7 @@ graph_load_json(Graph *self, JsonParser *parser) {
             const gchar *iip = G_VALUE_HOLDS_STRING(&value) ? g_value_get_string(&value) : "IIP";
             fprintf(stdout, "'%s' -> %s %s\n", iip, tgt_port, tgt_proc);
 
-
-            GParamSpec *paramspec = gegl_node_find_property(t, tgt_port);
-            if (paramspec) {
-                GType value_type = G_VALUE_TYPE(&value);
-                GType target_type = G_PARAM_SPEC_VALUE_TYPE(paramspec);
-
-                if (g_type_is_a(value_type, target_type)) {
-                    // No conversion needed
-                    gegl_node_set_property(t, tgt_port, &value);
-                } else {
-                    // TODO: attempt generic GValue transforms here?
-                    if (G_IS_PARAM_SPEC_DOUBLE(paramspec)) {
-                        gdouble d = g_ascii_strtod (iip, NULL);
-                        if (d != 0.0) {
-                            gegl_node_set(t, tgt_port, d, NULL);
-                        }
-                    } else {
-                        fprintf(stderr, "target_type=%s \n", g_type_name(target_type));
-                        fprintf(stderr, "Unable to convert value for property '%s' of node '%s'\n",
-                                tgt_port, tgt_proc);
-                    }
-
-                }
-            } else {
-                fprintf(stderr, "Node '%s' has no property '%s'\n", tgt_proc, tgt_port);
-            }
-
+            graph_add_iip(self, tgt_proc, tgt_port, &value);
             g_value_unset(&value);
         }
     }
