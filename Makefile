@@ -16,6 +16,7 @@ noflo-gegl:
 	gcc -o ./bin/noflo-gegl bin/noflo-gegl.c -I. $(FLAGS) $(DEPS)
 
 env:
+	mkdir -p $(PREFIX) || true
 	sed -e 's|@PREFIX@|$(PREFIX)|' env.sh.in > $(PREFIX)/env.sh
 	chmod +x $(PREFIX)/env.sh
 
