@@ -1,7 +1,7 @@
 
 #PREFIX=/opt/noflo-gegl
 PREFIX=$(shell echo `pwd`/install)
-DEPS=$(shell $(PREFIX)/env.sh pkg-config --libs --cflags gegl-0.3 json-glib-1.0)
+DEPS=$(shell $(PREFIX)/env.sh pkg-config --libs --cflags gegl-0.3 json-glib-1.0 libsoup-2.4)
 FLAGS=-Wall -Werror -std=c99
 
 GLIB_MAJOR=2.38
@@ -10,13 +10,17 @@ GLIB_VERSION=2.38.2
 all: run
 
 run: install
-	$(PREFIX)/env.sh ./bin/noflo-gegl
+	$(PREFIX)/env.sh ./bin/noflo-gegl-runtime
 
-install: noflo-gegl
+install: noflo-gegl noflo-gegl-runtime
 	cp ./bin/noflo-gegl $(PREFIX)/bin/
+	cp ./bin/noflo-gegl-runtime $(PREFIX)/bin/
 
 noflo-gegl:
 	$(PREFIX)/env.sh gcc -o ./bin/noflo-gegl bin/noflo-gegl.c -I. $(FLAGS) $(DEPS)
+
+noflo-gegl-runtime:
+	$(PREFIX)/env.sh gcc -o ./bin/noflo-gegl-runtime bin/noflo-gegl-runtime.c -I. $(FLAGS) $(DEPS)
 
 env:
 	mkdir -p $(PREFIX) || true
@@ -46,4 +50,4 @@ dependencies: gegl babl libsoup
 check:
 	npm test
 
-.PHONY=all noflo-gegl run
+.PHONY=all noflo-gegl noflo-gegl-runtime run

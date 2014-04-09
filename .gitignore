@@ -1,4 +1,5 @@
 bin/noflo-gegl
+bin/noflo-gegl-runtime
 install/
 *~
 out.png
