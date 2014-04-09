@@ -20,6 +20,12 @@ env:
 	sed -e 's|@PREFIX@|$(PREFIX)|' env.sh.in > $(PREFIX)/env.sh
 	chmod +x $(PREFIX)/env.sh
 
+glib: env
+	cd thirdparty && wget http://ftp.gnome.org/pub/gnome/sources/glib/2.36/glib-2.36.4.tar.xz
+	cd thirdparty && tar -xf glib-2.36.4.tar.xz
+	cd thirdparty/glib-2.36.4 && $(PREFIX)/env.sh ./autogen.sh --prefix=$(PREFIX)
+	cd thirdparty/glib-2.36.4 && $(PREFIX)/env.sh make -j4 install
+
 babl: env
 	cd thirdparty/babl && $(PREFIX)/env.sh ./autogen.sh --prefix=$(PREFIX)
 	cd thirdparty/babl && $(PREFIX)/env.sh make -j4 install
