@@ -13,7 +13,7 @@ install: noflo-gegl
 	cp ./bin/noflo-gegl $(PREFIX)/bin/
 
 noflo-gegl:
-	gcc -o ./bin/noflo-gegl bin/noflo-gegl.c -I. $(FLAGS) $(DEPS)
+	$(PREFIX)/env.sh gcc -o ./bin/noflo-gegl bin/noflo-gegl.c -I. $(FLAGS) $(DEPS)
 
 env:
 	mkdir -p $(PREFIX) || true
