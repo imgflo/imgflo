@@ -1,7 +1,7 @@
 
 #PREFIX=/opt/noflo-gegl
 PREFIX=$(shell echo `pwd`/install)
-DEPS=`pkg-config --libs --cflags gegl-0.3 json-glib-1.0`
+DEPS=$(shell $(PREFIX)/env.sh pkg-config --libs --cflags gegl-0.3 json-glib-1.0)
 FLAGS=-Wall -Werror -std=c99
 
 GLIB_MAJOR=2.38
