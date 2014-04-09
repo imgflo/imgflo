@@ -12,6 +12,16 @@ gcc -o main main.c -std=c99 `pkg-config --libs --cflags gegl-0.3 json-glib-1.0` 
 
 // GOAL: get JSON serialization support upstream, support building meta-operations with it
 
+// Convert between the lib/Foo used by NoFlo and lib:foo used by GEGL
+gchar *
+component2geglop(const gchar *name) {
+    gchar *dup = g_strdup(name);
+    gchar *slash = g_strstr_len(dup, -1, "/");
+    *slash = ':';
+    g_ascii_strdown(dup, -1);
+    return dup;
+}
+
 typedef struct {
     GeglNode *top;
     GHashTable *node_map;
@@ -50,12 +60,15 @@ graph_load_json(Graph *self, JsonParser *parser) {
     for (int i=0; i<g_list_length(process_names); i++) {
         const gchar *name = g_list_nth_data(process_names, i);
         JsonObject *proc = json_object_get_object_member(processes, name);
-        const gchar *op = json_object_get_string_member(proc, "component");
+        const gchar *component = json_object_get_string_member(proc, "component");
+        gchar *op = component2geglop(component);
+
         fprintf(stdout, "%s(%s)\n", name, op);
 
         GeglNode *n = gegl_node_new_child(self->top, "operation", op, NULL);
         g_assert(n);
         g_hash_table_insert(self->node_map, (gpointer)g_strdup(name), (gpointer)n);
+        g_free(op);
     }
 
     //g_free(process_names); crashes??
@@ -92,10 +105,19 @@ graph_load_json(Graph *self, JsonParser *parser) {
             g_assert(JSON_NODE_HOLDS_VALUE(datanode));
             json_node_get_value(datanode, &value);
 
-            // TODO: print IIP
-            // TODO: convert values when needed. Maybe lookup paramspec?
-            fprintf(stdout, "'%s' -> %s %s\n", " ", tgt_port, tgt_proc);
-            gegl_node_set_property(t, tgt_port, &value);
+            const gchar *iip = G_VALUE_HOLDS_STRING(&value) ? g_value_get_string(&value) : "IIP";
+            fprintf(stdout, "'%s' -> %s %s\n", iip, tgt_port, tgt_proc);
+
+            // TODO: Lookup paramspec to determine type to convert to?
+            GValue number = G_VALUE_INIT;
+            g_value_init(&number, G_TYPE_DOUBLE);
+            if (g_value_transform(&value, &number)) {
+                gegl_node_set_property(t, tgt_port, &number);
+            } else {
+                fprintf(stdout, "transform WIN\n");
+                gegl_node_set_property(t, tgt_port, &value);
+            }
+
             g_value_unset(&value);
         }
     }

@@ -1,13 +1,13 @@
 {
   "processes": {
     "in": {
-      "component": "gegl:load"
+      "component": "gegl/load"
     },
     "f": {
-      "component": "gegl:crop"
+      "component": "gegl/crop"
     },
     "out": {
-      "component": "gegl:png-save"
+      "component": "gegl/png-save"
     }
   },
   "connections": [
@@ -32,20 +32,6 @@
       }
     },
     {
-      "data": 200,
-      "tgt": {
-        "process": "f",
-        "port": "width"
-      }
-    },
-    {
-      "data": 200,
-      "tgt": {
-        "process": "f",
-        "port": "height"
-      }
-    }
-    {
       "data": "examples/grid-toastybob.jpg",
       "tgt": {
         "process": "in",
@@ -57,6 +43,20 @@
       "tgt": {
         "process": "out",
         "port": "path"
+      }
+    },
+    {
+      "data": 200,
+      "tgt": {
+        "process": "f",
+        "port": "width"
+      }
+    },
+    {
+      "data": 200,
+      "tgt": {
+        "process": "f",
+        "port": "height"
       }
     }
   ]
