@@ -47,7 +47,7 @@ libsoup: env
 
 dependencies: gegl babl libsoup
 
-check:
+check: install
 	npm test
 
 .PHONY=all noflo-gegl noflo-gegl-runtime run
