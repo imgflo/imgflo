@@ -56,6 +56,8 @@ void
 graph_add_iip(Graph *self, const gchar *node, const gchar *port, GValue *value) {
 
     const gchar *iip = G_VALUE_HOLDS_STRING(value) ? g_value_get_string(value) : "IIP";
+    fprintf(stdout, "'%s' -> %s %s\n", iip, node, port);
+
     GeglNode *t = g_hash_table_lookup(self->node_map, node);
 
     GParamSpec *paramspec = gegl_node_find_property(t, port);
@@ -86,6 +88,36 @@ graph_add_iip(Graph *self, const gchar *node, const gchar *port, GValue *value) 
 }
 
 void
+graph_add_node(Graph *self, const gchar *name, const gchar *component)
+{
+    gchar *op = component2geglop(component);
+
+    fprintf(stdout, "%s(%s)\n", name, op);
+
+    GeglNode *n = gegl_node_new_child(self->top, "operation", op, NULL);
+    g_assert(n);
+    g_hash_table_insert(self->node_map, (gpointer)g_strdup(name), (gpointer)n);
+
+    g_free(op);
+}
+
+
+void
+graph_add_edge(Graph *self,
+        const gchar *src, const gchar *srcport,
+        const gchar *tgt, const gchar *tgtport)
+{
+    fprintf(stdout, "%s %s -> %s %s\n", src, srcport,
+                                        tgtport, tgt);
+    GeglNode *t = g_hash_table_lookup(self->node_map, tgt);
+    GeglNode *s = g_hash_table_lookup(self->node_map, src);
+
+    g_assert(s);
+    g_assert(t);
+    gegl_node_connect_to(s, srcport, t, tgtport);
+}
+
+void
 graph_load_json(Graph *self, JsonParser *parser) {
 
     JsonNode *rootnode = json_parser_get_root(parser);
@@ -101,14 +133,7 @@ graph_load_json(Graph *self, JsonParser *parser) {
         const gchar *name = g_list_nth_data(process_names, i);
         JsonObject *proc = json_object_get_object_member(processes, name);
         const gchar *component = json_object_get_string_member(proc, "component");
-        gchar *op = component2geglop(component);
-
-        fprintf(stdout, "%s(%s)\n", name, op);
-
-        GeglNode *n = gegl_node_new_child(self->top, "operation", op, NULL);
-        g_assert(n);
-        g_hash_table_insert(self->node_map, (gpointer)g_strdup(name), (gpointer)n);
-        g_free(op);
+        graph_add_node(self, name, component);
     }
 
     //g_free(process_names); crashes??
@@ -122,7 +147,6 @@ graph_load_json(Graph *self, JsonParser *parser) {
         JsonObject *tgt = json_object_get_object_member(conn, "tgt");
         const gchar *tgt_proc = json_object_get_string_member(tgt, "process");
         const gchar *tgt_port = json_object_get_string_member(tgt, "port");
-        GeglNode *t = g_hash_table_lookup(self->node_map, tgt_proc);
 
         JsonNode *srcnode = json_object_get_member(conn, "src");
         if (srcnode) {
@@ -131,22 +155,13 @@ graph_load_json(Graph *self, JsonParser *parser) {
             const gchar *src_proc = json_object_get_string_member(src, "process");
             const gchar *src_port = json_object_get_string_member(src, "port");
 
-            fprintf(stdout, "%s %s -> %s %s\n", src_proc, src_port,
-                                                tgt_port, tgt_proc);
-
-            GeglNode *s = g_hash_table_lookup(self->node_map, src_proc);
-            g_assert(s);
-            gegl_node_connect_to(s, src_port, t, tgt_port);
-
+            graph_add_edge(self, src_proc, src_port, tgt_proc, tgt_port);
         } else {
             // IIP
             JsonNode *datanode = json_object_get_member(conn, "data");
             GValue value = G_VALUE_INIT;
             g_assert(JSON_NODE_HOLDS_VALUE(datanode));
             json_node_get_value(datanode, &value);
-
-            const gchar *iip = G_VALUE_HOLDS_STRING(&value) ? g_value_get_string(&value) : "IIP";
-            fprintf(stdout, "'%s' -> %s %s\n", iip, tgt_port, tgt_proc);
 
             graph_add_iip(self, tgt_proc, tgt_port, &value);
             g_value_unset(&value);

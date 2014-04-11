@@ -7,6 +7,10 @@
 
 #include <libsoup/soup.h>
 
+typedef struct {
+	SoupServer *server;
+    Graph *graph;
+} UiConnection;
 
 JsonArray *
 inports_for_operation(const gchar *name)
@@ -58,15 +62,16 @@ send_response(SoupWebsocketConnection *ws,
     gsize len = 0;
     gchar *data = json_generator_to_data(generator, &len);
     GBytes *resp = g_bytes_new_take(data, len);
-    //g_print ("SEND: %.*s\n", (int)len, data);
+    g_print ("SEND: %.*s\n", (int)len, data);
     soup_websocket_connection_send(ws, SOUP_WEBSOCKET_DATA_TEXT, resp);
 
     g_object_unref(generator);
 }
 
-static gboolean
-handle_message(const gchar *protocol, const gchar *command,
-                JsonObject *payload, SoupWebsocketConnection *ws)
+static void
+ui_connection_handle_message(UiConnection *self,
+                const gchar *protocol, const gchar *command, JsonObject *payload,
+                SoupWebsocketConnection *ws)
 {
     if (g_strcmp0(protocol, "component") == 0 && g_strcmp0(command, "list") == 0) {
 
@@ -96,9 +101,41 @@ handle_message(const gchar *protocol, const gchar *command,
 
             send_response(ws, "component", "component", component);
         }
-        return TRUE;
+
+    } else if (g_strcmp0(protocol, "runtime") == 0 && g_strcmp0(command, "getruntime") == 0) {
+
+        JsonObject *runtime = json_object_new();
+        json_object_set_string_member(runtime, "version", "0.4"); // protocol version
+        json_object_set_string_member(runtime, "type", "noflo-gegl");
+
+        JsonArray *capabilities = json_array_new();
+        json_array_add_string_element(capabilities, "protocol:component");
+        json_object_set_array_member(runtime, "capabilities", capabilities);
+
+        send_response(ws, "runtime", "runtime", runtime);
+        
+
+    } else if (g_strcmp0(protocol, "graph") == 0 && g_strcmp0(command, "clear") == 0) {
+        if (self->graph) {
+            graph_free(self->graph);
+            self->graph = NULL;
+        }
+
+    } else if (g_strcmp0(protocol, "graph") == 0 && g_strcmp0(command, "addnode") == 0) {
+
+//        graph_add_node(self->graph, )
+
+    } else if (g_strcmp0(protocol, "graph") == 0 && g_strcmp0(command, "addinitial") == 0) {
+//        g_return_if_fail(self->graph);        
+//        graph_add_iip(self->graph, )
+
+
+    } else if (g_strcmp0(protocol, "graph") == 0 && g_strcmp0(command, "addedge") == 0) {
+
+//        graph_add_edge(self->graph, )
+
     } else {
-        return FALSE;
+        g_printerr("Unhandled message: protocol='%s', command='%s'", protocol, command);
     }
 }
 
@@ -106,7 +143,7 @@ static void
 on_web_socket_open(SoupWebsocketConnection *ws, gpointer user_data)
 {
 	gchar *url = soup_uri_to_string(soup_websocket_connection_get_uri (ws), FALSE);
-	g_print("WebSocket: opened %s with %s\n", soup_websocket_connection_get_protocol(ws), url);
+	g_print("WebSocket: client opened %s with %s\n", soup_websocket_connection_get_protocol(ws), url);
 	g_free(url);
 }
 
@@ -122,7 +159,7 @@ on_web_socket_message(SoupWebsocketConnection *ws,
     //g_print ("%s: %p", __PRETTY_FUNCTION__, user_data);
 
 	data = g_bytes_get_data (message, &len);
-	//g_print ("RECV: %.*s\n", (int)len, data);
+	g_print ("RECV: %.*s\n", (int)len, data);
 
     JsonParser *parser = json_parser_new();
     gboolean success = json_parser_load_from_data(parser, data, len, NULL);
@@ -137,7 +174,8 @@ on_web_socket_message(SoupWebsocketConnection *ws,
         JsonNode *pnode = json_object_get_member(root, "payload");
         JsonObject *payload = JSON_NODE_HOLDS_OBJECT(pnode) ? json_object_get_object_member(root, "payload") : NULL;
 
-        handle_message(protocol, command, payload, ws);
+        UiConnection *ui = (UiConnection *)user_data;
+        ui_connection_handle_message(ui, protocol, command, payload, ws);
 
     } else {
         g_error("Unable to parse WebSocket message as JSON");
@@ -170,10 +208,10 @@ void websocket_callback(SoupServer *server,
 					    SoupClientContext *client,
 					    gpointer user_data)
 {
-	g_signal_connect (connection, "open", G_CALLBACK (on_web_socket_open), user_data);
-	g_signal_connect (connection, "message", G_CALLBACK (on_web_socket_message), user_data);
-	g_signal_connect (connection, "error", G_CALLBACK (on_web_socket_error), user_data);
-	g_signal_connect (connection, "close", G_CALLBACK (on_web_socket_close), user_data);
+	g_signal_connect(connection, "open", G_CALLBACK(on_web_socket_open), user_data);
+	g_signal_connect(connection, "message", G_CALLBACK(on_web_socket_message), user_data);
+	g_signal_connect(connection, "error", G_CALLBACK(on_web_socket_error), user_data);
+	g_signal_connect(connection, "close", G_CALLBACK(on_web_socket_close), user_data);
 }
 
 static void
@@ -205,13 +243,11 @@ server_callback (SoupServer *server, SoupMessage *msg,
 }
 
 
-typedef struct {
-	SoupServer *server;
-} UiConnection;
-
 UiConnection *
 ui_connection_new(int port) {
     UiConnection *self = g_new(UiConnection, 1);
+
+    self->graph = NULL;
 
 	self->server = soup_server_new(SOUP_SERVER_PORT, port,
         SOUP_SERVER_SERVER_HEADER, "noflo-gegl-runtime", NULL);
@@ -221,9 +257,9 @@ ui_connection_new(int port) {
     }
 
     soup_server_add_websocket_handler(self->server, NULL, NULL, NULL,
-        websocket_callback, (void *)0x1000, NULL);
+        websocket_callback, self, NULL);
 	soup_server_add_handler(self->server, NULL,
-        server_callback, NULL, NULL);
+        server_callback, self, NULL);
 
 	soup_server_run_async (self->server);
 

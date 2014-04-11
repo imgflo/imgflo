@@ -46,8 +46,8 @@ main (int argc, char **argv)
 	    signal(SIGINT, quit);
 
         gegl_init(0, NULL);
-        GMainLoop *loop = g_main_loop_new(NULL, TRUE);
 	    UiConnection *ui = ui_connection_new(port);
+        GMainLoop *loop = g_main_loop_new(NULL, TRUE);
 
 	    if (!ui) {
 		    g_printerr("Unable to bind to server port %d\n", port);
@@ -57,8 +57,8 @@ main (int argc, char **argv)
 
 	    g_main_loop_run (loop);
 
-        ui_connection_free(ui);
         g_main_loop_unref(loop);
+        ui_connection_free(ui);
         gegl_exit();
     }
 

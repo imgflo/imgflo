@@ -7,10 +7,13 @@ chai = require 'chai'
 # TODO: move into library, also use in MicroFlo and other FBP runtime implementations?
 class MockUi extends EventEmitter
     @components = {}
+
     constructor: ->
         @client = new websocket.client()
         @connection = null
+
         @components = {}
+        @runtimeinfo = {}
 
         @client.on 'connect', (connection) =>
             @connection = connection
@@ -26,10 +29,12 @@ class MockUi extends EventEmitter
 
         d = JSON.parse message.utf8Data
         if d.protocol == "component" and d.command == "component"
-            comp = d.payload
-            id = comp.name
-            @components[id] = comp
-            @emit 'component-added', id, comp
+            id = d.payload.name
+            @components[id] = d.payload
+            @emit 'component-added', id, @components[id]
+        else if d.protocol == "runtime" and d.command == "runtime"
+            @runtimeinfo = d.payload
+            @emit 'runtime-info-changed', @runtimeinfo
         else
             console.log 'unknown message', d
 
@@ -91,7 +96,25 @@ describe 'NoFlo UI WebSocket API', () ->
         runtime.stop()
         ui.disconnect()
 
-    describe 'sending component list command', ->
+    describe 'runtime info', ->
+        info = null
+        it 'should be returned on getruntime', (done) ->
+            ui.send "runtime", "getruntime"
+            ui.once 'runtime-info-changed', () ->
+                info = ui.runtimeinfo
+                chai.expect(info).to.be.an 'object'
+                done()
+        it 'type should be "noflo-gegl"', ->
+            chai.expect(info.type).to.equal "noflo-gegl"
+        it 'protocol version should be "0.4"', ->
+            chai.expect(info.version).to.be.a "string"
+            chai.expect(info.version).to.equal "0.4"
+        it 'capabilities should include "protocol:component"', ->
+            chai.expect(info.capabilities).to.be.an "array"
+            chai.expect(info.capabilities.length).to.equal 1
+            chai.expect((info.capabilities.filter -> 'protocol:component')[0]).to.be.a "string"
+
+    describe 'sending component list', ->
         it 'should return more than 100 components', (done) ->
             ui.send "component", "list"
             ui.on 'component-added', (name, definition) ->
@@ -117,4 +140,18 @@ describe 'NoFlo UI WebSocket API', () ->
                 chai.expect((c.inPorts.filter (p) -> p.id == 'height')[0].type).to.not.equal 'buffer'
                 chai.expect((c.inPorts.filter (p) -> p.id == 'x')[0].type).to.not.equal 'buffer'
                 chai.expect((c.inPorts.filter (p) -> p.id == 'y')[0].type).to.not.equal 'buffer'
+
+    describe 'graph building', ->
+        it 'should not crash', (done) ->
+            ui.send "graph", "clear"
+            ui.send "graph", "addnode", {}
+            ui.send "graph", "addnode", {}
+            ui.send "graph", "addedge", {}
+            ui.send "graph", "addedge", {}
+            ui.send "graph", "addinitial", {}
+            ui.send "graph", "addinitial", {}
+
+            ui.send "runtime", "getruntime"
+            ui.once 'runtime-info-changed', ->
+                done()
 
