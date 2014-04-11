@@ -3,6 +3,7 @@ server = require '../server'
 chai = require 'chai'
 http = require 'http'
 fs = require 'fs'
+path = require 'path'
 
 urlbase = 'http://localhost:8888'
 
@@ -10,7 +11,10 @@ describe 'Server', ->
     s = null
 
     before ->
-        s = new server.Server './testtemp'
+        wd = './testtemp'
+        for f in fs.readdirSync wd
+            fs.unlinkSync path.join wd, f
+        s = new server.Server wd
         s.listen 8888
 
     describe 'Get new image', ->

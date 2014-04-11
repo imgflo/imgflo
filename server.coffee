@@ -1,6 +1,7 @@
 
 node_static = require 'node-static'
 http = require 'http'
+fs = require 'fs'
 child_process = require 'child_process'
 EventEmitter = (require 'events').EventEmitter
 
@@ -21,6 +22,9 @@ class Server
         @fileserver = new node_static.Server workdir
         @httpserver = http.createServer @handleHttpRequest
         @processor = new Processor
+
+        if not fs.existsSync workdir
+            fs.mkdirSync workdir
 
     listen: (port) ->
         @httpserver.listen port
