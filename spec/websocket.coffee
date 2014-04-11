@@ -1,52 +1,116 @@
 
 websocket = require 'websocket'
-assert = require 'assert'
 child_process = require 'child_process'
+EventEmitter = (require 'events').EventEmitter
+chai = require 'chai'
 
-describe 'NoFlo UI WebSocket API', () ->
-    process = null    
+# TODO: move into library, also use in MicroFlo and other FBP runtime implementations?
+class MockUi extends EventEmitter
+    @components = {}
+    constructor: ->
+        @client = new websocket.client()
+        @connection = null
+        @components = {}
 
-    before ->
+        @client.on 'connect', (connection) =>
+            @connection = connection
+            @connection.on 'error', (error) =>
+                throw error
+            @connection.on 'message', (message) =>
+                @handleMessage message
+            @emit 'connected', connection
+
+    handleMessage: (message) ->
+        if not message.type == 'utf8'
+            throw new Error "Received non-UTF8 message: " + message
+
+        d = JSON.parse message.utf8Data
+        if d.protocol == "component" and d.command == "component"
+            comp = d.payload
+            id = comp.name
+            @components[id] = comp
+            @emit 'component-added', id, comp
+        else
+            console.log 'unknown message', d
+
+    connect: ->
+        @client.connect 'ws://localhost:3888/', "noflo"
+    disconnect: ->
+        #
+
+    send: (protocol, command, payload) ->
+        msg = 
+            protocol: protocol
+            command: command
+            payload: payload || {}
+        @sendMsg msg
+
+    sendMsg: (msg) ->
+        @connection.sendUTF JSON.stringify msg
+
+class RuntimeProcess
+    constructor: ->
+        @process = null
+
+    start: ->
+        exec = './install/env.sh'
         args = ['./install/bin/noflo-gegl-runtime', '--port', '3888']
-        process = child_process.spawn './install/env.sh', args
-        process.on 'error', (err) ->
-            assert.fail 'starting noflo-gegl-runtime', '', err.toString()
-        process.on 'exit', (code, signal) ->
-            assert.equal code, 0
+        @process = child_process.spawn exec, args
+        @process.on 'error', (err) ->
+            throw err
+        @process.on 'exit', (code, signal) ->
+            if code != 0
+                throw new Error 'Runtime exited with non-zero code: ' + code
 
         console.log "PID: ", process.pid
-        process.stdout.on 'data', (d) ->
+        @process.stdout.on 'data', (d) ->
             console.log d.toString()
-        process.stderr.on 'data', (d) ->
+        @process.stderr.on 'data', (d) ->
             console.log d.toString()
+
+    stop: ->
+        @process.kill()
+
+
+describe 'NoFlo UI WebSocket API', () ->
+    runtime = new RuntimeProcess
+    ui = new MockUi
+
+    before (done) ->
+        runtime.start()
+        f = ->
+            ui.connect()
+            ui.on 'connected', () ->
+                done()
+        setTimeout f, 300 # Wait for runtime to be ready
     after ->
-        process.kill
+        runtime.stop()
+        ui.disconnect()
 
     describe 'sending component list command', ->
-        it 'should return all available components', (done) ->
+        it 'should return more than 100 components', (done) ->
+            ui.send "component", "list"
+            ui.on 'component-added', (name, definition) ->
+                numberOfComponents = Object.keys(ui.components).length
+                if numberOfComponents == 100
+                    done()
+        it 'should contain gegl:crop', ->
+            chai.expect(ui.components['gegl/crop']).to.be.an 'object'
 
-# TODO: factor out into a NoFloUiMock object
-            client = new websocket.client()
-
-#            var expectedComponents = []
-#            var receivedComponent = []
-
-            client.on 'connect', (connection) ->
-                connection.on 'error', (error) ->
-                    assert.fail "connect OK", "connect error", error.toString();
-                connection.on 'message', (message) ->
-                    if message.type == 'utf8'
-                        response = JSON.parse message.utf8Data
-                        assert.equal response.protocol, "component"
-                        assert.equal response.command, "component"
-
-                        done()
-# FIXME: verify
-#                        receivedComponent.push(response.payload);
-
-
-                msg = {"protocol": "component", "command": "list"};
-                connection.sendUTF JSON.stringify msg
-
-            client.connect 'ws://localhost:3888/', "noflo"
+        describe 'gegl:crop component', ->
+            it 'should have a "input" buffer port', ->
+                input = ui.components['gegl/crop'].inPorts.filter (p) -> p.id == 'input'
+                chai.expect(input.length).to.equal 1
+                chai.expect(input[0].type).to.equal "buffer"
+            it 'should have a "output" buffer port', ->
+                output = ui.components['gegl/crop'].outPorts.filter (p) -> p.id == 'output'
+                chai.expect(output.length).to.equal 1
+                chai.expect(output[0].type).to.equal "buffer"
+            it 'should also have inports for properties "x", "y", "width" and "height"', ->
+                c = ui.components['gegl/crop']
+                chai.expect(Object.keys(c.inPorts).length).to.equal 5
+                chai.expect((c.inPorts.filter (p) -> p.id == 'width')[0].type).to.not.equal 'buffer'
+                chai.expect((c.inPorts.filter (p) -> p.id == 'height')[0].type).to.not.equal 'buffer'
+                chai.expect((c.inPorts.filter (p) -> p.id == 'x')[0].type).to.not.equal 'buffer'
+                chai.expect((c.inPorts.filter (p) -> p.id == 'y')[0].type).to.not.equal 'buffer'
 

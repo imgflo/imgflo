@@ -58,7 +58,7 @@ send_response(SoupWebsocketConnection *ws,
     gsize len = 0;
     gchar *data = json_generator_to_data(generator, &len);
     GBytes *resp = g_bytes_new_take(data, len);
-    g_print ("SEND: %.*s\n", (int)len, data);
+    //g_print ("SEND: %.*s\n", (int)len, data);
     soup_websocket_connection_send(ws, SOUP_WEBSOCKET_DATA_TEXT, resp);
 
     g_object_unref(generator);
@@ -123,7 +123,7 @@ on_web_socket_message(SoupWebsocketConnection *ws,
 	gsize len;
 
 	data = g_bytes_get_data (message, &len);
-	g_print ("RECV: %.*s\n", (int)len, data);
+	//g_print ("RECV: %.*s\n", (int)len, data);
 
     JsonParser *parser = json_parser_new();
     gboolean success = json_parser_load_from_data(parser, data, len, NULL);

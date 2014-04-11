@@ -19,7 +19,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "mocha --compilers .coffee:coffee-script/register ./spec/*.coffee"
+    "test": "mocha --reporter spec --compilers .coffee:coffee-script/register ./spec/*.coffee"
   },
   "engines": {
     "node": ">=0.10.0"
