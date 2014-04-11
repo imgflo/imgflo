@@ -19,6 +19,16 @@ component2geglop(const gchar *name) {
     return dup;
 }
 
+gchar *
+geglop2component(const gchar *name) {
+    gchar *dup = g_strdup(name);
+    gchar *sep = g_strstr_len(dup, -1, ":");
+    *sep = '/';
+    g_ascii_strdown(dup, -1);
+    return dup;
+}
+
+
 typedef struct {
     GeglNode *top;
     GHashTable *node_map;

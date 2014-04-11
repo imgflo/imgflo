@@ -8,6 +8,37 @@
 #include <libsoup/soup.h>
 
 
+JsonArray *
+inports_for_operation(const gchar *name)
+{
+    JsonArray *inports = json_array_new();
+
+    // Hardcode 'input' buffer as the only inport
+    // FIXME: programatically determine if 'aux' or other ports exists, and add them
+    JsonObject *in = json_object_new();
+    json_object_set_string_member(in, "id", "input");
+    json_object_set_string_member(in, "type", "buffer");
+    json_array_add_object_element(inports, in);
+
+    guint n_properties = 0;
+    GParamSpec** properties = gegl_operation_list_properties(name, &n_properties);
+    for (int i=0; i<n_properties; i++) {
+        GParamSpec *prop = properties[i];
+        const gchar *id = g_param_spec_get_name(prop);
+        const gchar *type = G_PARAM_SPEC_TYPE_NAME(prop);
+        // TODO: map the GParam types to something more sane
+
+        JsonObject *port = json_object_new();
+        json_object_set_string_member(port, "id", id);
+        json_object_set_string_member(port, "type", type);
+
+        json_array_add_object_element(inports, port);
+    }
+
+    return inports;
+}
+
+
 static void
 send_response(SoupWebsocketConnection *ws,
             const gchar *protocol, const gchar *command, JsonObject *payload)
@@ -44,19 +75,24 @@ handle_message(const gchar *protocol, const gchar *command,
 
         for (int i=0; i<no_ops; i++) {
             // FIXME: normalize to NoFlo convention
-            const gchar *name = operation_names[i];
+            const gchar *op = operation_names[i];
+            gchar *name = geglop2component(op);
 
             JsonObject *component = json_object_new();
             json_object_set_string_member(component, "name", name);
             json_object_set_string_member(component, "description", "");
 
-            // FIXME: retrieve properties, return as ports
-            // {id: , type: "all"}
-            JsonArray *inPorts = json_array_new();
-            json_object_set_array_member(component, "inPorts", inPorts);
+            JsonArray *inports = inports_for_operation(op);
+            json_object_set_array_member(component, "inPorts", inports);
 
-            JsonArray *outPorts = json_array_new();
-            json_object_set_array_member(component, "outPorts", outPorts);
+            // Hardcode 'output' buffer as the only outport. Should be the case for all current GEGL ops
+            JsonObject *out = json_object_new();
+            json_object_set_string_member(out, "id", "output");
+            json_object_set_string_member(out, "type", "buffer");
+
+            JsonArray *outports = json_array_new();
+            json_array_add_object_element(outports, out);
+            json_object_set_array_member(component, "outPorts", outports);
 
             send_response(ws, "component", "component", component);
         }
