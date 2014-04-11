@@ -1,5 +1,6 @@
 bin/noflo-gegl
 bin/noflo-gegl-runtime
+testtemp/
 install/
 *~
 out.png
