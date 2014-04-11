@@ -51,8 +51,9 @@ class MockUi extends EventEmitter
 class RuntimeProcess
     constructor: ->
         @process = null
+        @started = false
 
-    start: ->
+    start: (success) ->
         exec = './install/env.sh'
         args = ['./install/bin/noflo-gegl-runtime', '--port', '3888']
         @process = child_process.spawn exec, args
@@ -62,11 +63,16 @@ class RuntimeProcess
             if code != 0
                 throw new Error 'Runtime exited with non-zero code: ' + code
 
-        console.log "PID: ", process.pid
-        @process.stdout.on 'data', (d) ->
-            console.log d.toString()
         @process.stderr.on 'data', (d) ->
             console.log d.toString()
+
+        stdout = ""
+        @process.stdout.on 'data', (d) ->
+            stdout += d.toString()
+            if stdout.indexOf 'running on port' != -1
+                if not @started
+                    @started = true
+                    success process.pid
 
     stop: ->
         @process.kill()
@@ -77,12 +83,10 @@ describe 'NoFlo UI WebSocket API', () ->
     ui = new MockUi
 
     before (done) ->
-        runtime.start()
-        f = ->
+        runtime.start ->
             ui.connect()
             ui.on 'connected', () ->
                 done()
-        setTimeout f, 300 # Wait for runtime to be ready
     after ->
         runtime.stop()
         ui.disconnect()

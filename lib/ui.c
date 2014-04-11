@@ -103,24 +103,23 @@ handle_message(const gchar *protocol, const gchar *command,
 }
 
 static void
-on_web_socket_open(SoupWebsocketConnection *ws, gpointer unused)
+on_web_socket_open(SoupWebsocketConnection *ws, gpointer user_data)
 {
 	gchar *url = soup_uri_to_string(soup_websocket_connection_get_uri (ws), FALSE);
-
-	g_printerr("WebSocket: opened %s with %s\n",
-		    soup_websocket_connection_get_protocol (ws),
-		    url);
-
+	g_print("WebSocket: opened %s with %s\n", soup_websocket_connection_get_protocol(ws), url);
 	g_free(url);
 }
 
 static void
 on_web_socket_message(SoupWebsocketConnection *ws,
                       SoupWebsocketDataType type,
-                      GBytes *message)
+                      GBytes *message,
+                      void *user_data)
 {
 	const gchar *data;
 	gsize len;
+
+    //g_print ("%s: %p", __PRETTY_FUNCTION__, user_data);
 
 	data = g_bytes_get_data (message, &len);
 	//g_print ("RECV: %.*s\n", (int)len, data);
@@ -148,14 +147,13 @@ on_web_socket_message(SoupWebsocketConnection *ws,
 }
 
 static void
-on_web_socket_error(SoupWebsocketConnection *ws,
-                    GError *error)
+on_web_socket_error(SoupWebsocketConnection *ws, GError *error, gpointer user_data)
 {
 	g_printerr("WebSocket: error: %s\n", error->message);
 }
 
 static void
-on_web_socket_close(SoupWebsocketConnection *ws)
+on_web_socket_close(SoupWebsocketConnection *ws, gpointer user_data)
 {
 	gushort code = soup_websocket_connection_get_close_code(ws);
 	if (code != 0) {
@@ -172,10 +170,10 @@ void websocket_callback(SoupServer *server,
 					    SoupClientContext *client,
 					    gpointer user_data)
 {
-	g_signal_connect (connection, "open", G_CALLBACK (on_web_socket_open), NULL);
-	g_signal_connect (connection, "message", G_CALLBACK (on_web_socket_message), NULL);
-	g_signal_connect (connection, "error", G_CALLBACK (on_web_socket_error), NULL);
-	g_signal_connect (connection, "close", G_CALLBACK (on_web_socket_close), NULL);
+	g_signal_connect (connection, "open", G_CALLBACK (on_web_socket_open), user_data);
+	g_signal_connect (connection, "message", G_CALLBACK (on_web_socket_message), user_data);
+	g_signal_connect (connection, "error", G_CALLBACK (on_web_socket_error), user_data);
+	g_signal_connect (connection, "close", G_CALLBACK (on_web_socket_close), user_data);
 }
 
 static void
@@ -207,3 +205,35 @@ server_callback (SoupServer *server, SoupMessage *msg,
 }
 
 
+typedef struct {
+	SoupServer *server;
+} UiConnection;
+
+UiConnection *
+ui_connection_new(int port) {
+    UiConnection *self = g_new(UiConnection, 1);
+
+	self->server = soup_server_new(SOUP_SERVER_PORT, port,
+        SOUP_SERVER_SERVER_HEADER, "noflo-gegl-runtime", NULL);
+    if (!self->server) {
+        g_free(self);
+        return NULL;
+    }
+
+    soup_server_add_websocket_handler(self->server, NULL, NULL, NULL,
+        websocket_callback, (void *)0x1000, NULL);
+	soup_server_add_handler(self->server, NULL,
+        server_callback, NULL, NULL);
+
+	soup_server_run_async (self->server);
+
+    return self;
+}
+
+void
+ui_connection_free(UiConnection *self) {
+
+    g_object_unref(self->server);
+
+    g_free(self);
+}
