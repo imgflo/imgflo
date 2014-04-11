@@ -1,12 +1,13 @@
 
-websocket = require 'websocket'
+fs = require 'fs'
 child_process = require 'child_process'
 EventEmitter = (require 'events').EventEmitter
+
+websocket = require 'websocket'
 chai = require 'chai'
 
 # TODO: move into library, also use in MicroFlo and other FBP runtime implementations?
 class MockUi extends EventEmitter
-    @components = {}
 
     constructor: ->
         @client = new websocket.client()
@@ -14,6 +15,7 @@ class MockUi extends EventEmitter
 
         @components = {}
         @runtimeinfo = {}
+        @networkrunning = false
 
         @client.on 'connect', (connection) =>
             @connection = connection
@@ -35,8 +37,14 @@ class MockUi extends EventEmitter
         else if d.protocol == "runtime" and d.command == "runtime"
             @runtimeinfo = d.payload
             @emit 'runtime-info-changed', @runtimeinfo
+        else if d.protocol == "network" and d.command == "started"
+            @networkrunning = true
+            @emit 'network-running', @networkrunning
+        else if d.protocol == "network" and d.command == "stopped"
+            @networkrunning = false
+            @emit 'network-running', @networkrunning
         else
-            console.log 'unknown message', d
+            console.log 'UI received unknown message', d
 
     connect: ->
         @client.connect 'ws://localhost:3888/', "noflo"
@@ -86,6 +94,8 @@ class RuntimeProcess
 describe 'NoFlo UI WebSocket API', () ->
     runtime = new RuntimeProcess
     ui = new MockUi
+
+    outfile = null
 
     before (done) ->
         runtime.start ->
@@ -142,8 +152,9 @@ describe 'NoFlo UI WebSocket API', () ->
                 chai.expect((c.inPorts.filter (p) -> p.id == 'y')[0].type).to.not.equal 'buffer'
 
     describe 'graph building', ->
+        outfile = 'testtemp/protocol-crop.png'
         it 'should not crash', (done) ->
-            # FIXME: check annd assert no errors on stderr of runtime process
+            # FIXME: check and assert no errors on stderr of runtime process
 
             ui.send "graph", "clear"
             ui.send "graph", "addnode", {id: 'in', component: 'gegl/load'}
@@ -152,9 +163,22 @@ describe 'NoFlo UI WebSocket API', () ->
             ui.send "graph", "addedge", {src: {node: 'in', port: 'output'}, tgt: {node: 'filter', port: 'input'}}
             ui.send "graph", "addedge", {src: {node: 'filter', port: 'output'}, tgt: {node: 'out', port: 'input'}}
             ui.send "graph", "addinitial", {src: {data: 'examples/grid-toastybob.jpg'}, tgt: {node: 'in', port: 'path'}}
-            ui.send "graph", "addinitial", {src: {data: 'examples/cropped.png'}, tgt: {node: 'out', port: 'path'}}
+            ui.send "graph", "addinitial", {src: {data: outfile}, tgt: {node: 'out', port: 'path'}}
 
             ui.send "runtime", "getruntime"
             ui.once 'runtime-info-changed', ->
                 done()
+
+    describe 'starting the network', ->
+        it 'should respond with network started', (done) ->
+            ui.send "network", "start"
+            ui.once 'network-running', (running) ->
+                done() if running
+        it 'should result in a created PNG file', (done) ->
+            # TODO: add better API for getting notified of results
+            # Maybe have a Processor node which sends string with URL of output when done?
+            checkExistence = ->
+                fs.exists outfile, (exists) ->
+                    done() if exists
+            setInterval checkExistence, 50
 

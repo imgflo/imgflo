@@ -113,7 +113,6 @@ ui_connection_handle_message(UiConnection *self,
         json_object_set_array_member(runtime, "capabilities", capabilities);
 
         send_response(ws, "runtime", "runtime", runtime);
-        
 
     } else if (g_strcmp0(protocol, "graph") == 0 && g_strcmp0(command, "clear") == 0) {
         if (self->graph) {
@@ -153,6 +152,22 @@ ui_connection_handle_message(UiConnection *self,
             json_object_get_string_member(tgt, "node"),
             json_object_get_string_member(tgt, "port")
         );
+
+    } else if (g_strcmp0(protocol, "network") == 0 && g_strcmp0(command, "start") == 0) {
+        g_return_if_fail(self->graph);
+
+        // FIXME: should be done in callback monitoring network state changes
+        // TODO: send timestamp, graph id
+        JsonObject *info = json_object_new();
+        send_response(ws, "network", "started", info);
+
+        // TODO: generalize
+        // Use a Network class, which holds a number of Processor's,
+        // which. On network start/stop, enable/disable the processing
+        GeglNode *node_to_process = g_hash_table_lookup(self->graph->node_map, "out");
+        g_return_if_fail(node_to_process);
+        gegl_node_process(node_to_process);
+
     } else {
         g_printerr("Unhandled message: protocol='%s', command='%s'", protocol, command);
     }
