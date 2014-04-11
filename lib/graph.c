@@ -53,7 +53,12 @@ graph_free(Graph *self) {
 }
 
 void
-graph_add_iip(Graph *self, const gchar *node, const gchar *port, GValue *value) {
+graph_add_iip(Graph *self, const gchar *node, const gchar *port, GValue *value)
+{
+    g_return_if_fail(self);
+    g_return_if_fail(node);
+    g_return_if_fail(port);
+    g_return_if_fail(value);
 
     const gchar *iip = G_VALUE_HOLDS_STRING(value) ? g_value_get_string(value) : "IIP";
     fprintf(stdout, "'%s' -> %s %s\n", iip, node, port);
@@ -90,12 +95,16 @@ graph_add_iip(Graph *self, const gchar *node, const gchar *port, GValue *value) 
 void
 graph_add_node(Graph *self, const gchar *name, const gchar *component)
 {
+    g_return_if_fail(self);
+    g_return_if_fail(name);
+    g_return_if_fail(component);
+
     gchar *op = component2geglop(component);
+    GeglNode *n = gegl_node_new_child(self->top, "operation", op, NULL);
+
+    g_return_if_fail(n);
 
     fprintf(stdout, "%s(%s)\n", name, op);
-
-    GeglNode *n = gegl_node_new_child(self->top, "operation", op, NULL);
-    g_assert(n);
     g_hash_table_insert(self->node_map, (gpointer)g_strdup(name), (gpointer)n);
 
     g_free(op);
@@ -107,13 +116,20 @@ graph_add_edge(Graph *self,
         const gchar *src, const gchar *srcport,
         const gchar *tgt, const gchar *tgtport)
 {
-    fprintf(stdout, "%s %s -> %s %s\n", src, srcport,
-                                        tgtport, tgt);
+    g_return_if_fail(self);
+    g_return_if_fail(src);
+    g_return_if_fail(tgt);
+    g_return_if_fail(srcport);
+    g_return_if_fail(tgtport);
+
     GeglNode *t = g_hash_table_lookup(self->node_map, tgt);
     GeglNode *s = g_hash_table_lookup(self->node_map, src);
 
-    g_assert(s);
-    g_assert(t);
+    g_return_if_fail(t);
+    g_return_if_fail(s);
+
+    fprintf(stdout, "%s %s -> %s %s\n", src, srcport,
+                                        tgtport, tgt);
     gegl_node_connect_to(s, srcport, t, tgtport);
 }
 

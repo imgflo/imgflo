@@ -120,20 +120,39 @@ ui_connection_handle_message(UiConnection *self,
             graph_free(self->graph);
             self->graph = NULL;
         }
-
+        // TODO: respect id/label
+        self->graph = graph_new();
     } else if (g_strcmp0(protocol, "graph") == 0 && g_strcmp0(command, "addnode") == 0) {
+        g_return_if_fail(self->graph);
 
-//        graph_add_node(self->graph, )
-
+        graph_add_node(self->graph,
+            json_object_get_string_member(payload, "id"),
+            json_object_get_string_member(payload, "component")
+        );
     } else if (g_strcmp0(protocol, "graph") == 0 && g_strcmp0(command, "addinitial") == 0) {
-//        g_return_if_fail(self->graph);        
-//        graph_add_iip(self->graph, )
+        g_return_if_fail(self->graph);
 
-
+        JsonObject *tgt = json_object_get_object_member(payload, "tgt");
+        JsonObject *src = json_object_get_object_member(payload, "src");
+        GValue data = G_VALUE_INIT;
+        json_node_get_value(json_object_get_member(src, "data"), &data);
+        graph_add_iip(self->graph,
+            json_object_get_string_member(tgt, "node"),
+            json_object_get_string_member(tgt, "port"),
+            &data
+        );
+        g_value_unset(&data);
     } else if (g_strcmp0(protocol, "graph") == 0 && g_strcmp0(command, "addedge") == 0) {
+        g_return_if_fail(self->graph);
 
-//        graph_add_edge(self->graph, )
-
+        JsonObject *src = json_object_get_object_member(payload, "src");
+        JsonObject *tgt = json_object_get_object_member(payload, "tgt");
+        graph_add_edge(self->graph,
+            json_object_get_string_member(src, "node"),
+            json_object_get_string_member(src, "port"),
+            json_object_get_string_member(tgt, "node"),
+            json_object_get_string_member(tgt, "port")
+        );
     } else {
         g_printerr("Unhandled message: protocol='%s', command='%s'", protocol, command);
     }

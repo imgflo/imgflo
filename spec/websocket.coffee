@@ -143,13 +143,16 @@ describe 'NoFlo UI WebSocket API', () ->
 
     describe 'graph building', ->
         it 'should not crash', (done) ->
+            # FIXME: check annd assert no errors on stderr of runtime process
+
             ui.send "graph", "clear"
-            ui.send "graph", "addnode", {}
-            ui.send "graph", "addnode", {}
-            ui.send "graph", "addedge", {}
-            ui.send "graph", "addedge", {}
-            ui.send "graph", "addinitial", {}
-            ui.send "graph", "addinitial", {}
+            ui.send "graph", "addnode", {id: 'in', component: 'gegl/load'}
+            ui.send "graph", "addnode", {id: 'filter', component: 'gegl/crop'}
+            ui.send "graph", "addnode", {id: 'out', component: 'gegl/png-save'}
+            ui.send "graph", "addedge", {src: {node: 'in', port: 'output'}, tgt: {node: 'filter', port: 'input'}}
+            ui.send "graph", "addedge", {src: {node: 'filter', port: 'output'}, tgt: {node: 'out', port: 'input'}}
+            ui.send "graph", "addinitial", {src: {data: 'examples/grid-toastybob.jpg'}, tgt: {node: 'in', port: 'path'}}
+            ui.send "graph", "addinitial", {src: {data: 'examples/cropped.png'}, tgt: {node: 'out', port: 'path'}}
 
             ui.send "runtime", "getruntime"
             ui.once 'runtime-info-changed', ->
