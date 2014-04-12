@@ -9,10 +9,7 @@
 #include <sys/stat.h>
 
 #include <libsoup/soup.h>
-
-
-// FIXME: get API public in GEGL. https://bugzilla.gnome.org/show_bug.cgi?id=728086
-const gchar * gegl_operation_get_key(const gchar *operation_type, const gchar *key_name);
+#include <gegl-plugin.h>
 
 // FIXME: need proper GEGL API, https://bugzilla.gnome.org/show_bug.cgi?id=728085
 GType gegl_operation_gtype_from_name(const gchar *name);
