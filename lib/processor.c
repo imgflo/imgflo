@@ -125,6 +125,11 @@ processor_set_target(Processor *self, GeglNode *node)
 {
     g_return_if_fail(self);
 
+    if (TRUE) {
+        self->node = node;
+        return;
+    }
+
     if (self->node == node) {
         return;
     }
