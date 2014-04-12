@@ -1,3 +1,7 @@
+//     imgflo - Flowhub.io Image-processing runtime
+//     (c) 2014 The Grid
+//     imgflo may be freely distributed under the MIT license
+
 #include "lib/processor.c"
 #include "lib/graph.c"
 #include "lib/network.c"

@@ -1,3 +1,6 @@
+#     imgflo - Flowhub.io Image-processing runtime
+#     (c) 2014 The Grid
+#     imgflo may be freely distributed under the MIT license
 
 fs = require 'fs'
 child_process = require 'child_process'

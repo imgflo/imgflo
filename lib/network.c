@@ -1,4 +1,6 @@
-
+//     imgflo - Flowhub.io Image-processing runtime
+//     (c) 2014 The Grid
+//     imgflo may be freely distributed under the MIT license
 
 typedef struct {
     Graph *graph; // unowned
