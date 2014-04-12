@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/jonnor/imgflo.svg?branch=master)](https://travis-ci.org/jonnor/imgflo)
+
 imgflo
 ==========
 imgflo is an image-processing server build on top of [GEGL](http://gegl.org)
