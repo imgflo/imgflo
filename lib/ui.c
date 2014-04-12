@@ -91,6 +91,29 @@ inports_for_operation(const gchar *name)
     return inports;
 }
 
+static JsonObject *
+get_processor_component(void)
+{
+    JsonObject *component = json_object_new();
+    json_object_set_string_member(component, "name", "Processor");
+    json_object_set_string_member(component, "description", "Process a connected node");
+    json_object_set_string_member(component, "icon", "spinner");
+
+    // Inports
+    JsonArray *inports = json_array_new();
+    JsonObject *input = json_object_new();
+    json_object_set_string_member(input, "id", "input");
+    json_object_set_string_member(input, "type", "buffer");
+    json_array_add_object_element(inports, input);
+    json_object_set_array_member(component, "inPorts", inports);
+
+    // Outports
+    JsonArray *outports = json_array_new();
+    json_object_set_array_member(component, "outPorts", outports);
+
+    return component;
+}
+
 static void
 send_response(SoupWebsocketConnection *ws,
             const gchar *protocol, const gchar *command, JsonObject *payload)
@@ -123,9 +146,13 @@ ui_connection_handle_message(UiConnection *self,
 {
     if (g_strcmp0(protocol, "component") == 0 && g_strcmp0(command, "list") == 0) {
 
+        // Our special Processor component
+        JsonObject *processor = get_processor_component();
+        send_response(ws, "component", "component", processor);
+
+        // Components for all available GEGL operations
         guint no_ops = 0;
         gchar **operation_names = gegl_list_operations(&no_ops);
-
         for (int i=0; i<no_ops; i++) {
             const gchar *op = operation_names[i];
             gchar *name = geglop2component(op);
