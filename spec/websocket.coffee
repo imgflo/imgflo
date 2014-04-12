@@ -129,6 +129,7 @@ describe 'NoFlo UI WebSocket API', () ->
 
     describe 'sending component list', ->
         it 'should return more than 100 components', (done) ->
+            @timeout 5000 # FIXME: make faster
             ui.send "component", "list"
             ui.on 'component-added', (name, definition) ->
                 numberOfComponents = Object.keys(ui.components).length
@@ -157,6 +158,41 @@ describe 'NoFlo UI WebSocket API', () ->
                 chai.expect(ui.components['gegl/crop'].icon).to.equal 'crop'
             it 'should have description', ->
                 chai.expect(ui.components['gegl/crop'].description).to.equal 'Crop a buffer'
+
+        describe 'gegl:png-save component', ->
+            c = 'gegl/png-save'
+            it 'should have a "input" buffer port', ->
+                input = ui.components[c].inPorts.filter (p) -> p.id == 'input'
+                chai.expect(input.length).to.equal 1
+                chai.expect(input[0].type).to.equal "buffer"
+            it 'should not have a "output" port', ->
+                output = ui.components[c].outPorts.filter (p) -> p.id == 'output'
+                chai.expect(output.length).to.equal 0
+
+        describe 'gegl:png-load component', ->
+            c = 'gegl/png-load'
+            it 'should not have a "input" buffer port', ->
+                input = ui.components[c].inPorts.filter (p) -> p.id == 'input'
+                chai.expect(input.length).to.equal 0
+            it 'should have a "output" port', ->
+                output = ui.components[c].outPorts.filter (p) -> p.id == 'output'
+                chai.expect(output.length).to.equal 1
+                chai.expect(output[0].type).to.equal "buffer"
+
+        describe 'gegl/add component', ->
+            c = 'gegl/add'
+            it 'should have "input" and "aux" buffer ports', ->
+                input = ui.components[c].inPorts.filter (p) -> p.id == 'input'
+                aux = ui.components[c].inPorts.filter (p) -> p.id == 'aux'
+                chai.expect(input.length).to.equal 1
+                chai.expect(input[0].type).to.equal "buffer"
+                chai.expect(aux.length).to.equal 1
+                chai.expect(aux[0].type).to.equal "buffer"
+            it 'should have a "output" port', ->
+                output = ui.components[c].outPorts.filter (p) -> p.id == 'output'
+                chai.expect(output.length).to.equal 1
+                chai.expect(output[0].type).to.equal "buffer"
+
 
     describe 'graph building', ->
         outfile = 'testtemp/protocol-crop.png'

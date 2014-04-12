@@ -12,8 +12,10 @@
 
 
 // FIXME: get API public in GEGL. https://bugzilla.gnome.org/show_bug.cgi?id=728086
-const gchar * gegl_operation_get_key            (const gchar *operation_type,
-                                                 const gchar *key_name);
+const gchar * gegl_operation_get_key(const gchar *operation_type, const gchar *key_name);
+
+// FIXME: need proper GEGL API, https://bugzilla.gnome.org/show_bug.cgi?id=728085
+GType gegl_operation_gtype_from_name(const gchar *name);
 
 typedef struct {
 	SoupServer *server;
@@ -46,12 +48,30 @@ inports_for_operation(const gchar *name)
 {
     JsonArray *inports = json_array_new();
 
-    // Hardcode 'input' buffer as the only inport
-    // FIXME: programatically determine if 'aux' or other ports exists, and add them
-    JsonObject *in = json_object_new();
-    json_object_set_string_member(in, "id", "input");
-    json_object_set_string_member(in, "type", "buffer");
-    json_array_add_object_element(inports, in);
+    // FIXME: find a better way than these heuristics for determining available pads
+    GType type = gegl_operation_gtype_from_name(name);
+    GType composer = g_type_from_name("GeglOperationComposer");
+    GType composer3 = g_type_from_name("GeglOperationComposer3");
+    GType source = g_type_from_name("GeglOperationSource");
+
+    if (!g_type_is_a(type, source)) {
+        JsonObject *input = json_object_new();
+        json_object_set_string_member(input, "id", "input");
+        json_object_set_string_member(input, "type", "buffer");
+        json_array_add_object_element(inports, input);
+    }
+    if (g_type_is_a(type, composer) || g_type_is_a(type, composer3)) {
+        JsonObject *aux = json_object_new();
+        json_object_set_string_member(aux, "id", "aux");
+        json_object_set_string_member(aux, "type", "buffer");
+        json_array_add_object_element(inports, aux);
+    }
+    if (g_type_is_a(type, composer3)) {
+        JsonObject *aux2 = json_object_new();
+        json_object_set_string_member(aux2, "id", "aux2");
+        json_object_set_string_member(aux2, "type", "buffer");
+        json_array_add_object_element(inports, aux2);
+    }
 
     guint n_properties = 0;
     GParamSpec** properties = gegl_operation_list_properties(name, &n_properties);
@@ -120,13 +140,17 @@ ui_connection_handle_message(UiConnection *self,
             JsonArray *inports = inports_for_operation(op);
             json_object_set_array_member(component, "inPorts", inports);
 
-            // Hardcode 'output' buffer as the only outport. Should be the case for all current GEGL ops
-            JsonObject *out = json_object_new();
-            json_object_set_string_member(out, "id", "output");
-            json_object_set_string_member(out, "type", "buffer");
-
+            // FIXME: find better way to get output pads
+            GType type = gegl_operation_gtype_from_name(op);
+            GType sink = g_type_from_name("GeglOperationSink");
             JsonArray *outports = json_array_new();
-            json_array_add_object_element(outports, out);
+            if (!g_type_is_a(type, sink)) {
+                JsonObject *out = json_object_new();
+                json_object_set_string_member(out, "id", "output");
+                json_object_set_string_member(out, "type", "buffer");
+                json_array_add_object_element(outports, out);
+            }
+
             json_object_set_array_member(component, "outPorts", outports);
 
             send_response(ws, "component", "component", component);
