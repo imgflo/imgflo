@@ -1,5 +1,5 @@
 
-#PREFIX=/opt/noflo-gegl
+#PREFIX=/opt/imgflo
 PREFIX=$(shell echo `pwd`/install)
 DEPS=$(shell $(PREFIX)/env.sh pkg-config --libs --cflags gegl-0.3 json-glib-1.0 libsoup-2.4)
 FLAGS=-Wall -Werror -std=c99 -g
@@ -11,17 +11,17 @@ GLIB_VERSION=2.38.2
 all: run
 
 run: install
-	$(PREFIX)/env.sh $(DEBUGPROG) ./bin/noflo-gegl-runtime
+	$(PREFIX)/env.sh $(DEBUGPROG) ./bin/imgflo-runtime
 
-install: noflo-gegl noflo-gegl-runtime
-	cp ./bin/noflo-gegl $(PREFIX)/bin/
-	cp ./bin/noflo-gegl-runtime $(PREFIX)/bin/
+install: imgflo imgflo-runtime
+	cp ./bin/imgflo $(PREFIX)/bin/
+	cp ./bin/imgflo-runtime $(PREFIX)/bin/
 
-noflo-gegl:
-	$(PREFIX)/env.sh gcc -o ./bin/noflo-gegl bin/noflo-gegl.c -I. $(FLAGS) $(DEPS)
+imgflo:
+	$(PREFIX)/env.sh gcc -o ./bin/imgflo bin/imgflo.c -I. $(FLAGS) $(DEPS)
 
-noflo-gegl-runtime:
-	$(PREFIX)/env.sh gcc -o ./bin/noflo-gegl-runtime bin/noflo-gegl-runtime.c -I. $(FLAGS) $(DEPS)
+imgflo-runtime:
+	$(PREFIX)/env.sh gcc -o ./bin/imgflo-runtime bin/imgflo-runtime.c -I. $(FLAGS) $(DEPS)
 
 env:
 	mkdir -p $(PREFIX) || true
@@ -51,4 +51,4 @@ dependencies: gegl babl libsoup
 check: install
 	npm test
 
-.PHONY=all noflo-gegl noflo-gegl-runtime run
+.PHONY=all imgflo imgflo-runtime run

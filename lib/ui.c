@@ -107,7 +107,7 @@ ui_connection_handle_message(UiConnection *self,
 
         JsonObject *runtime = json_object_new();
         json_object_set_string_member(runtime, "version", "0.4"); // protocol version
-        json_object_set_string_member(runtime, "type", "noflo-gegl");
+        json_object_set_string_member(runtime, "type", "imgflo");
 
         JsonArray *capabilities = json_array_new();
         json_array_add_string_element(capabilities, "protocol:component");
@@ -284,7 +284,7 @@ ui_connection_new(int port) {
     self->network = network_new();
 
 	self->server = soup_server_new(SOUP_SERVER_PORT, port,
-        SOUP_SERVER_SERVER_HEADER, "noflo-gegl-runtime", NULL);
+        SOUP_SERVER_SERVER_HEADER, "imgflo-runtime", NULL);
     if (!self->server) {
         g_free(self);
         return NULL;

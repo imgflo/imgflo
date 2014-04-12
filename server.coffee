@@ -11,7 +11,7 @@ class Processor extends EventEmitter
         #
 
     run: (callback) ->
-        cmd = './install/env.sh ./install/bin/noflo-gegl'
+        cmd = './install/env.sh ./install/bin/imgflo'
         console.log 'executing', cmd
         process = child_process.exec cmd, (err, stdout, stderr) ->
             console.log stdout, stderr

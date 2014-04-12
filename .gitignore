@@ -1,5 +1,5 @@
-bin/noflo-gegl
-bin/noflo-gegl-runtime
+bin/imgflo
+bin/imgflo-runtime
 testtemp/
 install/
 *~

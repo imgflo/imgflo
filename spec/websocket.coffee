@@ -68,7 +68,7 @@ class RuntimeProcess
 
     start: (success) ->
         exec = './install/env.sh'
-        args = ['./install/bin/noflo-gegl-runtime', '--port', '3888']
+        args = ['./install/bin/imgflo-runtime', '--port', '3888']
         @process = child_process.spawn exec, args
         @process.on 'error', (err) ->
             throw err
@@ -114,8 +114,8 @@ describe 'NoFlo UI WebSocket API', () ->
                 info = ui.runtimeinfo
                 chai.expect(info).to.be.an 'object'
                 done()
-        it 'type should be "noflo-gegl"', ->
-            chai.expect(info.type).to.equal "noflo-gegl"
+        it 'type should be "imgflo"', ->
+            chai.expect(info.type).to.equal "imgflo"
         it 'protocol version should be "0.4"', ->
             chai.expect(info.version).to.be.a "string"
             chai.expect(info.version).to.equal "0.4"

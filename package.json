@@ -1,20 +1,23 @@
 {
-  "name": "noflo-gegl",
+  "name": "imgflo",
   "version": "0.0.2",
   "description": "",
   "keywords": [
     "fbp",
     "noflo",
+    "GEGL",
+    "flowhub",
+    "graphics",
     "dataflow",
     "image processing"
   ],
   "author": "Jon Nordby <jononor@gmail.com> (http://www.jonnor.com)",
   "repository": {
     "type": "git",
-    "url": "http://github.com/jonnor/noflo-gegl.git"
+    "url": "http://github.com/jonnor/imgflo.git"
   },
-  "bugs": "http://github.com/jonnor/noflo-gegl/issues",
-  "homepage": "http://github.com/jonnor/noflo-gegl",
+  "bugs": "http://github.com/jonnor/imgflo/issues",
+  "homepage": "http://imgflo.org",
   "license": "MIT",
   "main": "index.js",
   "scripts": {
