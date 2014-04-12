@@ -68,10 +68,15 @@ class RuntimeProcess
     constructor: ->
         @process = null
         @started = false
+        @debug = false
 
     start: (success) ->
         exec = './install/env.sh'
         args = ['./install/bin/imgflo-runtime', '--port', '3888']
+        if @debug
+            console.log 'Debug mode: setup runtime yourself!', exec, args
+            return success 0
+
         @process = child_process.spawn exec, args
         @process.on 'error', (err) ->
             throw err
@@ -84,6 +89,8 @@ class RuntimeProcess
 
         stdout = ""
         @process.stdout.on 'data', (d) ->
+            if @debug
+                console.log d
             stdout += d.toString()
             if stdout.indexOf 'running on port' != -1
                 if not @started
@@ -91,6 +98,8 @@ class RuntimeProcess
                     success process.pid
 
     stop: ->
+        if @debug
+            return
         @process.kill()
 
 

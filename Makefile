@@ -4,6 +4,7 @@ PREFIX=$(shell echo `pwd`/install)
 DEPS=$(shell $(PREFIX)/env.sh pkg-config --libs --cflags gegl-0.3 json-glib-1.0 libsoup-2.4)
 FLAGS=-Wall -Werror -std=c99 -g
 DEBUGPROG=
+PORT=3569
 
 GLIB_MAJOR=2.38
 GLIB_VERSION=2.38.2
@@ -11,7 +12,7 @@ GLIB_VERSION=2.38.2
 all: run
 
 run: install
-	$(PREFIX)/env.sh $(DEBUGPROG) ./bin/imgflo-runtime
+	$(PREFIX)/env.sh $(DEBUGPROG) ./bin/imgflo-runtime --port $(PORT)
 
 install: imgflo imgflo-runtime
 	cp ./bin/imgflo $(PREFIX)/bin/
