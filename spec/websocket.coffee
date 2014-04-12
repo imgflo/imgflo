@@ -174,9 +174,10 @@ describe 'NoFlo UI WebSocket API', () ->
                 input = ui.components[c].inPorts.filter (p) -> p.id == 'input'
                 chai.expect(input.length).to.equal 1
                 chai.expect(input[0].type).to.equal "buffer"
-            it 'should not have a "output" port', ->
-                output = ui.components[c].outPorts.filter (p) -> p.id == 'output'
-                chai.expect(output.length).to.equal 0
+            it 'should have a dummy "process" port', ->
+                proccess = ui.components[c].outPorts.filter (p) -> p.id == 'process'
+                chai.expect(proccess.length).to.equal 1
+                chai.expect(proccess[0].type).to.equal "N/A"
 
         describe 'gegl:png-load component', ->
             c = 'gegl/png-load'

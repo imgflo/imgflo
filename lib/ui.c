@@ -168,12 +168,11 @@ ui_connection_handle_message(UiConnection *self,
             GType type = gegl_operation_gtype_from_name(op);
             GType sink = g_type_from_name("GeglOperationSink");
             JsonArray *outports = json_array_new();
-            if (TRUE || !g_type_is_a(type, sink)) {
-                JsonObject *out = json_object_new();
-                json_object_set_string_member(out, "id", "output");
-                json_object_set_string_member(out, "type", "buffer");
-                json_array_add_object_element(outports, out);
-            }
+
+            JsonObject *out = json_object_new();
+            json_object_set_string_member(out, "id", g_type_is_a(type, sink) ? "process" : "output");
+            json_object_set_string_member(out, "type", g_type_is_a(type, sink) ? "N/A" : "buffer");
+            json_array_add_object_element(outports, out);
 
             json_object_set_array_member(component, "outPorts", outports);
 
