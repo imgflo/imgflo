@@ -13,8 +13,10 @@
 gchar *
 component2geglop(const gchar *name) {
     gchar *dup = g_strdup(name);
-    gchar *slash = g_strstr_len(dup, -1, "/");
-    *slash = ':';
+    gchar *sep = g_strstr_len(dup, -1, "/");
+    if (sep) {
+        *sep = ':';
+    }
     g_ascii_strdown(dup, -1);
     return dup;
 }
@@ -23,7 +25,9 @@ gchar *
 geglop2component(const gchar *name) {
     gchar *dup = g_strdup(name);
     gchar *sep = g_strstr_len(dup, -1, ":");
-    *sep = '/';
+    if (sep) {
+        *sep = '/';
+    }
     g_ascii_strdown(dup, -1);
     return dup;
 }
