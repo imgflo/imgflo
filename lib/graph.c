@@ -32,6 +32,7 @@ geglop2component(const gchar *name) {
 typedef struct {
     GeglNode *top;
     GHashTable *node_map;
+    GHashTable *processor_map;
 } Graph;
 
 
@@ -40,6 +41,7 @@ graph_new() {
     Graph *self = g_new(Graph, 1);
     self->top = gegl_node_new();
     self->node_map = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+    self->processor_map = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
     return self;
 }
 
@@ -48,6 +50,7 @@ graph_free(Graph *self) {
 
     g_object_unref(self->top);
     g_hash_table_destroy(self->node_map);
+    g_hash_table_destroy(self->processor_map);
 
     g_free(self);
 }
@@ -99,6 +102,12 @@ graph_add_node(Graph *self, const gchar *name, const gchar *component)
     g_return_if_fail(name);
     g_return_if_fail(component);
 
+    if (g_strcmp0(component, "Processor") == 0) {
+        Processor *proc = processor_new();
+        g_hash_table_insert(self->processor_map, (gpointer)g_strdup(name), (gpointer)proc);
+        return;
+    }
+
     gchar *op = component2geglop(component);
     GeglNode *n = gegl_node_new_child(self->top, "operation", op, NULL);
 
@@ -121,6 +130,15 @@ graph_add_edge(Graph *self,
     g_return_if_fail(tgt);
     g_return_if_fail(srcport);
     g_return_if_fail(tgtport);
+
+    Processor *p = g_hash_table_lookup(self->processor_map, tgt);
+    if (p) {
+        GeglNode *s = g_hash_table_lookup(self->node_map, src);
+        fprintf(stderr, "connecting processor to: %s\n", src);
+        g_return_if_fail(s);
+        processor_set_target(p, s);
+        return;
+    }
 
     GeglNode *t = g_hash_table_lookup(self->node_map, tgt);
     GeglNode *s = g_hash_table_lookup(self->node_map, src);

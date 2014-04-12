@@ -10,6 +10,7 @@
 typedef struct {
 	SoupServer *server;
     Graph *graph;
+    Network *network;
 } UiConnection;
 
 JsonArray *
@@ -115,12 +116,14 @@ ui_connection_handle_message(UiConnection *self,
         send_response(ws, "runtime", "runtime", runtime);
 
     } else if (g_strcmp0(protocol, "graph") == 0 && g_strcmp0(command, "clear") == 0) {
+        network_set_graph(self->network, NULL);
         if (self->graph) {
             graph_free(self->graph);
             self->graph = NULL;
         }
         // TODO: respect id/label
         self->graph = graph_new();
+        network_set_graph(self->network, self->graph);
     } else if (g_strcmp0(protocol, "graph") == 0 && g_strcmp0(command, "addnode") == 0) {
         g_return_if_fail(self->graph);
 
@@ -161,12 +164,8 @@ ui_connection_handle_message(UiConnection *self,
         JsonObject *info = json_object_new();
         send_response(ws, "network", "started", info);
 
-        // TODO: generalize
-        // Use a Network class, which holds a number of Processor's,
-        // which. On network start/stop, enable/disable the processing
-        GeglNode *node_to_process = g_hash_table_lookup(self->graph->node_map, "out");
-        g_return_if_fail(node_to_process);
-        gegl_node_process(node_to_process);
+        // TODO: don't do blocking processing, just start it and let it work async
+        network_process(self->network);
 
     } else {
         g_printerr("Unhandled message: protocol='%s', command='%s'", protocol, command);
@@ -282,6 +281,7 @@ ui_connection_new(int port) {
     UiConnection *self = g_new(UiConnection, 1);
 
     self->graph = NULL;
+    self->network = network_new();
 
 	self->server = soup_server_new(SOUP_SERVER_PORT, port,
         SOUP_SERVER_SERVER_HEADER, "noflo-gegl-runtime", NULL);
@@ -303,6 +303,12 @@ ui_connection_new(int port) {
 void
 ui_connection_free(UiConnection *self) {
 
+    network_free(self->network);
+
+    if (self->graph) {
+        graph_free(self->graph);
+        self->graph = NULL;
+    }
     g_object_unref(self->server);
 
     g_free(self);

@@ -1,4 +1,9 @@
+#include <glib.h>
+#include <gegl.h>
+
+#include "lib/processor.c"
 #include "lib/graph.c"
+#include "lib/network.c"
 
 void print_available_ops() {
     guint no_ops = 0;
@@ -16,21 +21,18 @@ int main(int argc, char *argv[]) {
     //print_available_ops();
 
     Graph *graph = graph_new();
+    Network *net = network_new();
+    network_set_graph(net, graph);
 
     if (!graph_load_json_file(graph, "./examples/first.json", NULL)) {
         fprintf(stderr, "Failed to load file!\n");
         return 1;
     }
+    network_process(net);
 
-    fprintf(stdout, "Processing\n");
-    // FIXME: determine last node automatically
-    GeglNode *last = g_hash_table_lookup(graph->node_map, "out");
-    g_assert(last);
-    gegl_node_process(last);
-
+    network_free(net);
     graph_free(graph);
 
     gegl_exit();
-
 	return 0;
 }

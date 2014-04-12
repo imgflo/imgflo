@@ -8,6 +8,9 @@
     },
     "out": {
       "component": "gegl/png-save"
+    },
+    "p": {
+      "component": "Processor"
     }
   },
   "connections": [
@@ -29,6 +32,16 @@
       "tgt": {
         "process": "out",
         "port": "input"
+      }
+    },
+    {
+      "src": {
+        "process": "out",
+        "port": "node"
+      },
+      "tgt": {
+        "process": "p",
+        "port": "target"
       }
     },
     {

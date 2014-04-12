@@ -1,6 +1,7 @@
+#include "lib/processor.c"
 #include "lib/graph.c"
+#include "lib/network.c"
 #include "lib/ui.c"
-
 
 static void
 quit(int sig)

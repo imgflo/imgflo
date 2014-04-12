@@ -160,8 +160,10 @@ describe 'NoFlo UI WebSocket API', () ->
             ui.send "graph", "addnode", {id: 'in', component: 'gegl/load'}
             ui.send "graph", "addnode", {id: 'filter', component: 'gegl/crop'}
             ui.send "graph", "addnode", {id: 'out', component: 'gegl/png-save'}
+            ui.send "graph", "addnode", {id: 'proc', component: 'Processor'}
             ui.send "graph", "addedge", {src: {node: 'in', port: 'output'}, tgt: {node: 'filter', port: 'input'}}
             ui.send "graph", "addedge", {src: {node: 'filter', port: 'output'}, tgt: {node: 'out', port: 'input'}}
+            ui.send "graph", "addedge", {src: {node: 'out', port: 'ANY'}, tgt: {node: 'proc', port: 'node'}}
             ui.send "graph", "addinitial", {src: {data: 'examples/grid-toastybob.jpg'}, tgt: {node: 'in', port: 'path'}}
             ui.send "graph", "addinitial", {src: {data: outfile}, tgt: {node: 'out', port: 'path'}}
 
