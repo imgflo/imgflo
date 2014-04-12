@@ -71,7 +71,7 @@ graph_add_iip(Graph *self, const gchar *node, const gchar *port, GValue *value)
     g_return_if_fail(value);
 
     const gchar *iip = G_VALUE_HOLDS_STRING(value) ? g_value_get_string(value) : "IIP";
-    fprintf(stdout, "'%s' -> %s %s\n", iip, node, port);
+    g_print("\t'%s' -> %s %s\n", iip, node, port);
 
     GeglNode *t = g_hash_table_lookup(self->node_map, node);
 
@@ -112,6 +112,7 @@ graph_add_node(Graph *self, const gchar *name, const gchar *component)
     if (g_strcmp0(component, "Processor") == 0) {
         Processor *proc = processor_new();
         g_hash_table_insert(self->processor_map, (gpointer)g_strdup(name), (gpointer)proc);
+        g_print("\tAdding Processor: %s\n", name);
         return;
     }
 
@@ -120,7 +121,7 @@ graph_add_node(Graph *self, const gchar *name, const gchar *component)
 
     g_return_if_fail(n);
 
-    fprintf(stdout, "%s(%s)\n", name, op);
+    g_print("\t%s(%s)\n", name, op);
     g_hash_table_insert(self->node_map, (gpointer)g_strdup(name), (gpointer)n);
 
     g_free(op);
@@ -142,6 +143,7 @@ graph_add_edge(Graph *self,
     if (p) {
         GeglNode *s = g_hash_table_lookup(self->node_map, src);
         g_return_if_fail(s);
+        g_print("\tConnecting Processor '%s' to node '%s'\n", tgt, src);
         processor_set_target(p, s);
         return;
     }
@@ -152,7 +154,7 @@ graph_add_edge(Graph *self,
     g_return_if_fail(t);
     g_return_if_fail(s);
 
-    fprintf(stdout, "%s %s -> %s %s\n", src, srcport,
+    g_print("\t%s %s -> %s %s\n", src, srcport,
                                         tgtport, tgt);
     gegl_node_connect_to(s, srcport, t, tgtport);
 }

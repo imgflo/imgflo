@@ -218,7 +218,9 @@ ui_connection_handle_message(UiConnection *self,
         send_response(ws, "network", "started", info);
 
         // TODO: don't do blocking processing, just start it and let it work async
+        g_print("\tProcessing network START\n");
         network_process(self->network);
+        g_print("\tProcessing network END\n");
 
     } else {
         g_printerr("Unhandled message: protocol='%s', command='%s'", protocol, command);
