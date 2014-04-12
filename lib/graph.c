@@ -141,7 +141,6 @@ graph_add_edge(Graph *self,
     Processor *p = g_hash_table_lookup(self->processor_map, tgt);
     if (p) {
         GeglNode *s = g_hash_table_lookup(self->node_map, src);
-        fprintf(stderr, "connecting processor to: %s\n", src);
         g_return_if_fail(s);
         processor_set_target(p, s);
         return;

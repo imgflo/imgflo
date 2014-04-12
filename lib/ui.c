@@ -10,11 +10,36 @@
 
 #include <libsoup/soup.h>
 
+
+// FIXME: get API public in GEGL. https://bugzilla.gnome.org/show_bug.cgi?id=728086
+const gchar * gegl_operation_get_key            (const gchar *operation_type,
+                                                 const gchar *key_name);
+
 typedef struct {
 	SoupServer *server;
     Graph *graph;
     Network *network;
 } UiConnection;
+
+static const gchar *
+icon_for_op(const gchar *op, const gchar *categories) {
+
+    // TODO: go through all GEGL categories and operations, find more appropriate icons
+    // http://gegl.org/operations.html
+    // http://fortawesome.github.io/Font-Awesome/icons/
+    // PERFORMANCE: build up a hashmap once, lookup on-demand afterwards
+    if (g_strcmp0(op, "gegl:crop") == 0) {
+        return "crop";
+    } else if (g_strstr_len(op, -1, "save") != NULL) {
+        return "save";
+    } else if (g_strstr_len(op, -1, "load") != NULL) {
+        return "file-o";
+    } else if (g_strstr_len(op, -1, "text") != NULL) {
+        return "font";
+    } else {
+        return "picture-o"; 
+    }
+}
 
 JsonArray *
 inports_for_operation(const gchar *name)
@@ -45,7 +70,6 @@ inports_for_operation(const gchar *name)
 
     return inports;
 }
-
 
 static void
 send_response(SoupWebsocketConnection *ws,
@@ -83,13 +107,15 @@ ui_connection_handle_message(UiConnection *self,
         gchar **operation_names = gegl_list_operations(&no_ops);
 
         for (int i=0; i<no_ops; i++) {
-            // FIXME: normalize to NoFlo convention
             const gchar *op = operation_names[i];
             gchar *name = geglop2component(op);
+            const gchar *description = gegl_operation_get_key(op, "description");
+            const gchar *categories = gegl_operation_get_key(op, "categories");
 
             JsonObject *component = json_object_new();
             json_object_set_string_member(component, "name", name);
-            json_object_set_string_member(component, "description", "");
+            json_object_set_string_member(component, "description", description);
+            json_object_set_string_member(component, "icon", icon_for_op(op, categories));
 
             JsonArray *inports = inports_for_operation(op);
             json_object_set_array_member(component, "inPorts", inports);

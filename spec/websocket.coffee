@@ -153,6 +153,10 @@ describe 'NoFlo UI WebSocket API', () ->
                 chai.expect((c.inPorts.filter (p) -> p.id == 'height')[0].type).to.not.equal 'buffer'
                 chai.expect((c.inPorts.filter (p) -> p.id == 'x')[0].type).to.not.equal 'buffer'
                 chai.expect((c.inPorts.filter (p) -> p.id == 'y')[0].type).to.not.equal 'buffer'
+            it 'should have icon "fa-crop"', ->
+                chai.expect(ui.components['gegl/crop'].icon).to.equal 'crop'
+            it 'should have description', ->
+                chai.expect(ui.components['gegl/crop'].description).to.equal 'Crop a buffer'
 
     describe 'graph building', ->
         outfile = 'testtemp/protocol-crop.png'
