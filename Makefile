@@ -14,7 +14,7 @@ all: run
 run: install
 	$(PREFIX)/env.sh $(DEBUGPROG) ./bin/imgflo-runtime --port $(PORT)
 
-install: imgflo imgflo-runtime
+install: env imgflo imgflo-runtime
 	cp ./bin/imgflo $(PREFIX)/bin/
 	cp ./bin/imgflo-runtime $(PREFIX)/bin/
 
