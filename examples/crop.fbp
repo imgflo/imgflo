@@ -1,0 +1,8 @@
+INPORT=crop.INPUT:INPUT
+INPORT=crop.X:X
+INPORT=crop.Y:Y
+INPORT=crop.HEIGHT:HEIGHT
+INPORT=crop.WIDTH:WIDTH
+OUTPORT=nop.OUTPUT:OUTPUT
+
+crop(gegl/crop) OUTPUT -> INPUT nop(gegl/nop)

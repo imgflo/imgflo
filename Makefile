@@ -52,4 +52,7 @@ dependencies: gegl babl libsoup
 check: install
 	npm test
 
+clean:
+	git clean -dfx --exclude node_modules --exclude install
+
 .PHONY=all imgflo imgflo-runtime run

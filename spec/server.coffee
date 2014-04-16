@@ -21,9 +21,15 @@ describe 'Server', ->
         s = new server.Server wd
         s.listen 8888
 
-    describe 'Get new image', ->
-        it 'should be processed on demand', (finish) ->
-            http.get urlbase+'/out.png', (response) ->
+    describe 'Get image with custom p', ->
+        # TODO: use a CC image
+        # TODO: serve file locally, avoid always fetching from internet
+        img = "http://www.petfinder.com/wp-content/uploads/2012/11/101418789-cat-panleukopenia-fact-sheet-632x475.jpg"
+        src = new Buffer(img).toString('base64')
+        url = urlbase+"/crop?x=200&y=230&height=110&width=130&input=#{src}"
+
+        it 'should be created on demand', (finish) ->
+            http.get url, (response) ->
                 chai.expect(response.statusCode).to.equal 200
                 responseData = ""
                 response.on 'data', (chunk) ->

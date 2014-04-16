@@ -20,6 +20,13 @@ void print_available_ops() {
 
 int main(int argc, char *argv[]) {
 
+    if (argc != 2) {
+        g_printerr("Error: Expected 1 argument, got %d\n", argc-1);
+        g_printerr("Usage: %s graph.json\n", argv[0]);
+        return 1;
+    }
+    const char *path = argv[1];
+
     gegl_init(0, NULL);
 
     //print_available_ops();
@@ -28,9 +35,10 @@ int main(int argc, char *argv[]) {
     Network *net = network_new();
     network_set_graph(net, graph);
 
-    if (!graph_load_json_file(graph, "./examples/first.json", NULL)) {
+    // TODO: accept input on stdin
+    if (!graph_load_json_file(graph, path, NULL)) {
         fprintf(stderr, "Failed to load file!\n");
-        return 1;
+        return 2;
     }
     network_process(net);
 
