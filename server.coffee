@@ -56,7 +56,7 @@ class Server
 exports.Server = Server
 
 exports.main = ->
-    port = 8080
+    port = process.env.PORT || 8080
     workdir = './temp'
 
     server = new Server workdir
