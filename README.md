@@ -45,22 +45,37 @@ Now you can build & install imgflo itself
 
     make install
 
-Run
------
 To verify that things are working, run the test suite
 
     make check
+
+Register
+--------
+
+To actually be able to use it from Flowhub, you need to register the runtime (once).
+* Open [Flowhub](http://app.flowhub.io)
+* Login with your Github account
+* Click "Register" under "runtimes" to find your user ID. Copy it and paste in command below
+
+    ./bin/imgflo-register -u USERUUID
+
+In Flowhub, refresh the runtimes and you should see your new "imgflo" instance. 
+Note: sometimes a page refresh is needed.
+
+Run
+-----
 
 Finally, to run the Flowhub.io runtime use.
 You can customize the port used by setting PORT=3322
 
     make run
 
-To actually be able to use it from Flowhub, you need to register the runtime.
-TODO: make a tool for this and document how to use.
+You should now be able to create a new project in Flowhub of the "imgflo" type,
+select your local runtime and create image processing graphs!
+
 
 License
---------
+=======
 MIT
 
 Note: GEGL itself is under LGPLv3.

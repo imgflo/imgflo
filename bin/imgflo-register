@@ -1,0 +1,81 @@
+#!/usr/bin/env node
+
+var uuid = require("node-uuid");
+var commander = require("commander");
+var flowhub = require("flowhub-registry");
+
+var createFlowhubRuntime = function(user, ip, port, label, id, apihost) {
+
+    // Unique identifier of the runtime instance
+    id = id || uuid.v4();
+    label = label || "imgflo"
+
+    var rtinfo = {
+        label: label,
+        id: id,
+        user: user,
+        protocol: 'websocket',
+        type: 'imgflo',
+        // Secret string for simple auth
+        secret: '19osdf3034s66'
+    };
+
+    if (ip !== 'auto') {
+        rtinfo.address =  'ws://'+ip+':'+port;
+    } else {
+        rtinfo.address = 'auto'
+    }
+
+    var regoptions = {};
+    if (typeof apihost !== 'undefined') {
+        regoptions.host = apihost;
+    }
+
+    var rt = new flowhub.Runtime(rtinfo, regoptions);
+    return rt;
+}
+
+var registerFlowhubRuntime = function(rt, callback) {
+    rt.register(callback);
+}
+
+var registerAction = function(env) {
+
+    var user_id = env.user;
+    var ip = env.ip || 'localhost';
+    var port = env.port || 3569;
+    var label = env.label || 'imgflo';
+    var r = createFlowhubRuntime(user_id, ip, port, label);
+
+    registerFlowhubRuntime(r, function(err) {
+        if (err) {
+            throw err;
+        }
+        console.log('Registered with Flowhub.io!');
+        console.log('ID:', r.runtime.id);
+    });
+}
+
+var main = function() {
+    commander
+        .version('0.0.1')
+        .description('Register a imgflo runtime with Flowhub.io')
+        .option('-u, --user <UUID>', 'UUID for Flowhub user to register for')
+        .option('-i, --ip <IP>', 'port for WebSockets. Default: localhost')
+        .option('-p, --port <PORT>', 'port for WebSockets. Default: 3569', parseInt)
+        .option('-l, --label <NAME>', 'label to use in Flowhub user interface')
+
+    var res = commander.parse(process.argv)
+    if (commander.args.length == 0) {
+        if (commander.user === typeof 'undefined') {
+            console.log('You must specify a Flowhub user!');
+            commander.help()
+        }
+        registerAction(commander);
+
+    } else {
+        commander.help()
+    }
+}
+
+main();

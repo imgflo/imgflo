@@ -32,7 +32,9 @@
     "commander": "~2.1.0",
     "pkginfo": "~0.3.0",
     "coffee-script": "^1.7.1",
-    "node-static": "^0.7.3"
+    "node-static": "^0.7.3",
+    "node-uuid": "^1.4.1",
+    "flowhub-registry": "0.0.2"
   },
   "devDependencies": {
     "chai": "~1.8.0",
