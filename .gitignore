@@ -5,3 +5,4 @@ install/
 *~
 out.png
 node_modules
+*.creator.user

@@ -7,3 +7,8 @@ lib/network.c
 lib/processor.c
 lib/ui.c
 Makefile
+examples/crop.fbp
+examples/crop.json
+server.coffee
+spec/server.coffee
+spec/websocket.coffee
