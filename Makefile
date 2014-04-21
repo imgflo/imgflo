@@ -1,7 +1,7 @@
 
 #PREFIX=/opt/imgflo
 PREFIX=$(shell echo `pwd`/install)
-DEPS=$(shell $(PREFIX)/env.sh pkg-config --libs --cflags gegl-0.3 json-glib-1.0 libsoup-2.4)
+DEPS=$(shell $(PREFIX)/env.sh pkg-config --libs --cflags gegl-0.3 gio-unix-2.0 json-glib-1.0 libsoup-2.4)
 FLAGS=-Wall -Werror -std=c99 -g
 DEBUGPROG=
 PORT=3569

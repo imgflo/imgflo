@@ -8,17 +8,30 @@ url = require 'url'
 querystring = require 'querystring'
 path = require 'path'
 
+# TODO: support using long-lived workers as Processors, use FBP WebSocket API to control
+
 class Processor extends EventEmitter
 
     constructor: () ->
         #
 
     run: (graph, callback) ->
-        cmd = "./install/env.sh ./install/bin/imgflo #{graph}"
-        console.log 'executing', cmd
-        process = child_process.exec cmd, (err, stdout, stderr) ->
-            console.log stdout, stderr
+        s = JSON.stringify graph, null, "  "
+        cmd = './install/env.sh'
+        args = ['./install/bin/imgflo', "-"]
+
+        console.log 'executing', cmd, args
+        process = child_process.spawn cmd, args, { stdio: ['pipe', 'pipe', 'pipe'] }
+        process.on 'close', (exitcode) ->
+            err = if exitcode then new Error "processor returned exitcode: #{exitcode}" else null
+            console.log "processor DONE"
             return callback err
+        process.stdout.on 'data', (d)->
+            console.log d.toString()
+        process.stderr.on 'data', (d)->
+            console.log d.toString()
+        process.stdin.write s
+        process.stdin.end()
 
 prepareGraph = (def, attributes, inpath, outpath) ->
 
@@ -114,14 +127,9 @@ class Server
             def = JSON.parse fs.readFileSync graph
 
             delete attr.input
-            def = prepareGraph def, attr, to, outf            
+            def = prepareGraph def, attr, to, outf
 
-            # FIXME: make async, don't use file or at least use temporary
-            tempgraph = path.join @workdir, 'execgraph.json'
-            s = JSON.stringify def, null, "  "
-            fs.writeFileSync tempgraph, s
-
-            @processor.run tempgraph, callback
+            @processor.run def, callback
 
 exports.Server = Server
 

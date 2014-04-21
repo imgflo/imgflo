@@ -35,11 +35,19 @@ int main(int argc, char *argv[]) {
     Network *net = network_new();
     network_set_graph(net, graph);
 
-    // TODO: accept input on stdin
-    if (!graph_load_json_file(graph, path, NULL)) {
-        fprintf(stderr, "Failed to load file!\n");
-        return 2;
+    if (g_strcmp0(path, "-") == 0) {
+        if (!graph_load_stdin(graph, NULL)) {
+            g_printerr("Error: Failed to load graph from stdin\n");
+            return 2;
+        }
+
+    } else {
+        if (!graph_load_json_file(graph, path, NULL)) {
+            fprintf(stderr, "Failed to load file!\n");
+            return 2;
+        }
     }
+
     network_process(net);
 
     network_free(net);

@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include <glib.h>
+#include <gio/gunixinputstream.h>
 #include <gegl.h>
 #include <json-glib/json-glib.h>
 
@@ -224,3 +225,35 @@ graph_load_json_file(Graph *self, const gchar *path, GError **error) {
     g_object_unref(parser);
     return success;
 }
+
+gboolean
+graph_load_json_data(Graph *self, const gchar *data, ssize_t length, GError **error) {
+
+    JsonParser *parser = json_parser_new();
+
+    gboolean success = json_parser_load_from_data(parser, data, length, error);
+    if (success) {
+        graph_load_json(self, parser);
+    }
+
+    g_object_unref(parser);
+    return success;
+}
+
+gboolean
+graph_load_stdin(Graph *self, GError **error) {
+    size_t max_bytes = 1e6;
+    void * buffer = g_malloc(max_bytes);
+    size_t bytes_read = 0;
+    GInputStream *stdin_stream = g_unix_input_stream_new(STDIN_FILENO, FALSE);
+
+    gboolean stdin_read = g_input_stream_read_all(stdin_stream, buffer, max_bytes, &bytes_read, NULL, error);
+    gboolean json_loaded = FALSE;
+    if (stdin_read) {
+        json_loaded = graph_load_json_data(self, buffer, bytes_read, error);
+    }
+
+    g_object_unref(stdin_stream);
+    return stdin_read && json_loaded;
+}
+
