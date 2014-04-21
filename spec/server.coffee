@@ -15,7 +15,7 @@ describe 'Server', ->
 
     before ->
         wd = './testtemp'
-        if fs.exists wd
+        if fs.existsSync wd
             for f in fs.readdirSync wd
                 fs.unlinkSync path.join wd, f
         s = new server.Server wd

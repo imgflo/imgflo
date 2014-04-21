@@ -1,5 +1,4 @@
 
-node_static = require 'node-static'
 http = require 'http'
 fs = require 'fs'
 child_process = require 'child_process'
@@ -7,6 +6,8 @@ EventEmitter = (require 'events').EventEmitter
 url = require 'url'
 querystring = require 'querystring'
 path = require 'path'
+
+node_static = require 'node-static'
 
 # TODO: support using long-lived workers as Processors, use FBP WebSocket API to control
 
@@ -24,7 +25,6 @@ class Processor extends EventEmitter
         process = child_process.spawn cmd, args, { stdio: ['pipe', 'pipe', 'pipe'] }
         process.on 'close', (exitcode) ->
             err = if exitcode then new Error "processor returned exitcode: #{exitcode}" else null
-            console.log "processor DONE"
             return callback err
         process.stdout.on 'data', (d)->
             console.log d.toString()
@@ -62,6 +62,14 @@ prepareGraph = (def, attributes, inpath, outpath) ->
     delete def.outports
 
     return def
+
+downloadFile = (src, out, finish) ->
+    http.get src, (response) ->
+        response.on 'data', (chunk) ->
+            fs.appendFile out, chunk, ->
+                #
+        response.on 'end', ->
+            return finish()
 
 class Server
     constructor: (workdir) ->
@@ -110,26 +118,19 @@ class Server
         # TODO: transform urls to downloaded images for all attributes, not just "input"
         src = (new Buffer attr.input, 'base64').toString()
 
-        downloadFile = (src, out, finish) ->
-            http.get src, (response) ->
-                response.on 'data', (chunk) ->
-                    fs.appendFile out, chunk, ->
-                        #
-                response.on 'end', ->
-                    return finish()
 
         # Add extension so GEGL load op can use the correct file loader
         # FIXME: look up extension of input attribute
         to = path.join @workdir, attr.input + '.jpg'
 
         downloadFile src, to, =>
-            # FIXME: make async
-            def = JSON.parse fs.readFileSync graph
+            fs.readFile graph, (err, contents) =>
+                def = JSON.parse contents
 
-            delete attr.input
-            def = prepareGraph def, attr, to, outf
+                delete attr.input
+                def = prepareGraph def, attr, to, outf
 
-            @processor.run def, callback
+                @processor.run def, callback
 
 exports.Server = Server
 
