@@ -26,7 +26,7 @@ describe 'Server', ->
         # TODO: serve file locally, avoid always fetching from internet
         img = "http://www.petfinder.com/wp-content/uploads/2012/11/101418789-cat-panleukopenia-fact-sheet-632x475.jpg"
         src = new Buffer(img).toString('base64')
-        url = urlbase+"/crop?x=200&y=230&height=110&width=130&input=#{src}"
+        url = urlbase+"/graph/crop?x=200&y=230&height=110&width=130&input=#{src}"
 
         it 'should be created on demand', (finish) ->
             http.get url, (response) ->

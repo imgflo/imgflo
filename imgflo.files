@@ -12,3 +12,9 @@ examples/crop.json
 server.coffee
 spec/server.coffee
 spec/websocket.coffee
+package.json
+README.md
+doc/braindump.md
+examples/demo.js
+examples/index.html
+examples/style.css

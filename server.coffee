@@ -72,8 +72,10 @@ downloadFile = (src, out, finish) ->
             return finish()
 
 class Server
-    constructor: (workdir) ->
+    constructor: (workdir, resourcedir) ->
         @workdir = workdir
+        @resourcedir = resourcedir || './examples'
+        @resourceserver = new node_static.Server resourcedir
         @fileserver = new node_static.Server workdir
         @httpserver = http.createServer @handleHttpRequest
         @processor = new Processor
@@ -89,35 +91,63 @@ class Server
     handleHttpRequest: (request, response) =>
         request.addListener('end', () =>
             u = url.parse request.url, true
-            # TODO: namespace input and output files
-            filepath = new Buffer(u.search).toString('base64')
-            workdir_filepath = path.join @workdir, filepath
+            if u.pathname == '/'
+                u.pathname = '/demo/index.html'
 
-            fs.exists workdir_filepath, (exists) =>
-                if exists
-                    @fileserver.serveFile filepath, 200, {}, request, response
-                else
-                    @processHttpRequest workdir_filepath, request.url, (err) =>
-                        if err
-                            response.writeHead(500);
-                            response.end();
-                        else
-                            # requested file shall now be present
-                            @fileserver.serveFile filepath, 200, {}, request, response
-                    
+            if (u.pathname.indexOf "/demo") == 0
+                @serveDemoPage request, response
+            else if (u.pathname.indexOf "/graph") == 0
+                @handleGraphRequest request, response
+            else
+                console.log "Got unknown HTTP request: ", u.pathname
+                response.statusCode = 404
+                response.end "Cannot find #{u.pathname}"
         ).resume()
 
-    processHttpRequest: (outf, request_url, callback) =>
+    serveDemoPage: (request, response) ->
+        u = url.parse request.url
+        p = u.pathname
+        if p == '/'
+            p = '/demo/index.html'
+        p = p.replace '/demo', ''
+        if p
+            p = path.join @resourcedir, p
+            @resourceserver.serveFile p, 200, {}, request, response
+        else
+            demodata =
+                graphs: ["crop"],
+                inputimages: ["grid-toastybob.jpg"]
+                pipelines: ["/graph/crop?x=200&y=230&height=110&width=130&input="]
+            response.statusCode = 200
+            response.end JSON.stringify demodata
+
+    handleGraphRequest: (request, response) ->
+        u = url.parse request.url, true
+        filepath = new Buffer(u.search).toString('base64')
+        workdir_filepath = path.join @workdir, filepath
+
+        fs.exists workdir_filepath, (exists) =>
+            if exists
+                @fileserver.serveFile filepath, 200, {}, request, response
+            else
+                @processGraphRequest workdir_filepath, request.url, (err) =>
+                    if err
+                        response.writeHead(500);
+                        response.end();
+                    else
+                        # requested file shall now be present
+                        @fileserver.serveFile filepath, 200, {}, request, response
+
+    processGraphRequest: (outf, request_url, callback) =>
 
         u = url.parse request_url, true
         attr = u.query
 
-        graph = (u.pathname.replace '/', '') + '.json'
-        graph = path.join 'examples', graph
+        graph = (u.pathname.replace '/graph', '') + '.json'
+        graph = path.join @resourcedir, graph
 
         # TODO: transform urls to downloaded images for all attributes, not just "input"
         src = (new Buffer attr.input, 'base64').toString()
-
 
         # Add extension so GEGL load op can use the correct file loader
         # FIXME: look up extension of input attribute
@@ -125,11 +155,12 @@ class Server
 
         downloadFile src, to, =>
             fs.readFile graph, (err, contents) =>
-                def = JSON.parse contents
+                if err
+                    throw err
 
+                def = JSON.parse contents
                 delete attr.input
                 def = prepareGraph def, attr, to, outf
-
                 @processor.run def, callback
 
 exports.Server = Server

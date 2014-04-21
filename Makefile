@@ -9,7 +9,10 @@ PORT=3569
 GLIB_MAJOR=2.38
 GLIB_VERSION=2.38.2
 
-all: run
+all: install
+
+server: install
+	npm start
 
 run: install
 	$(PREFIX)/env.sh $(DEBUGPROG) ./bin/imgflo-runtime --port $(PORT)
