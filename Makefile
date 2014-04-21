@@ -1,4 +1,5 @@
 
+VERSION=$(shell echo `git describe`)
 #PREFIX=/opt/imgflo
 PREFIX=$(shell echo `pwd`/install)
 DEPS=$(shell $(PREFIX)/env.sh pkg-config --libs --cflags gegl-0.3 gio-unix-2.0 json-glib-1.0 libsoup-2.4)
@@ -57,5 +58,8 @@ check: install
 
 clean:
 	git clean -dfx --exclude node_modules --exclude install
+
+release: check
+	cd $(PREFIX) && tar -caf ../imgflo-$(VERSION).tgz ./
 
 .PHONY=all imgflo imgflo-runtime run
