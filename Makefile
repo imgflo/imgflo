@@ -7,8 +7,12 @@ FLAGS=-Wall -Werror -std=c99 -g
 DEBUGPROG=
 PORT=3569
 
+GNOME_SOURCES=http://ftp.gnome.org/pub/gnome/sources
+
 GLIB_MAJOR=2.38
 GLIB_VERSION=2.38.2
+JSON_GLIB_MAJOR=1.0
+JSON_GLIB_VERSION=1.0.0
 
 all: install
 
@@ -33,8 +37,14 @@ env:
 	sed -e 's|@PREFIX@|$(PREFIX)|' env.sh.in > $(PREFIX)/env.sh
 	chmod +x $(PREFIX)/env.sh
 
+json-glib: env
+	cd thirdparty && wget $(GNOME_SOURCES)/json-glib/$(JSON_GLIB_MAJOR)/json-glib-$(JSON_GLIB_VERSION).tar.xz
+	cd thirdparty && tar -xf json-glib-$(JSON_GLIB_VERSION).tar.xz
+	cd thirdparty/json-glib-$(JSON_GLIB_VERSION) && $(PREFIX)/env.sh ./configure --prefix=$(PREFIX)
+	cd thirdparty/json-glib-$(JSON_GLIB_VERSION) && $(PREFIX)/env.sh make -j4 install
+
 glib: env
-	cd thirdparty && wget http://ftp.gnome.org/pub/gnome/sources/glib/$(GLIB_MAJOR)/glib-$(GLIB_VERSION).tar.xz
+	cd thirdparty && wget $(GNOME_SOURCES)/glib/$(GLIB_MAJOR)/glib-$(GLIB_VERSION).tar.xz
 	cd thirdparty && tar -xf glib-$(GLIB_VERSION).tar.xz
 	cd thirdparty/glib-$(GLIB_VERSION) && $(PREFIX)/env.sh ./autogen.sh --prefix=$(PREFIX)
 	cd thirdparty/glib-$(GLIB_VERSION) && $(PREFIX)/env.sh make -j4 install
@@ -50,6 +60,8 @@ gegl: babl env
 libsoup: env
 	cd thirdparty/libsoup && $(PREFIX)/env.sh ./autogen.sh --prefix=$(PREFIX) --disable-tls-check
 	cd thirdparty/libsoup && $(PREFIX)/env.sh make -j4 install
+
+heroku-deps: glib json-glib
 
 dependencies: gegl babl libsoup
 
