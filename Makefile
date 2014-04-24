@@ -11,8 +11,11 @@ GNOME_SOURCES=http://ftp.gnome.org/pub/gnome/sources
 
 GLIB_MAJOR=2.38
 GLIB_VERSION=2.38.2
+GLIB_TARNAME=glib-$(GLIB_VERSION)
+
 JSON_GLIB_MAJOR=1.0
 JSON_GLIB_VERSION=1.0.0
+JSON_GLIB_TARNAME=json-glib-$(JSON_GLIB_VERSION)
 
 all: install
 
@@ -38,16 +41,16 @@ env:
 	chmod +x $(PREFIX)/env.sh
 
 json-glib: env
-	cd thirdparty && wget $(GNOME_SOURCES)/json-glib/$(JSON_GLIB_MAJOR)/json-glib-$(JSON_GLIB_VERSION).tar.xz
-	cd thirdparty && tar -xf json-glib-$(JSON_GLIB_VERSION).tar.xz
-	cd thirdparty/json-glib-$(JSON_GLIB_VERSION) && $(PREFIX)/env.sh ./configure --prefix=$(PREFIX)
-	cd thirdparty/json-glib-$(JSON_GLIB_VERSION) && $(PREFIX)/env.sh make -j4 install
+	cd thirdparty && curl -o $(JSON_GLIB_TARNAME).tar.xz $(GNOME_SOURCES)/json-glib/$(JSON_GLIB_MAJOR)/$(JSON_GLIB_TARNAME).tar.xz
+	cd thirdparty && tar -xf $(JSON_GLIB_TARNAME).tar.xz
+	cd thirdparty/$(JSON_GLIB_TARNAME) && $(PREFIX)/env.sh ./configure --prefix=$(PREFIX)
+	cd thirdparty/$(JSON_GLIB_TARNAME) && $(PREFIX)/env.sh make -j4 install
 
 glib: env
-	cd thirdparty && wget $(GNOME_SOURCES)/glib/$(GLIB_MAJOR)/glib-$(GLIB_VERSION).tar.xz
-	cd thirdparty && tar -xf glib-$(GLIB_VERSION).tar.xz
-	cd thirdparty/glib-$(GLIB_VERSION) && $(PREFIX)/env.sh ./autogen.sh --prefix=$(PREFIX)
-	cd thirdparty/glib-$(GLIB_VERSION) && $(PREFIX)/env.sh make -j4 install
+	cd thirdparty && curl -o $(GLIB_TARNAME).tar.xz $(GNOME_SOURCES)/glib/$(GLIB_MAJOR)/$(GLIB_TARNAME).tar.xz
+	cd thirdparty && tar -xf $(GLIB_TARNAME).tar.xz
+	cd thirdparty/$(GLIB_TARNAME) && $(PREFIX)/env.sh ./autogen.sh --prefix=$(PREFIX)
+	cd thirdparty/$(GLIB_TARNAME) && $(PREFIX)/env.sh make -j4 install
 
 babl: env
 	cd thirdparty/babl && $(PREFIX)/env.sh ./autogen.sh --prefix=$(PREFIX)
