@@ -17,6 +17,9 @@ JSON_GLIB_MAJOR=1.0
 JSON_GLIB_VERSION=1.0.0
 JSON_GLIB_TARNAME=json-glib-$(JSON_GLIB_VERSION)
 
+LIBFFI_VERSION=3.0.13
+LIBFFI_TARNAME=libffi-$(LIBFFI_VERSION)
+
 all: install
 
 server: install
@@ -39,6 +42,12 @@ env:
 	mkdir -p $(PREFIX) || true
 	sed -e 's|@PREFIX@|$(PREFIX)|' env.sh.in > $(PREFIX)/env.sh
 	chmod +x $(PREFIX)/env.sh
+
+libffi: env
+	cd thirdparty && curl -o $(LIBFFI_TARNAME).tar.gz ftp://sourceware.org/pub/libffi/$(LIBFFI_TARNAME).tar.gz
+	cd thirdparty && tar -xf $(LIBFFI_TARNAME).tar.gz
+	cd thirdparty/$(LIBFFI_TARNAME) && $(PREFIX)/env.sh ./configure --prefix=$(PREFIX)
+	cd thirdparty/$(LIBFFI_TARNAME) && $(PREFIX)/env.sh make -j4 install
 
 json-glib: env
 	cd thirdparty && curl -o $(JSON_GLIB_TARNAME).tar.xz $(GNOME_SOURCES)/json-glib/$(JSON_GLIB_MAJOR)/$(JSON_GLIB_TARNAME).tar.xz
@@ -64,7 +73,7 @@ libsoup: env
 	cd thirdparty/libsoup && $(PREFIX)/env.sh ./autogen.sh --prefix=$(PREFIX) --disable-tls-check
 	cd thirdparty/libsoup && $(PREFIX)/env.sh make -j4 install
 
-heroku-deps: glib json-glib
+heroku-deps: libffi glib json-glib
 
 dependencies: gegl babl libsoup
 
