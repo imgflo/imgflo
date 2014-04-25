@@ -2,10 +2,19 @@
 VERSION=$(shell echo `git describe`)
 #PREFIX=/opt/imgflo
 PREFIX=$(shell echo `pwd`/install)
-DEPS=$(shell $(PREFIX)/env.sh pkg-config --libs --cflags gegl-0.3 gio-unix-2.0 json-glib-1.0 libsoup-2.4)
 FLAGS=-Wall -Werror -std=c99 -g
 DEBUGPROG=
 PORT=3569
+
+ifneq ("$(wildcard /app)","")
+# Heroku build. TODO: find better way to detect
+PKGCONFIG_ARGS:=--define-variable=prefix=$(PREFIX)
+else
+PKGCONFIG_ARGS:=
+endif
+
+LIBS=gegl-0.3 gio-unix-2.0 json-glib-1.0 libsoup-2.4
+DEPS=$(shell $(PREFIX)/env.sh pkg-config $(PKGCONFIG_ARGS) --libs --cflags $(LIBS))
 
 GNOME_SOURCES=http://ftp.gnome.org/pub/gnome/sources
 
