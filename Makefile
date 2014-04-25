@@ -24,6 +24,8 @@ INTLTOOL_MAJOR=0.40
 INTLTOOL_VERSION=0.40.6
 INTLTOOL_TARNAME=intltool-$(INTLTOOL_VERSION)
 
+SQLITE_TARNAME=sqlite-autoconf-3080403
+
 all: install
 
 server: install
@@ -46,6 +48,12 @@ env:
 	mkdir -p $(PREFIX) || true
 	sed -e 's|@PREFIX@|$(PREFIX)|' env.sh.in > $(PREFIX)/env.sh
 	chmod +x $(PREFIX)/env.sh
+
+sqlite: env
+	cd thirdparty && curl -o $(SQLITE_TARNAME).tar.gz http://sqlite.org/2014/$(SQLITE_TARNAME).tar.gz
+	cd thirdparty && tar -xf $(SQLITE_TARNAME).tar.gz
+	cd thirdparty/$(SQLITE_TARNAME) && $(PREFIX)/env.sh ./configure --prefix=$(PREFIX)
+	cd thirdparty/$(SQLITE_TARNAME) && $(PREFIX)/env.sh make -j4 install
 
 intltool: env
 	cd thirdparty && curl -o $(INTLTOOL_TARNAME).tar.gz $(GNOME_SOURCES)/intltool/$(INTLTOOL_MAJOR)/$(INTLTOOL_TARNAME).tar.gz
@@ -83,7 +91,7 @@ libsoup: env
 	cd thirdparty/libsoup && $(PREFIX)/env.sh ./autogen.sh --prefix=$(PREFIX) --disable-tls-check
 	cd thirdparty/libsoup && $(PREFIX)/env.sh make -j4 install
 
-heroku-deps: intltool libffi glib json-glib
+heroku-deps: intltool libffi glib json-glib sqlite
 
 dependencies: gegl babl libsoup
 
