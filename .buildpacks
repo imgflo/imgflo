@@ -1,2 +1,4 @@
 https://github.com/heroku/heroku-buildpack-nodejs
 https://github.com/piotras/heroku-buildpack-gettext
+https://github.com/peterkeen/heroku-buildpack-vendorbinaries
+https://github.com/heroku/heroku-buildpack-c
