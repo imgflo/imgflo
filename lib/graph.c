@@ -93,14 +93,14 @@ graph_add_iip(Graph *self, const gchar *node, const gchar *port, GValue *value)
                     gegl_node_set(t, port, d, NULL);
                 }
             } else {
-                fprintf(stderr, "target_type=%s value_type=%s\n",
+                g_printerr("target_type=%s value_type=%s\n",
                         g_type_name(target_type), g_type_name(value_type));
-                fprintf(stderr, "Unable to convert value for property '%s' of node '%s'\n",
+                g_printerr("Unable to convert value for property '%s' of node '%s'\n",
                         port, node);
             }
         }
     } else {
-        fprintf(stderr, "Node '%s' has no property '%s'\n", node, port);
+        g_printerr("Node '%s' has no property '%s'\n", node, port);
     }
 }
 
@@ -120,7 +120,7 @@ graph_remove_iip(Graph *self, const gchar *node, const gchar *port)
         const GValue *def = g_param_spec_get_default_value(paramspec);
         gegl_node_set_property(t, port, def);
     } else {
-        fprintf(stderr, "Node '%s' has no property '%s'\n", node, port);
+        g_printerr("Node '%s' has no property '%s'\n", node, port);
     }
 }
 

@@ -14,7 +14,7 @@ void print_available_ops() {
     gchar **operation_names = gegl_list_operations(&no_ops);
 
     for (int i=0; i<no_ops; i++) {
-        fprintf(stdout, "%d: %s\n", i, operation_names[i]);
+        g_print("%d: %s\n", i, operation_names[i]);
     }
 }
 
@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 
     } else {
         if (!graph_load_json_file(graph, path, NULL)) {
-            fprintf(stderr, "Failed to load file!\n");
+            g_printerr("Failed to load file!\n");
             return 2;
         }
     }
