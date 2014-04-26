@@ -285,11 +285,33 @@ ui_connection_handle_message(UiConnection *self,
     }
 }
 
+void
+send_preview_invalidated(Network *network, Processor *processor, GeglRectangle rect, gpointer user_data) {
+    SoupWebsocketConnection *conn = (SoupWebsocketConnection *)user_data;
+
+    const gchar *node = graph_find_processor_name(network->graph, processor);
+
+    // FIXME: do not hardcode url. Ideally relative URL should work, UI would make it relative to runtime
+    gchar url[1024];
+    g_snprintf(url, 1024, "http://localhost:3569/process?node=%s", node);
+
+    JsonObject *payload = json_object_new();
+    json_object_set_string_member(payload, "type", "previewurl");
+    json_object_set_string_member(payload, "url", url);
+    json_object_set_string_member(payload, "message", "preview invalidated!"); // TEMP
+    send_response(conn, "network", "output", payload);
+}
+
 static void
 on_web_socket_open(SoupWebsocketConnection *ws, gpointer user_data)
 {
 	gchar *url = soup_uri_to_string(soup_websocket_connection_get_uri (ws), FALSE);
 	g_print("WebSocket: client opened %s with %s\n", soup_websocket_connection_get_protocol(ws), url);
+
+    UiConnection *self = (UiConnection *)user_data;
+    self->network->on_processor_invalidated_data = (gpointer)ws;
+    self->network->on_processor_invalidated = send_preview_invalidated;
+
 	g_free(url);
 }
 
@@ -361,31 +383,74 @@ void websocket_callback(SoupServer *server,
 }
 
 static void
+process_image_callback (SoupServer *server, SoupMessage *msg,
+		 const char *path, GHashTable *query,
+		 SoupClientContext *context, gpointer user_data) {
+
+    UiConnection *self = (UiConnection *)user_data;
+    PngEncoder *encoder = png_encoder_new();
+
+    const gchar *node_name = g_hash_table_lookup(query, "node");
+
+    // TODO: move code into backend somewhere
+    Processor *processor = NULL;
+    if (self->graph && node_name) {
+        processor = g_hash_table_lookup(self->graph->processor_map, node_name);
+    }
+
+    if (processor) {
+        const Babl *format = babl_format("R'G'B'A u8");
+        // FIXME: take region-of-interest as parameter
+        GeglRectangle roi = gegl_node_get_bounding_box(processor->node);
+        // FIXME: take size as parameter, set scale to give approx that
+        const double scale = 1.0;
+        gchar *buffer = g_malloc(roi.width*roi.height*babl_format_get_bytes_per_pixel(format));
+        // XXX: maybe use GEGL_BLIT_DIRTY?
+        gegl_node_blit(processor->node, scale, &roi, format, buffer,
+                       GEGL_AUTO_ROWSTRIDE, GEGL_BLIT_DEFAULT);
+        png_encoder_encode_rgba(encoder, roi.width, roi.height, buffer);
+
+        g_free(buffer);
+    } else {
+        g_warning("Rendering fallback image");
+        png_encoder_encode_rgba(encoder, 100, 100, NULL);
+    }
+
+    const gchar *mime_type = "image/png";
+    char *buf = encoder->buffer;
+    const size_t len = encoder->size;
+
+    soup_message_set_status(msg, SOUP_STATUS_OK);
+    soup_message_set_response(msg, mime_type, SOUP_MEMORY_COPY, buf, len);
+
+    //png_encoder_free(encoder);
+}
+
+static void
 server_callback (SoupServer *server, SoupMessage *msg,
 		 const char *path, GHashTable *query,
 		 SoupClientContext *context, gpointer data)
 {
 
-	SoupMessageHeadersIter iter;
-	const char *name, *value;
+    SoupMessageHeadersIter iter;
+    const char *name, *value;
 
-	g_print("%s %s HTTP/1.%d\n", msg->method, path,
-		 soup_message_get_http_version(msg));
-	soup_message_headers_iter_init(&iter, msg->request_headers);
-	while (soup_message_headers_iter_next(&iter, &name, &value))
-		g_print("%s: %s\n", name, value);
-	if (msg->request_body->length)
-		g_print("%s\n", msg->request_body->data);
+    g_print("%s %s HTTP/1.%d\n", msg->method, path,
+         soup_message_get_http_version(msg));
 
-	char *file_path = g_strdup_printf(".%s", path);
-
-	if (msg->method == SOUP_METHOD_GET || msg->method == SOUP_METHOD_HEAD) {
-		g_print("GET REQUEST!!");
+    if (g_strcmp0(path, "/process") == 0 && msg->method == SOUP_METHOD_GET) {
+        process_image_callback(server, msg, path, query, context, data);
     } else {
-		soup_message_set_status(msg, SOUP_STATUS_NOT_IMPLEMENTED);
+        soup_message_headers_iter_init(&iter, msg->request_headers);
+        while (soup_message_headers_iter_next(&iter, &name, &value))
+            g_print("%s: %s\n", name, value);
+        if (msg->request_body->length)
+            g_print("%s\n", msg->request_body->data);
+
+        g_print("  -> %d %s\n\n", msg->status_code, msg->reason_phrase);
+
+        soup_message_set_status(msg, SOUP_STATUS_NOT_IMPLEMENTED);
     }
-	g_free(file_path);
-	g_print("  -> %d %s\n\n", msg->status_code, msg->reason_phrase);
 }
 
 

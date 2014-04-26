@@ -19,6 +19,7 @@ class MockUi extends EventEmitter
         @components = {}
         @runtimeinfo = {}
         @networkrunning = false
+        @networkoutput = {}
 
         @client.on 'connect', (connection) =>
             @connection = connection
@@ -46,6 +47,9 @@ class MockUi extends EventEmitter
         else if d.protocol == "network" and d.command == "stopped"
             @networkrunning = false
             @emit 'network-running', @networkrunning
+        else if d.protocol == "network" and d.command == "output"
+            @networkoutput = d.payload
+            @emit 'network-output', @networkoutput
         else
             console.log 'UI received unknown message', d
 

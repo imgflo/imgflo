@@ -5,13 +5,20 @@
 #include <glib.h>
 #include <gegl.h>
 
-typedef struct {
+struct _Processor;
+
+typedef void (* ProcessorInvalidatedCallback)
+    (struct _Processor *processor, GeglRectangle rect, gpointer user_data);
+
+typedef struct _Processor {
     gboolean running;
     GeglNode *node;
     guint monitor_id;
     GQueue *processing_queue; /* Queue of rectangles that needs to be processed */
     GeglRectangle *currently_processed_rect;
     GeglProcessor *processor;
+    ProcessorInvalidatedCallback on_invalidated;
+    gpointer on_invalidated_data;
 } Processor;
 
 static gboolean
@@ -27,6 +34,8 @@ processor_new(void) {
     self->processor = NULL;
     self->processing_queue = g_queue_new();
     self->currently_processed_rect = NULL;
+    self->on_invalidated = NULL;
+    self->on_invalidated_data = NULL;
     return self;
 }
 
@@ -70,6 +79,9 @@ invalidated_event(GeglNode *node, GeglRectangle *rect, Processor *self)
 {
     if (self->running) {
         trigger_processing(self, *rect);
+    }
+    if (self->on_invalidated) {
+        self->on_invalidated(self, *rect, self->on_invalidated_data);
     }
 }
 

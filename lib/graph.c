@@ -331,3 +331,21 @@ graph_load_stdin(Graph *self, GError **error) {
     return stdin_read && json_loaded;
 }
 
+const gchar *
+graph_find_processor_name(Graph *self, Processor *processor) {
+    g_return_val_if_fail(self, NULL);
+    g_return_val_if_fail(processor, NULL);
+
+    GHashTableIter iter;
+    gpointer key, value;
+    gchar *processor_name = NULL;
+
+    g_hash_table_iter_init(&iter, self->processor_map);
+    while (g_hash_table_iter_next(&iter, &key, &value))
+    {
+        if (value == processor) {
+            processor_name = (gchar *)key;
+        }
+    }
+    return processor_name;
+}

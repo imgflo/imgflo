@@ -18,3 +18,4 @@ doc/braindump.md
 examples/demo.js
 examples/index.html
 examples/style.css
+lib/png.c

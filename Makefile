@@ -13,7 +13,7 @@ else
 PKGCONFIG_ARGS:=
 endif
 
-LIBS=gegl-0.3 gio-unix-2.0 json-glib-1.0 libsoup-2.4
+LIBS=gegl-0.3 gio-unix-2.0 json-glib-1.0 libsoup-2.4 libpng
 DEPS=$(shell $(PREFIX)/env.sh pkg-config $(PKGCONFIG_ARGS) --libs --cflags $(LIBS))
 
 GNOME_SOURCES=http://ftp.gnome.org/pub/gnome/sources
