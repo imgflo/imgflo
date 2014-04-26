@@ -266,10 +266,19 @@ ui_connection_handle_message(UiConnection *self,
         JsonObject *info = json_object_new();
         send_response(ws, "network", "started", info);
 
-        // TODO: don't do blocking processing, just start it and let it work async
-        g_print("\tProcessing network START\n");
-        network_process(self->network);
-        g_print("\tProcessing network END\n");
+        g_print("\tNetwork START\n");
+        network_set_running(self->network, TRUE);
+
+    } else if (g_strcmp0(protocol, "network") == 0 && g_strcmp0(command, "stop") == 0) {
+        g_return_if_fail(self->graph);
+
+        // FIXME: should be done in callback monitoring network state changes
+        // TODO: send timestamp, graph id
+        JsonObject *info = json_object_new();
+        send_response(ws, "network", "stopped", info);
+
+        g_print("\tNetwork STOP\n");
+        network_set_running(self->network, FALSE);
 
     } else {
         g_printerr("Unhandled message: protocol='%s', command='%s'", protocol, command);

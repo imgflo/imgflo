@@ -125,12 +125,6 @@ processor_set_target(Processor *self, GeglNode *node)
 {
     g_return_if_fail(self);
 
-    // FIXME: don't return early, fix the logic below
-    if (TRUE) {
-        self->node = node;
-        return;
-    }
-
     if (self->node == node) {
         return;
     }
@@ -141,12 +135,10 @@ processor_set_target(Processor *self, GeglNode *node)
         g_object_ref(node);
         self->node = node;
 
-        g_signal_connect_object(self->node, "computed",
-                                G_CALLBACK(computed_event),
-                                self, 0);
-        g_signal_connect_object(self->node, "invalidated",
-                                G_CALLBACK(invalidated_event),
-                                self, 0);
+        g_signal_connect(self->node, "computed",
+                        G_CALLBACK(computed_event), self);
+        g_signal_connect(self->node, "invalidated",
+                        G_CALLBACK(invalidated_event), self);
 
         if (self->processor) {
             g_object_unref(self->processor);

@@ -251,6 +251,15 @@ describe 'NoFlo runtime API,', () ->
         it 'should not have produced any errors', ->
             chai.expect(runtime.popErrors()).to.eql []
 
+    describe 'stopping the network', ->
+
+        it 'should respond with network stopped', (done) ->
+            ui.send "network", "stop"
+            ui.once 'network-running', (running) ->
+                done() if not running
+        it 'should not have produced any errors', ->
+            chai.expect(runtime.popErrors()).to.eql []
+
     describe 'graph tear down', ->
 
         it 'should not crash', (done) ->

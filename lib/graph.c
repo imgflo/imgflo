@@ -73,7 +73,7 @@ graph_add_iip(Graph *self, const gchar *node, const gchar *port, GValue *value)
     g_return_if_fail(value);
 
     const gchar *iip = G_VALUE_HOLDS_STRING(value) ? g_value_get_string(value) : "IIP";
-    g_print("\t'%s' -> %s %s\n", iip, node, port);
+    g_print("\t'%s' -> %s %s\n", iip, port, node);
 
     GeglNode *t = g_hash_table_lookup(self->node_map, node);
 
