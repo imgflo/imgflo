@@ -125,6 +125,7 @@ processor_set_target(Processor *self, GeglNode *node)
 {
     g_return_if_fail(self);
 
+    // FIXME: don't return early, fix the logic below
     if (TRUE) {
         self->node = node;
         return;

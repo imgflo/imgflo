@@ -141,6 +141,8 @@ ui_connection_handle_message(UiConnection *self,
                 const gchar *protocol, const gchar *command, JsonObject *payload,
                 SoupWebsocketConnection *ws)
 {
+    // TODO: move graph command handling code out to functions, taking graph instance, payload, ws
+
     if (g_strcmp0(protocol, "component") == 0 && g_strcmp0(command, "list") == 0) {
 
         // Our special Processor component
@@ -207,6 +209,12 @@ ui_connection_handle_message(UiConnection *self,
             json_object_get_string_member(payload, "id"),
             json_object_get_string_member(payload, "component")
         );
+    } else if (g_strcmp0(protocol, "graph") == 0 && g_strcmp0(command, "removenode") == 0) {
+        g_return_if_fail(self->graph);
+
+        graph_remove_node(self->graph,
+            json_object_get_string_member(payload, "id")
+        );
     } else if (g_strcmp0(protocol, "graph") == 0 && g_strcmp0(command, "addinitial") == 0) {
         g_return_if_fail(self->graph);
 
@@ -220,6 +228,14 @@ ui_connection_handle_message(UiConnection *self,
             &data
         );
         g_value_unset(&data);
+    } else if (g_strcmp0(protocol, "graph") == 0 && g_strcmp0(command, "removeinitial") == 0) {
+        g_return_if_fail(self->graph);
+
+        JsonObject *tgt = json_object_get_object_member(payload, "tgt");
+        graph_remove_iip(self->graph,
+            json_object_get_string_member(tgt, "node"),
+            json_object_get_string_member(tgt, "port")
+        );
     } else if (g_strcmp0(protocol, "graph") == 0 && g_strcmp0(command, "addedge") == 0) {
         g_return_if_fail(self->graph);
 
@@ -231,7 +247,17 @@ ui_connection_handle_message(UiConnection *self,
             json_object_get_string_member(tgt, "node"),
             json_object_get_string_member(tgt, "port")
         );
+    } else if (g_strcmp0(protocol, "graph") == 0 && g_strcmp0(command, "removeedge") == 0) {
+        g_return_if_fail(self->graph);
 
+        JsonObject *src = json_object_get_object_member(payload, "src");
+        JsonObject *tgt = json_object_get_object_member(payload, "tgt");
+        graph_remove_edge(self->graph,
+            json_object_get_string_member(src, "node"),
+            json_object_get_string_member(src, "port"),
+            json_object_get_string_member(tgt, "node"),
+            json_object_get_string_member(tgt, "port")
+        );
     } else if (g_strcmp0(protocol, "network") == 0 && g_strcmp0(command, "start") == 0) {
         g_return_if_fail(self->graph);
 

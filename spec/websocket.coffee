@@ -69,6 +69,7 @@ class RuntimeProcess
         @process = null
         @started = false
         @debug = false
+        @errors = []
 
     start: (success) ->
         exec = './install/env.sh'
@@ -84,8 +85,12 @@ class RuntimeProcess
             if code != 0
                 throw new Error 'Runtime exited with non-zero code: ' + code
 
-        @process.stderr.on 'data', (d) ->
-            console.log d.toString()
+        @process.stderr.on 'data', (d) =>
+            output = d.toString()
+            lines = output.split '\n'
+            for line in lines
+                err = line.trim()
+                @errors.push err if err
 
         stdout = ""
         @process.stdout.on 'data', (d) ->
@@ -102,8 +107,12 @@ class RuntimeProcess
             return
         @process.kill()
 
+    popErrors: ->
+        errors = @errors
+        @errors = []
+        return errors
 
-describe 'NoFlo UI WebSocket API', () ->
+describe 'NoFlo runtime API,', () ->
     runtime = new RuntimeProcess
     ui = new MockUi
 
@@ -205,10 +214,9 @@ describe 'NoFlo UI WebSocket API', () ->
 
 
     describe 'graph building', ->
+
         outfile = 'testtemp/protocol-crop.png'
         it 'should not crash', (done) ->
-            # FIXME: check and assert no errors on stderr of runtime process
-
             ui.send "graph", "clear"
             ui.send "graph", "addnode", {id: 'in', component: 'gegl/load'}
             ui.send "graph", "addnode", {id: 'filter', component: 'gegl/crop'}
@@ -224,7 +232,11 @@ describe 'NoFlo UI WebSocket API', () ->
             ui.once 'runtime-info-changed', ->
                 done()
 
+        it 'should not have produced any errors', ->
+            chai.expect(runtime.popErrors()).to.eql []
+
     describe 'starting the network', ->
+
         it 'should respond with network started', (done) ->
             ui.send "network", "start"
             ui.once 'network-running', (running) ->
@@ -236,4 +248,27 @@ describe 'NoFlo UI WebSocket API', () ->
                 fs.exists outfile, (exists) ->
                     done() if exists
             setInterval checkExistence, 50
+        it 'should not have produced any errors', ->
+            chai.expect(runtime.popErrors()).to.eql []
 
+    describe 'graph tear down', ->
+
+        it 'should not crash', (done) ->
+            # FIXME: check and assert no errors on stderr of runtime process
+
+            ui.send "graph", "removeinitial", {tgt: {node: 'in', port: 'path'}}
+            ui.send "graph", "removeinitial", {tgt: {node: 'out', port: 'path'}}
+            ui.send "graph", "removeedge", {src: {node: 'in', port: 'output'}, tgt: {node: 'filter', port: 'input'}}
+            ui.send "graph", "removeedge", {src: {node: 'filter', port: 'output'}, tgt: {node: 'out', port: 'input'}}
+            ui.send "graph", "removeedge", {src: {node: 'out', port: 'ANY'}, tgt: {node: 'proc', port: 'node'}}
+            ui.send "graph", "removenode", {id: 'in'}
+            ui.send "graph", "removenode", {id: 'filter'}
+            ui.send "graph", "removenode", {id: 'out'}
+            ui.send "graph", "removenode", {id: 'proc'}
+
+            ui.send "runtime", "getruntime"
+            ui.once 'runtime-info-changed', ->
+                done()
+
+        it 'should not have produced any errors', ->
+            chai.expect(runtime.popErrors()).to.eql []

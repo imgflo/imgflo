@@ -57,6 +57,7 @@ void
 graph_free(Graph *self) {
 
     g_object_unref(self->top);
+    // FIXME: leaks memeory. Go through all nodes and processors and free
     g_hash_table_destroy(self->node_map);
     g_hash_table_destroy(self->processor_map);
 
@@ -104,6 +105,26 @@ graph_add_iip(Graph *self, const gchar *node, const gchar *port, GValue *value)
 }
 
 void
+graph_remove_iip(Graph *self, const gchar *node, const gchar *port)
+{
+    g_return_if_fail(self);
+    g_return_if_fail(node);
+    g_return_if_fail(port);
+
+    g_print("\tDEL '%s' -> %s %s\n", "IIP", node, port);
+
+    GeglNode *t = g_hash_table_lookup(self->node_map, node);
+    g_return_if_fail(t);
+    GParamSpec *paramspec = gegl_node_find_property(t, port);
+    if (paramspec) {
+        const GValue *def = g_param_spec_get_default_value(paramspec);
+        gegl_node_set_property(t, port, def);
+    } else {
+        fprintf(stderr, "Node '%s' has no property '%s'\n", node, port);
+    }
+}
+
+void
 graph_add_node(Graph *self, const gchar *name, const gchar *component)
 {
     g_return_if_fail(self);
@@ -118,6 +139,7 @@ graph_add_node(Graph *self, const gchar *name, const gchar *component)
     }
 
     gchar *op = component2geglop(component);
+    // FIXME: check that operation is correct
     GeglNode *n = gegl_node_new_child(self->top, "operation", op, NULL);
 
     g_return_if_fail(n);
@@ -126,6 +148,28 @@ graph_add_node(Graph *self, const gchar *name, const gchar *component)
     g_hash_table_insert(self->node_map, (gpointer)g_strdup(name), (gpointer)n);
 
     g_free(op);
+}
+
+void
+graph_remove_node(Graph *self, const gchar *name)
+{
+    g_return_if_fail(self);
+    g_return_if_fail(name);
+
+    Processor *p = g_hash_table_lookup(self->processor_map, name);
+    if (p) {
+        g_print("\tDeleting Processor '%s'\n", name);
+        g_hash_table_remove(self->processor_map, name);
+        processor_free(p);
+        return;
+    }
+
+    GeglNode *n = g_hash_table_lookup(self->node_map, name);
+    g_return_if_fail(n);
+
+    g_print("\t DEL %s()\n", name);
+    g_hash_table_remove(self->node_map, name);
+    gegl_node_remove_child(self->top, n);
 }
 
 
@@ -158,6 +202,36 @@ graph_add_edge(Graph *self,
     g_print("\t%s %s -> %s %s\n", src, srcport,
                                         tgtport, tgt);
     gegl_node_connect_to(s, srcport, t, tgtport);
+}
+
+void
+graph_remove_edge(Graph *self,
+        const gchar *src, const gchar *srcport,
+        const gchar *tgt, const gchar *tgtport)
+{
+    g_return_if_fail(self);
+    g_return_if_fail(src);
+    g_return_if_fail(tgt);
+    g_return_if_fail(srcport);
+    g_return_if_fail(tgtport);
+
+    Processor *p = g_hash_table_lookup(self->processor_map, tgt);
+    if (p) {
+        GeglNode *s = g_hash_table_lookup(self->node_map, src);
+        g_return_if_fail(s);
+        g_print("\tDisconnecting Processor '%s' from node '%s'\n", tgt, src);
+        processor_set_target(p, NULL);
+        return;
+    }
+
+    GeglNode *t = g_hash_table_lookup(self->node_map, tgt);
+    GeglNode *s = g_hash_table_lookup(self->node_map, src);
+    g_return_if_fail(t);
+    g_return_if_fail(s);
+
+    g_print("\tDEL %s %s -> %s %s\n",
+            src, srcport, tgtport, tgt);
+    gegl_node_disconnect(t, tgtport);
 }
 
 void
