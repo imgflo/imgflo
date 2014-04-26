@@ -38,8 +38,12 @@ processor_free(Processor *self) {
 static void
 trigger_processing(Processor *self, GeglRectangle roi)
 {
-    if (!self->node)
-        return;
+    g_return_if_fail(self->node);
+
+    if (!self->processor) {
+        self->processor = gegl_node_new_processor(self->node, &roi);
+        g_return_if_fail(self->processor);
+    }
 
     if (self->monitor_id == 0) {
         self->monitor_id = g_idle_add_full(G_PRIORITY_LOW,
@@ -64,15 +68,16 @@ computed_event(GeglNode *node, GeglRectangle *rect, Processor *self)
 static void
 invalidated_event(GeglNode *node, GeglRectangle *rect, Processor *self)
 {
-    trigger_processing(self, *rect);
+    if (self->running) {
+        trigger_processing(self, *rect);
+    }
 }
 
 static gboolean
 task_monitor(Processor *self)
 {
-    if (!self->processor || !self->node) {
-        return FALSE;
-    }
+    g_return_val_if_fail(self->processor, FALSE);
+    g_return_val_if_fail(self->node, FALSE);
 
     // PERFORMANCE: combine all the rects added to the queue during a single
     // iteration of the main loop somehow
@@ -115,7 +120,6 @@ processor_set_running(Processor *self, gboolean running)
 
     if (self->running && self->node) {
         GeglRectangle bbox = gegl_node_get_bounding_box(self->node);
-        self->processor = gegl_node_new_processor(self->node, &bbox);
         trigger_processing(self, bbox);
     }
 }
@@ -142,11 +146,11 @@ processor_set_target(Processor *self, GeglNode *node)
 
         if (self->processor) {
             g_object_unref(self->processor);
+            self->processor = NULL;
         }
-        GeglRectangle bbox = gegl_node_get_bounding_box(self->node);
-        self->processor = gegl_node_new_processor(self->node, &bbox);
 
         if (self->running) {
+            GeglRectangle bbox = gegl_node_get_bounding_box(self->node);
             trigger_processing(self, bbox);
         }
 
