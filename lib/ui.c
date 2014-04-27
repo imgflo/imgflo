@@ -302,7 +302,6 @@ send_preview_invalidated(Network *network, Processor *processor, GeglRectangle r
     JsonObject *payload = json_object_new();
     json_object_set_string_member(payload, "type", "previewurl");
     json_object_set_string_member(payload, "url", url);
-    json_object_set_string_member(payload, "message", "preview invalidated!"); // TEMP
     send_response(ui->connection, "network", "output", payload);
 }
 
