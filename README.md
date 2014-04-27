@@ -7,17 +7,36 @@ which can be visually programmed using [Flowhub.io](http://flowhub.io).
 
 imgflo is pronounced "Imageflo(w)".
 
-Status
--------
-Prototype
 
-Milestones
-------------
-* 0.1.0: Minimally useful. Can load graphics from file, process though several nodes, and show in interactive UI widget.
+Deploying to Heroku
+==========================
+
+Server
+--------
+Register/log-in with [Heroku](http://heroku.com), and create a new app. First one is free.
+
+Specify the multi buildpack, either at app creation time, in Heroku webui or using
+
+    heroku config:set BUILDPACK_URL=https://github.com/ddollar/heroku-buildpack-multi.git
+
+In your git checkout of imgflo, add your Heroku app as a remote.
+
+    git remote add heroku git@heroku.com:YOURAPP.git
+
+Deploy, will take ~1 minute
+
+    git push heroku
+
+You should now see the imgflo server running at http://YOURAPP.herokuapps.com
 
 
-Running
-==========
+Runtime
+--------
+TODO
+
+
+Developing and running locally
+==========================
 Note: imgflo has only been tested on GNU/Linux systems.
 _Root is not needed_ for any of the build.
 
@@ -49,8 +68,8 @@ To verify that things are working, run the test suite
 
     make check
 
-Register
---------
+Register runtime
+----------------
 
 To actually be able to use it from Flowhub, you need to register the runtime (once).
 * Open [Flowhub](http://app.flowhub.io)
@@ -62,8 +81,8 @@ To actually be able to use it from Flowhub, you need to register the runtime (on
 In Flowhub, refresh the runtimes and you should see your new "imgflo" instance. 
 Note: sometimes a page refresh is needed.
 
-Run
------
+Run the runtime
+----------------
 
 Finally, to run the Flowhub.io runtime use.
 You can customize the port used by setting PORT=3322
@@ -72,6 +91,13 @@ You can customize the port used by setting PORT=3322
 
 You should now be able to create a new project in Flowhub of the "imgflo" type,
 select your local runtime and create image processing graphs!
+
+Running server
+----------------
+
+    node index.js
+
+You should see your server running at http://localhost:8080
 
 
 License
