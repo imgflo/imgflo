@@ -49,6 +49,10 @@ trigger_processing(Processor *self, GeglRectangle roi)
 {
     g_return_if_fail(self->node);
 
+    if (self->on_invalidated) {
+        self->on_invalidated(self, roi, self->on_invalidated_data);
+    }
+
     if (!self->processor) {
         self->processor = gegl_node_new_processor(self->node, &roi);
         g_return_if_fail(self->processor);
@@ -79,9 +83,6 @@ invalidated_event(GeglNode *node, GeglRectangle *rect, Processor *self)
 {
     if (self->running) {
         trigger_processing(self, *rect);
-    }
-    if (self->on_invalidated) {
-        self->on_invalidated(self, *rect, self->on_invalidated_data);
     }
 }
 

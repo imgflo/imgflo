@@ -49,9 +49,9 @@ network_set_graph(Network *self, Graph *graph)
 void 
 set_running_state_func(gpointer key, Processor *value, Network *network)
 {
-    processor_set_running(value, network->running);
     value->on_invalidated_data = (gpointer)network;
     value->on_invalidated = emit_invalidated;
+    processor_set_running(value, network->running);
 }
 
 void
@@ -60,6 +60,7 @@ network_set_running(Network *self, gboolean running)
     if (!self->graph) {
         return;
     }
+    self->running = running;
     g_hash_table_foreach(self->graph->processor_map, (GHFunc)set_running_state_func, self);
 }
 
