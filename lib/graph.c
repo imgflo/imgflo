@@ -88,10 +88,13 @@ graph_add_iip(Graph *self, const gchar *node, const gchar *port, GValue *value)
         } else {
             // TODO: attempt generic GValue transforms here?
             if (G_IS_PARAM_SPEC_DOUBLE(paramspec)) {
-                gdouble d = g_ascii_strtod (iip, NULL);
+                gdouble d = g_ascii_strtod(iip, NULL);
                 if (d != 0.0) {
                     gegl_node_set(t, port, d, NULL);
                 }
+            } else if (G_IS_PARAM_SPEC_INT(paramspec)) {
+                const gint i = g_ascii_strtoll(iip, NULL, 10);
+                gegl_node_set(t, port, i, NULL);
             } else {
                 g_printerr("target_type=%s value_type=%s\n",
                         g_type_name(target_type), g_type_name(value_type));
