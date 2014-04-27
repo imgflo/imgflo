@@ -16,11 +16,11 @@ quit(int sig)
 }
 
 static int port = 3569;
+static gchar *host = "localhost";
 
 static GOptionEntry entries[] = {
-	{ "port", 'p', 0,
-	  G_OPTION_ARG_INT, &port,
-	  "Port to listen on", NULL },
+	{ "port", 'p', 0, G_OPTION_ARG_INT, &port, "Port to listen on", NULL },
+    { "host", 'h', 0, G_OPTION_ARG_STRING, &host, "Hostname", NULL },
 	{ NULL }
 };
 
@@ -52,7 +52,7 @@ main (int argc, char **argv)
 	    signal(SIGINT, quit);
 
         gegl_init(0, NULL);
-	    UiConnection *ui = ui_connection_new(port);
+	    UiConnection *ui = ui_connection_new(host, port);
         GMainLoop *loop = g_main_loop_new(NULL, TRUE);
 
 	    if (!ui) {

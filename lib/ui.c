@@ -18,6 +18,8 @@ typedef struct {
 	SoupServer *server;
     Graph *graph;
     Network *network;
+    gchar *hostname;
+    SoupWebsocketConnection *connection; // TODO: allow multiple clients
 } UiConnection;
 
 static const gchar *
@@ -115,6 +117,8 @@ static void
 send_response(SoupWebsocketConnection *ws,
             const gchar *protocol, const gchar *command, JsonObject *payload)
 {
+    g_return_if_fail(ws);
+
     JsonObject *response = json_object_new();
     g_assert(response);
 
@@ -287,19 +291,19 @@ ui_connection_handle_message(UiConnection *self,
 
 void
 send_preview_invalidated(Network *network, Processor *processor, GeglRectangle rect, gpointer user_data) {
-    SoupWebsocketConnection *conn = (SoupWebsocketConnection *)user_data;
+    UiConnection *ui = (UiConnection *)user_data;
 
     const gchar *node = graph_find_processor_name(network->graph, processor);
 
-    // FIXME: do not hardcode url. Ideally relative URL should work, UI would make it relative to runtime
     gchar url[1024];
-    g_snprintf(url, 1024, "http://localhost:3569/process?node=%s", node);
+    g_snprintf(url, 1024, "http://%s:%d/process?node=%s",
+               ui->hostname, soup_server_get_port(ui->server), node);
 
     JsonObject *payload = json_object_new();
     json_object_set_string_member(payload, "type", "previewurl");
     json_object_set_string_member(payload, "url", url);
     json_object_set_string_member(payload, "message", "preview invalidated!"); // TEMP
-    send_response(conn, "network", "output", payload);
+    send_response(ui->connection, "network", "output", payload);
 }
 
 static void
@@ -309,7 +313,9 @@ on_web_socket_open(SoupWebsocketConnection *ws, gpointer user_data)
 	g_print("WebSocket: client opened %s with %s\n", soup_websocket_connection_get_protocol(ws), url);
 
     UiConnection *self = (UiConnection *)user_data;
-    self->network->on_processor_invalidated_data = (gpointer)ws;
+    g_assert(self);
+    self->connection = ws;
+    self->network->on_processor_invalidated_data = (gpointer)self;
     self->network->on_processor_invalidated = send_preview_invalidated;
 
 	g_free(url);
@@ -355,12 +361,17 @@ on_web_socket_message(SoupWebsocketConnection *ws,
 static void
 on_web_socket_error(SoupWebsocketConnection *ws, GError *error, gpointer user_data)
 {
-	g_printerr("WebSocket: error: %s\n", error->message);
+    UiConnection *ui = (UiConnection *)user_data;
+    ui->connection = NULL;
+    g_printerr("WebSocket: error: %s\n", error->message);
 }
 
 static void
 on_web_socket_close(SoupWebsocketConnection *ws, gpointer user_data)
 {
+    UiConnection *ui = (UiConnection *)user_data;
+    ui->connection = NULL;
+
 	gushort code = soup_websocket_connection_get_close_code(ws);
 	if (code != 0) {
 		g_printerr("WebSocket: close: %d %s\n", code,
@@ -455,11 +466,12 @@ server_callback (SoupServer *server, SoupMessage *msg,
 
 
 UiConnection *
-ui_connection_new(int port) {
+ui_connection_new(const gchar *hostname, int port) {
     UiConnection *self = g_new(UiConnection, 1);
 
     self->graph = NULL;
     self->network = network_new();
+    self->hostname = g_strdup(hostname);
 
 	self->server = soup_server_new(SOUP_SERVER_PORT, port,
         SOUP_SERVER_SERVER_HEADER, "imgflo-runtime", NULL);
@@ -482,6 +494,7 @@ void
 ui_connection_free(UiConnection *self) {
 
     network_free(self->network);
+    g_free(self->hostname);
 
     if (self->graph) {
         graph_free(self->graph);
