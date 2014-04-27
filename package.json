@@ -34,7 +34,8 @@
     "coffee-script": "^1.7.1",
     "node-static": "^0.7.3",
     "node-uuid": "^1.4.1",
-    "flowhub-registry": "0.0.2"
+    "flowhub-registry": "0.0.2",
+    "async": "^0.7.0"
   },
   "devDependencies": {
     "chai": "~1.8.0",

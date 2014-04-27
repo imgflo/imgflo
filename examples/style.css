@@ -1,3 +1,74 @@
+/* Main layout */
+#app {
+    width: 800px;
+}
+
+#topSection {
+
+}
+
+#graphsSection {
+    float: left;
+    height: 300px;
+    width: 200px;
+}
+
+#propertiesSection {
+    float: right;
+    width: 600px;
+    height: 300px;
+}
+
+#historySection {
+    float: none;
+    overflow-y: scroll;
+    width: 800px;
+}
+
+/* Layout details */
+.portInput {
+    float: right;
+    margin-right: 30px;
+    width: 400px;
+}
+
+.portLabel {
+    margin-right: 10px;
+}
+
+.line {
+    height: 25px;
+}
+
+#runButton {
+    float: right;
+    margin-right: 30px;
+}
+
+.logEntry {
+    width: 770px;
+    height: 200px;
+}
+
 .image {
-    height: 400px;
+    height: 200px;
+    width: 200px;
+    float: left;
+}
+
+.request {
+    position: relative;
+    top: 140px;
+    left: 220px;
+    width: 500px;
+}
+
+
+/* Style */
+.verticalLine {
+    border-left: thin solid #000000;
+}
+
+.graphEntry .selected {
+
 }

@@ -8,6 +8,7 @@ querystring = require 'querystring'
 path = require 'path'
 
 node_static = require 'node-static'
+async = require 'async'
 
 # TODO: support using long-lived workers as Processors, use FBP WebSocket API to control
 
@@ -71,6 +72,31 @@ downloadFile = (src, out, finish) ->
         response.on 'end', ->
             return finish()
 
+
+getGraphs = (directory, callback) ->
+    graphs = {}
+
+    fs.readdir directory, (err, files) ->
+        if err
+            callback err, null
+
+        graphfiles = []
+        for f in files
+            graphfiles.push path.join directory, f if (path.extname f) == '.json'
+
+        async.map graphfiles, fs.readFile, (err, results) ->
+            if err
+                return callback err, null
+
+            for i in [0...results.length]
+                name = path.basename graphfiles[i]
+                name = (name.split '.')[0]
+                def = JSON.parse results[i]
+                graphs[name] = def
+
+            return callback null, graphs
+
+
 class Server
     constructor: (workdir, resourcedir) ->
         @workdir = workdir
@@ -104,6 +130,17 @@ class Server
                 response.end "Cannot find #{u.pathname}"
         ).resume()
 
+    getDemoData: (callback) ->
+
+        getGraphs @resourcedir, (err, res) =>
+            if err
+                throw err
+            d =
+                graphs: res
+                images: ["demo/grid-toastybob.jpg", "http://thegrid.io/img/thegrid-overlay.png"]
+            return callback null, d
+
+
     serveDemoPage: (request, response) ->
         u = url.parse request.url
         p = u.pathname
@@ -114,12 +151,9 @@ class Server
             p = path.join @resourcedir, p
             @resourceserver.serveFile p, 200, {}, request, response
         else
-            demodata =
-                graphs: ["crop"],
-                inputimages: ["grid-toastybob.jpg"]
-                pipelines: ["/graph/crop?x=200&y=230&height=110&width=130&input="]
-            response.statusCode = 200
-            response.end JSON.stringify demodata
+            @getDemoData (err, data) ->
+                response.statusCode = 200
+                response.end JSON.stringify data
 
     handleGraphRequest: (request, response) ->
         u = url.parse request.url, true
