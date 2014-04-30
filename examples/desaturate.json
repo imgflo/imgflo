@@ -1,0 +1,58 @@
+{
+  "processes": {
+    "crop": {
+      "component": "gegl/crop"
+    },
+    "desaturate": {
+      "component": "gegl/c2g"
+    }
+  },
+  "connections": [
+    {
+      "src": {
+        "process": "crop",
+        "port": "output"
+      },
+      "tgt": {
+        "process": "desaturate",
+        "port": "input"
+      }
+    }
+  ],
+  "inports": {
+    "input": {
+      "process": "crop",
+      "port": "input"
+    },
+    "x": {
+      "process": "crop",
+      "port": "x"
+    },
+    "y": {
+      "process": "crop",
+      "port": "y"
+    },
+    "height": {
+      "process": "crop",
+      "port": "height"
+    },
+    "width": {
+      "process": "crop",
+      "port": "width"
+    },
+    "grainsize": {
+      "process": "desaturate",
+      "port": "radius"
+    },
+    "samples": {
+      "process": "desaturate",
+      "port": "samples"
+    }
+  },
+  "outports": {
+    "output": {
+      "process": "desaturate",
+      "port": "output"
+    }
+  }
+}
