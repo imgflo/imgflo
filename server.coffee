@@ -197,7 +197,7 @@ class Server
             ext = '.png'
 
         to = path.join @workdir, (hashFile src) + ext
-        if src.indexOf 'http://' == -1
+        if (src.indexOf 'http://') == -1
             src = 'http://localhost:'+@port+'/'+src
 
         downloadFile src, to, =>
