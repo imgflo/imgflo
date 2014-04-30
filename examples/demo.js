@@ -73,7 +73,7 @@ var createLogEntry = function(url) {
     img.src = url;
 
     var req = document.createElement("p");
-    req.innerHTML = "GET " + url;
+    req.innerHTML = "GET " + url
     req.className = "request";
 
     var div = document.createElement("div");
@@ -87,10 +87,7 @@ var createRequestUrl = function(graphname, parameters) {
     var hasQuery = Object.keys(parameters).length > 0;
     var url = '/graph/'+graphname+(hasQuery ? '?' : '');
     for (var key in parameters) {
-        var value = parameters[key];
-        if (value.indexOf('http://') !== -1) {
-            value = btoa(value);
-        }
+        var value = encodeURIComponent(parameters[key]);
         url += key+'='+value+'&';
     }
     if (hasQuery) {

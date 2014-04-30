@@ -9,26 +9,28 @@
 
 #graphsSection {
     float: left;
-    height: 300px;
     width: 200px;
+    height: 250px;
 }
 
 #propertiesSection {
     float: right;
     width: 600px;
-    height: 300px;
+    height: 250px;
 }
 
 #historySection {
     float: none;
     overflow-y: scroll;
+    overflow-x: hidden;
     width: 800px;
+    height: 450px;
 }
 
 /* Layout details */
 .portInput {
     float: right;
-    margin-right: 30px;
+    margin-right: 10px;
     width: 400px;
 }
 
@@ -40,33 +42,43 @@
     height: 25px;
 }
 
+#graphProperties {
+    overflow-y: scroll;
+    overflow-x: hidden;
+    height: 170px;
+}
+
 #runButton {
     float: right;
+    margin-top: 22px;
     margin-right: 30px;
 }
 
+
 .logEntry {
     width: 770px;
-    height: 200px;
+    height: 150px;
+    margin-bottom: 10px;
 }
 
 .image {
-    height: 200px;
-    width: 200px;
-    float: left;
+    height: 150px;
+    width: 150px;
+    float: right;
 }
 
 .request {
-    position: relative;
-    top: 140px;
-    left: 220px;
+    float: left;
     width: 500px;
+    overflow-x: hidden;
+    margin-top: 50px;
 }
 
 
 /* Style */
-.verticalLine {
-    border-left: thin solid #000000;
+img {
+   padding:1px;
+   border:1px solid #021a40;
 }
 
 .graphEntry .selected {
