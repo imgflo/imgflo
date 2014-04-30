@@ -73,7 +73,7 @@ var createLogEntry = function(url) {
     img.src = url;
 
     var req = document.createElement("p");
-    req.innerHTML = "GET " + url
+    req.innerHTML = "GET " + url.replace('&', '\n&')
     req.className = "request";
 
     var div = document.createElement("div");

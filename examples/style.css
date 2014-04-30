@@ -70,8 +70,9 @@
 .request {
     float: left;
     width: 500px;
+    height: 140px;
     overflow-x: hidden;
-    margin-top: 50px;
+    margin-top: 10px;
 }
 
 
