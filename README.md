@@ -8,6 +8,16 @@ which can be visually programmed using [Flowhub.io](http://flowhub.io).
 imgflo is pronounced "Imageflo(w)".
 
 
+Changelog
+----------
+See [./CHANGES.md](./CHANGES.md)
+
+License
+--------
+MIT
+
+Note: GEGL itself is under LGPLv3.
+
 Deploying to Heroku
 ==========================
 
@@ -100,8 +110,3 @@ Running server
 You should see your server running at http://localhost:8080
 
 
-License
-=======
-MIT
-
-Note: GEGL itself is under LGPLv3.
