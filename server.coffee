@@ -6,6 +6,7 @@ EventEmitter = (require 'events').EventEmitter
 url = require 'url'
 querystring = require 'querystring'
 path = require 'path'
+crypto = require 'crypto'
 
 node_static = require 'node-static'
 async = require 'async'
@@ -97,6 +98,11 @@ getGraphs = (directory, callback) ->
             return callback null, graphs
 
 
+hashFile = (path) ->
+    hash = crypto.createHash 'sha1'
+    hash.update path
+    return hash.digest 'hex'
+
 class Server
     constructor: (workdir, resourcedir) ->
         @workdir = workdir
@@ -105,11 +111,13 @@ class Server
         @fileserver = new node_static.Server workdir
         @httpserver = http.createServer @handleHttpRequest
         @processor = new Processor
+        @port = null
 
         if not fs.existsSync workdir
             fs.mkdirSync workdir
 
     listen: (port) ->
+        @port = port
         @httpserver.listen port
     close: ->
         @httpserver.close()
@@ -157,7 +165,7 @@ class Server
 
     handleGraphRequest: (request, response) ->
         u = url.parse request.url, true
-        filepath = new Buffer(u.search).toString('base64')
+        filepath = hashFile u.search
         workdir_filepath = path.join @workdir, filepath
 
         fs.exists workdir_filepath, (exists) =>
@@ -181,11 +189,16 @@ class Server
         graph = path.join @resourcedir, graph
 
         # TODO: transform urls to downloaded images for all attributes, not just "input"
-        src = (new Buffer attr.input, 'base64').toString()
+        src = attr.input
 
         # Add extension so GEGL load op can use the correct file loader
-        # FIXME: look up extension of input attribute
-        to = path.join @workdir, attr.input + '.jpg'
+        ext = path.extname src
+        if ext == '' or (ext.indexOf '&') != -1
+            ext = '.png'
+
+        to = path.join @workdir, (hashFile src) + ext
+        if src.indexOf 'http://' == -1
+            src = 'http://localhost:'+@port+'/'+src
 
         downloadFile src, to, =>
             fs.readFile graph, (err, contents) =>

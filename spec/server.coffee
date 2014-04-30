@@ -7,8 +7,9 @@ chai = require 'chai'
 http = require 'http'
 fs = require 'fs'
 path = require 'path'
+url = require 'url'
 
-urlbase = 'http://localhost:8888'
+urlbase = 'localhost:8888'
 
 describe 'Server', ->
     s = null
@@ -22,14 +23,17 @@ describe 'Server', ->
         s.listen 8888
 
     describe 'Get image with custom p', ->
-        # TODO: use a CC image
-        # TODO: serve file locally, avoid always fetching from internet
-        img = "http://www.petfinder.com/wp-content/uploads/2012/11/101418789-cat-panleukopenia-fact-sheet-632x475.jpg"
-        src = new Buffer(img).toString('base64')
-        url = urlbase+"/graph/crop?x=200&y=230&height=110&width=130&input=#{src}"
+        d =
+            input: "demo/grid-toastybob.jpg"
+            height: 110
+            width: 130
+            x: 200
+            y: 230
+        u = url.format { protocol: 'http:', host: urlbase, pathname: '/graph/crop', query: d}
+        console.log u
 
         it 'should be created on demand', (finish) ->
-            http.get url, (response) ->
+            http.get u, (response) ->
                 chai.expect(response.statusCode).to.equal 200
                 responseData = ""
                 response.on 'data', (chunk) ->
