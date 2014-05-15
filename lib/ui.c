@@ -11,9 +11,6 @@
 #include <libsoup/soup.h>
 #include <gegl-plugin.h>
 
-// FIXME: need proper GEGL API, https://bugzilla.gnome.org/show_bug.cgi?id=728085
-GType gegl_operation_gtype_from_name(const gchar *name);
-
 typedef struct {
 	SoupServer *server;
     Graph *graph;
@@ -42,43 +39,85 @@ icon_for_op(const gchar *op, const gchar *categories) {
     }
 }
 
+const gchar *
+noflo_type_for_gtype(GType type) {
+
+    const gboolean is_integer = g_type_is_a(type, G_TYPE_INT) || g_type_is_a(type, G_TYPE_INT64)
+            || g_type_is_a(type, G_TYPE_UINT) || g_type_is_a(type, G_TYPE_UINT64);
+    if (is_integer) {
+        return "int";
+    } else if (g_type_is_a(type, G_TYPE_FLOAT) || g_type_is_a(type, G_TYPE_DOUBLE)) {
+        return "number";
+    } else {
+        const char *n = g_type_name(type);
+        g_warning("Could not map GType '%s' to a NoFlo FBP type", n);
+        return n;
+    }
+}
+
+void
+add_pad_ports(JsonArray *ports, gchar **pads) {
+    if (pads == NULL) {
+        return;
+    }
+    gchar *pad_name = pads[0];
+    while (pad_name) {
+        // TODO: look up type of pad from its paramspec. Requires GeglPad public API in GEGL
+        const gchar *type = "buffer";
+        JsonObject *port = json_object_new();
+        json_object_set_string_member(port, "id", pad_name);
+        json_object_set_string_member(port, "type", type);
+        json_array_add_object_element(ports, port);
+        pad_name = *(++pads);
+    }
+}
+
+JsonArray *
+outports_for_operation(const gchar *name)
+{
+    JsonArray *outports = json_array_new();
+
+    // Pads
+    GeglNode *node = gegl_node_new();
+    gegl_node_set(node, "operation", name, NULL);
+
+    gchar **pads = gegl_node_list_output_pads(node);
+    add_pad_ports(outports, pads);
+    g_strfreev(pads);
+
+    if (json_array_get_length(outports) == 0) {
+        // Add dummy "process" port for sinks, used to connect to a Processor node
+        JsonObject *port = json_object_new();
+        json_object_set_string_member(port, "id", "process");
+        json_object_set_string_member(port, "type", "N/A");
+        json_array_add_object_element(outports, port);
+    }
+
+    g_object_unref(node);
+
+    return outports;
+}
+
+
 JsonArray *
 inports_for_operation(const gchar *name)
 {
     JsonArray *inports = json_array_new();
 
-    // FIXME: find a better way than these heuristics for determining available pads
-    GType type = gegl_operation_gtype_from_name(name);
-    GType composer = g_type_from_name("GeglOperationComposer");
-    GType composer3 = g_type_from_name("GeglOperationComposer3");
-    GType source = g_type_from_name("GeglOperationSource");
+    // Pads
+    GeglNode *node = gegl_node_new();
+    gegl_node_set(node, "operation", name, NULL);
+    gchar **pads = gegl_node_list_input_pads(node);
+    add_pad_ports(inports, pads);
+    g_strfreev(pads);
 
-    if (!g_type_is_a(type, source)) {
-        JsonObject *input = json_object_new();
-        json_object_set_string_member(input, "id", "input");
-        json_object_set_string_member(input, "type", "buffer");
-        json_array_add_object_element(inports, input);
-    }
-    if (g_type_is_a(type, composer) || g_type_is_a(type, composer3)) {
-        JsonObject *aux = json_object_new();
-        json_object_set_string_member(aux, "id", "aux");
-        json_object_set_string_member(aux, "type", "buffer");
-        json_array_add_object_element(inports, aux);
-    }
-    if (g_type_is_a(type, composer3)) {
-        JsonObject *aux2 = json_object_new();
-        json_object_set_string_member(aux2, "id", "aux2");
-        json_object_set_string_member(aux2, "type", "buffer");
-        json_array_add_object_element(inports, aux2);
-    }
-
+    // Properties
     guint n_properties = 0;
     GParamSpec** properties = gegl_operation_list_properties(name, &n_properties);
     for (int i=0; i<n_properties; i++) {
         GParamSpec *prop = properties[i];
         const gchar *id = g_param_spec_get_name(prop);
-        const gchar *type = G_PARAM_SPEC_TYPE_NAME(prop);
-        // TODO: map the GParam types to something more sane
+        const gchar *type = noflo_type_for_gtype(G_PARAM_SPEC_VALUE_TYPE(prop));
 
         JsonObject *port = json_object_new();
         json_object_set_string_member(port, "id", id);
@@ -89,6 +128,7 @@ inports_for_operation(const gchar *name)
 
     return inports;
 }
+
 
 static JsonObject *
 get_processor_component(void)
@@ -156,6 +196,9 @@ ui_connection_handle_message(UiConnection *self,
         // Components for all available GEGL operations
         guint no_ops = 0;
         gchar **operation_names = gegl_list_operations(&no_ops);
+        if (no_ops == 0) {
+            g_warning("No GEGL operations found");
+        }
         for (int i=0; i<no_ops; i++) {
             const gchar *op = operation_names[i];
             gchar *name = geglop2component(op);
@@ -170,16 +213,7 @@ ui_connection_handle_message(UiConnection *self,
             JsonArray *inports = inports_for_operation(op);
             json_object_set_array_member(component, "inPorts", inports);
 
-            // FIXME: find better way to get output pads
-            GType type = gegl_operation_gtype_from_name(op);
-            GType sink = g_type_from_name("GeglOperationSink");
-            JsonArray *outports = json_array_new();
-
-            JsonObject *out = json_object_new();
-            json_object_set_string_member(out, "id", g_type_is_a(type, sink) ? "process" : "output");
-            json_object_set_string_member(out, "type", g_type_is_a(type, sink) ? "N/A" : "buffer");
-            json_array_add_object_element(outports, out);
-
+            JsonArray *outports = outports_for_operation(op);
             json_object_set_array_member(component, "outPorts", outports);
 
             send_response(ws, "component", "component", component);
