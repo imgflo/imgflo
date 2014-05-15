@@ -39,6 +39,49 @@ icon_for_op(const gchar *op, const gchar *categories) {
     }
 }
 
+
+JsonNode *
+json_from_gvalue(const GValue *val) {
+    GType type = G_VALUE_TYPE(val);
+    JsonNode *ret = json_node_alloc();
+    json_node_init(ret, JSON_NODE_VALUE);
+
+    if (G_VALUE_HOLDS_STRING(val)) {
+        json_node_set_string(ret, g_value_get_string(val));
+    } else if (G_VALUE_HOLDS(val, G_TYPE_BOOLEAN)) {
+        json_node_set_boolean(ret, g_value_get_boolean(val));
+    } else if (G_VALUE_HOLDS_DOUBLE(val)) {
+        json_node_set_double(ret, g_value_get_double(val));
+    } else if (G_VALUE_HOLDS_FLOAT(val)) {
+        json_node_set_double(ret, g_value_get_float(val));
+    } else if (G_VALUE_HOLDS_INT(val)) {
+        json_node_set_int(ret, g_value_get_int(val));
+    } else if (G_VALUE_HOLDS_UINT(val)) {
+        json_node_set_int(ret, g_value_get_uint(val));
+    } else if (G_VALUE_HOLDS_INT64(val)) {
+        json_node_set_int(ret, g_value_get_int64(val));
+    } else if (G_VALUE_HOLDS_UINT64(val)) {
+        json_node_set_int(ret, g_value_get_uint64(val));
+    } else if (g_type_is_a(type, GEGL_TYPE_COLOR)) {
+        // TODO: support GeglColor
+        json_node_init_null(ret);
+    } else if (g_type_is_a(type, GEGL_TYPE_PATH) || g_type_is_a(type, GEGL_TYPE_CURVE)) {
+        // TODO: support GeglPath / GeglCurve
+        json_node_init_null(ret);
+    } else if (G_VALUE_HOLDS_ENUM(val)) {
+        // TODO: support enums
+        json_node_init_null(ret);
+    } else if (G_VALUE_HOLDS_POINTER(val) || G_VALUE_HOLDS_OBJECT(val)) {
+        // TODO: go over operations which report this generic
+        json_node_init_null(ret);
+    } else {
+        json_node_init_null(ret);
+        g_warning("Cannot map GValue '%s' to JSON", g_type_name(type));
+    }
+
+    return ret;
+}
+
 const gchar *
 noflo_type_for_gtype(GType type) {
 
@@ -113,7 +156,6 @@ outports_for_operation(const gchar *name)
     return outports;
 }
 
-
 JsonArray *
 inports_for_operation(const gchar *name)
 {
@@ -133,10 +175,15 @@ inports_for_operation(const gchar *name)
         GParamSpec *prop = properties[i];
         const gchar *id = g_param_spec_get_name(prop);
         const gchar *type = noflo_type_for_gtype(G_PARAM_SPEC_VALUE_TYPE(prop));
+        const GValue *def = g_param_spec_get_default_value(prop);
+        JsonNode *def_json = json_from_gvalue(def);
 
         JsonObject *port = json_object_new();
         json_object_set_string_member(port, "id", id);
         json_object_set_string_member(port, "type", type);
+        if (!json_node_is_null(def_json)) {
+            json_object_set_member(port, "default", def_json);
+        }
 
         json_array_add_object_element(inports, port);
     }

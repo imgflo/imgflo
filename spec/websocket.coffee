@@ -174,10 +174,17 @@ describe 'NoFlo runtime API,', () ->
             it 'should also have inports for properties "x", "y", "width" and "height"', ->
                 c = ui.components['gegl/crop']
                 chai.expect(Object.keys(c.inPorts).length).to.equal 5
-                chai.expect((c.inPorts.filter (p) -> p.id == 'width')[0].type).to.not.equal 'buffer'
-                chai.expect((c.inPorts.filter (p) -> p.id == 'height')[0].type).to.not.equal 'buffer'
-                chai.expect((c.inPorts.filter (p) -> p.id == 'x')[0].type).to.not.equal 'buffer'
-                chai.expect((c.inPorts.filter (p) -> p.id == 'y')[0].type).to.not.equal 'buffer'
+                chai.expect((c.inPorts.filter (p) -> p.id == 'width')[0].type).to.equal 'number'
+                chai.expect((c.inPorts.filter (p) -> p.id == 'height')[0].type).to.equal 'number'
+                chai.expect((c.inPorts.filter (p) -> p.id == 'x')[0].type).to.equal 'number'
+                chai.expect((c.inPorts.filter (p) -> p.id == 'y')[0].type).to.equal 'number'
+            it 'should have default value for properties', ->
+                c = ui.components['gegl/crop']
+                chai.expect((c.inPorts.filter (p) -> p.id == 'width')[0].default).to.be.a.number
+                chai.expect((c.inPorts.filter (p) -> p.id == 'width')[0].default).to.equal 10
+                chai.expect((c.inPorts.filter (p) -> p.id == 'height')[0].default).to.equal 10
+                chai.expect((c.inPorts.filter (p) -> p.id == 'x')[0].default).to.equal 0
+                chai.expect((c.inPorts.filter (p) -> p.id == 'y')[0].default).to.equal 0
             it 'should have icon "fa-crop"', ->
                 chai.expect(ui.components['gegl/crop'].icon).to.equal 'crop'
             it 'should have description', ->
