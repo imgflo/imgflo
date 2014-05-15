@@ -40,27 +40,36 @@ gboolean
 set_property(GeglNode *t, const gchar *port, GParamSpec *paramspec, GValue *value)  {
     GType value_type = G_VALUE_TYPE(value);
     GType target_type = G_PARAM_SPEC_VALUE_TYPE(paramspec);
-    const gchar *iip = G_VALUE_HOLDS_STRING(value) ? g_value_get_string(value) : "IIP";
 
-    if (g_type_is_a(value_type, target_type)) {
-        // No conversion needed
-        gegl_node_set_property(t, port, value);
+    GValue dest_value = {0,};
+    g_value_init(&dest_value, target_type);
+
+    gboolean success = g_param_value_convert(paramspec, value, &dest_value, FALSE);
+    if (success) {
+        gegl_node_set_property(t, port, &dest_value);
         return TRUE;
     } else {
-        // TODO: attempt generic GValue transforms here?
-        if (G_IS_PARAM_SPEC_DOUBLE(paramspec)) {
+        if (value_type != G_TYPE_STRING) {
+            return FALSE;
+        }
+
+        const gchar *iip = G_VALUE_HOLDS_STRING(value) ? g_value_get_string(value) : "IIP";
+        if (g_type_is_a(target_type, G_TYPE_DOUBLE)) {
             gdouble d = g_ascii_strtod(iip, NULL);
-            if (d != 0.0) {
-                gegl_node_set(t, port, d, NULL);
+            g_value_set_double(&dest_value, d);
+        } else if (g_type_is_a(target_type, GEGL_TYPE_COLOR)) {
+            GeglColor *color = gegl_color_new(iip);
+            if (!color || !GEGL_IS_COLOR(color)) {
+                return FALSE;
             }
-            return TRUE;
-        } else if (G_IS_PARAM_SPEC_INT(paramspec)) {
-            const gint i = g_ascii_strtoll(iip, NULL, 10);
-            gegl_node_set(t, port, i, NULL);
-            return TRUE;
+            g_value_set_object(&dest_value, color);
         } else {
             return FALSE;
         }
+
+        g_param_value_validate(paramspec, &dest_value);
+        gegl_node_set_property(t, port, &dest_value);
+        return TRUE;
     }
 }
 
