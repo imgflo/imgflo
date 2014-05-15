@@ -42,14 +42,29 @@ icon_for_op(const gchar *op, const gchar *categories) {
 const gchar *
 noflo_type_for_gtype(GType type) {
 
+    const char *n = g_type_name(type);
     const gboolean is_integer = g_type_is_a(type, G_TYPE_INT) || g_type_is_a(type, G_TYPE_INT64)
             || g_type_is_a(type, G_TYPE_UINT) || g_type_is_a(type, G_TYPE_UINT64);
     if (is_integer) {
         return "int";
     } else if (g_type_is_a(type, G_TYPE_FLOAT) || g_type_is_a(type, G_TYPE_DOUBLE)) {
         return "number";
+    } else if (g_type_is_a(type, G_TYPE_BOOLEAN)) {
+        return "boolean";
+    } else if (g_type_is_a(type, G_TYPE_STRING)) {
+        return "string";
+    } else if (g_type_is_a(type, GEGL_TYPE_COLOR)) {
+        return "color";
+    } else if (g_type_is_a(type, GEGL_TYPE_PATH) || g_type_is_a(type, GEGL_TYPE_CURVE)) {
+        // TODO: support GeglPaths and GeglCurve
+        return n;
+    } else if (g_type_is_a(type, G_TYPE_ENUM)) {
+        // TODO: support enums
+        return n;
+    } else if (g_type_is_a(type, G_TYPE_POINTER) || g_type_is_a(type, G_TYPE_OBJECT)) {
+        // TODO: go through the operation with this type, try to make more specific, and serializable
+        return n;
     } else {
-        const char *n = g_type_name(type);
         g_warning("Could not map GType '%s' to a NoFlo FBP type", n);
         return n;
     }
@@ -201,6 +216,12 @@ ui_connection_handle_message(UiConnection *self,
         }
         for (int i=0; i<no_ops; i++) {
             const gchar *op = operation_names[i];
+
+            if (g_strcmp0(op, "gegl:seamless-clone-compose") == 0) {
+                // FIXME: reported by GEGL but cannot be instantiated...
+                continue;
+            }
+
             gchar *name = geglop2component(op);
             const gchar *description = gegl_operation_get_key(op, "description");
             const gchar *categories = gegl_operation_get_key(op, "categories");
