@@ -1,9 +1,3 @@
-[submodule "thirdparty/gegl"]
-	path = thirdparty/gegl
-	url = git://git.gnome.org/gegl
-[submodule "thirdparty/babl"]
-	path = thirdparty/babl
-	url = git://git.gnome.org/babl
-[submodule "thirdparty/libsoup"]
-	path = thirdparty/libsoup
-	url = https://github.com/jonnor/libsoup.git
+[submodule "dependencies"]
+	path = dependencies
+	url = ../imgflo-dependencies.git
