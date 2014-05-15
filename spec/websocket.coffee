@@ -69,10 +69,10 @@ class MockUi extends EventEmitter
         @connection.sendUTF JSON.stringify msg
 
 class RuntimeProcess
-    constructor: ->
+    constructor: (debug) ->
         @process = null
         @started = false
-        @debug = false
+        @debug = debug
         @errors = []
 
     start: (success) ->
@@ -116,8 +116,10 @@ class RuntimeProcess
         @errors = []
         return errors
 
+debug = process.env.IMGFLO_TESTS_DEBUG?
+
 describe 'NoFlo runtime API,', () ->
-    runtime = new RuntimeProcess
+    runtime = new RuntimeProcess debug
     ui = new MockUi
 
     outfile = null
