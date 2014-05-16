@@ -63,6 +63,13 @@ set_property(GeglNode *t, const gchar *port, GParamSpec *paramspec, GValue *valu
                 return FALSE;
             }
             g_value_set_object(&dest_value, color);
+        } else if (g_type_is_a(target_type, G_TYPE_ENUM)) {
+            GEnumClass *klass = (GEnumClass *)g_type_class_ref(target_type);
+            GEnumValue *val = g_enum_get_value_by_nick(klass, iip);
+            g_return_val_if_fail(val, FALSE);
+
+            g_value_set_enum(&dest_value, val->value);
+            g_type_class_unref((gpointer)klass);
         } else {
             return FALSE;
         }
