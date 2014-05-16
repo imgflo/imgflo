@@ -225,6 +225,14 @@ describe 'NoFlo runtime API,', () ->
                 chai.expect(output.length).to.equal 1
                 chai.expect(output[0].type).to.equal "buffer"
 
+        describe 'gegl/shear component', ->
+            c = 'gegl/shear'
+            it 'should have an GeglSamplerType enum for its "sampler" port', ->
+                port = ui.components[c].inPorts.filter (p) -> p.id == 'sampler'
+                chai.expect(port.length).to.equal 1
+                chai.expect(port[0].type).to.equal "enum"
+                chai.expect(port[0].values).to.deep.equal ["nearest", "linear", "cubic", "nohalo"]
+
 
     describe 'graph building', ->
 

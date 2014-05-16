@@ -82,6 +82,20 @@ json_from_gvalue(const GValue *val) {
     return ret;
 }
 
+JsonArray *
+json_for_enum(GType type) {
+    JsonArray *array = json_array_new();
+    GEnumClass * klass = (GEnumClass *)g_type_class_ref(type);
+
+    for (int i=klass->minimum; i<klass->maximum; i++) {
+        GEnumValue *val = g_enum_get_value(klass, i);
+        json_array_add_string_element(array, val->value_nick);
+        // TODO: verify that we should use nick for enums. Strange uses of nick and name in GEGL...
+    }
+
+    return array;
+}
+
 const gchar *
 noflo_type_for_gtype(GType type) {
 
@@ -102,8 +116,8 @@ noflo_type_for_gtype(GType type) {
         // TODO: support GeglPaths and GeglCurve
         return n;
     } else if (g_type_is_a(type, G_TYPE_ENUM)) {
-        // TODO: support enums
-        return n;
+        // FIXME: make sure "enum" is the standardized value
+        return "enum";
     } else if (g_type_is_a(type, G_TYPE_POINTER) || g_type_is_a(type, G_TYPE_OBJECT)) {
         // TODO: go through the operation with this type, try to make more specific, and serializable
         return n;
@@ -174,15 +188,20 @@ inports_for_operation(const gchar *name)
     for (int i=0; i<n_properties; i++) {
         GParamSpec *prop = properties[i];
         const gchar *id = g_param_spec_get_name(prop);
-        const gchar *type = noflo_type_for_gtype(G_PARAM_SPEC_VALUE_TYPE(prop));
+        GType type = G_PARAM_SPEC_VALUE_TYPE(prop);
+        const gchar *type_name = noflo_type_for_gtype(type);
         const GValue *def = g_param_spec_get_default_value(prop);
         JsonNode *def_json = json_from_gvalue(def);
 
         JsonObject *port = json_object_new();
         json_object_set_string_member(port, "id", id);
-        json_object_set_string_member(port, "type", type);
+        json_object_set_string_member(port, "type", type_name);
         if (!json_node_is_null(def_json)) {
             json_object_set_member(port, "default", def_json);
+        }
+        if (G_TYPE_IS_ENUM(type)) {
+            JsonArray *values = json_for_enum(type);
+            json_object_set_array_member(port, "values", values);
         }
 
         json_array_add_object_element(inports, port);
