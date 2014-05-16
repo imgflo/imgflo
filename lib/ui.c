@@ -85,13 +85,14 @@ json_from_gvalue(const GValue *val) {
 JsonArray *
 json_for_enum(GType type) {
     JsonArray *array = json_array_new();
-    GEnumClass * klass = (GEnumClass *)g_type_class_ref(type);
+    GEnumClass *klass = (GEnumClass *)g_type_class_ref(type);
 
     for (int i=klass->minimum; i<klass->maximum; i++) {
         GEnumValue *val = g_enum_get_value(klass, i);
         json_array_add_string_element(array, val->value_nick);
         // TODO: verify that we should use nick for enums. Strange uses of nick and name in GEGL...
     }
+    g_type_class_unref((gpointer)klass);
 
     return array;
 }
