@@ -43,6 +43,9 @@ env:
 dependencies:
 	cd dependencies && make PREFIX=$(PREFIX) dependencies
 
+gegl:
+	cd dependencies && make PREFIX=$(PREFIX) gegl
+
 check: install
 	npm test
 
