@@ -1,7 +1,7 @@
 {
   "processes": {
-    "crop": {
-      "component": "gegl/crop"
+    "in": {
+      "component": "gegl/nop"
     },
     "desaturate": {
       "component": "gegl/c2g"
@@ -10,7 +10,7 @@
   "connections": [
     {
       "src": {
-        "process": "crop",
+        "process": "in",
         "port": "output"
       },
       "tgt": {
@@ -21,24 +21,8 @@
   ],
   "inports": {
     "input": {
-      "process": "crop",
+      "process": "in",
       "port": "input"
-    },
-    "x": {
-      "process": "crop",
-      "port": "x"
-    },
-    "y": {
-      "process": "crop",
-      "port": "y"
-    },
-    "height": {
-      "process": "crop",
-      "port": "height"
-    },
-    "width": {
-      "process": "crop",
-      "port": "width"
     },
     "grainsize": {
       "process": "desaturate",
