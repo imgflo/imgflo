@@ -185,6 +185,14 @@ describe 'NoFlo runtime API,', () ->
                 chai.expect((c.inPorts.filter (p) -> p.id == 'height')[0].default).to.equal 10
                 chai.expect((c.inPorts.filter (p) -> p.id == 'x')[0].default).to.equal 0
                 chai.expect((c.inPorts.filter (p) -> p.id == 'y')[0].default).to.equal 0
+            it 'should have descriptions value for properties', ->
+                c = ui.components['gegl/crop']
+                p = (c.inPorts.filter (p) -> p.id == 'width')[0]
+                chai.expect(p.description).to.be.a.string
+                chai.expect(p.description).to.equal "Width"
+                p = (c.inPorts.filter (p) -> p.id == 'x')[0]
+                chai.expect(p.description).to.be.a.string
+                chai.expect(p.description).to.equal "X"
             it 'should have icon "fa-crop"', ->
                 chai.expect(ui.components['gegl/crop'].icon).to.equal 'crop'
             it 'should have description', ->

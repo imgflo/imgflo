@@ -193,10 +193,12 @@ inports_for_operation(const gchar *name)
         const gchar *type_name = noflo_type_for_gtype(type);
         const GValue *def = g_param_spec_get_default_value(prop);
         JsonNode *def_json = json_from_gvalue(def);
+        const gchar *description = g_param_spec_get_blurb(prop);
 
         JsonObject *port = json_object_new();
         json_object_set_string_member(port, "id", id);
         json_object_set_string_member(port, "type", type_name);
+        json_object_set_string_member(port, "description", description);
         if (!json_node_is_null(def_json)) {
             json_object_set_member(port, "default", def_json);
         }
