@@ -1,0 +1,78 @@
+{
+    "properties": {
+        "name": "Gad",
+        "id": "9nlos",
+        "project": "grad",
+        "environment": {
+            "type": "imgflo"
+        }
+    },
+    "inports": {
+        "input": {
+            "process": "gegl/grey_ro3v4",
+            "port": "input",
+            "metadata": {
+                "x": 288,
+                "y": 288
+            }
+        },
+        "color1": {
+            "process": "gegl/gradient-map_iqxf9",
+            "port": "color1",
+            "metadata": {
+                "x": 432,
+                "y": 180
+            }
+        },
+        "color2": {
+            "process": "gegl/gradient-map_iqxf9",
+            "port": "color2",
+            "metadata": {
+                "x": 576,
+                "y": 180
+            }
+        }
+    },
+    "outports": {
+        "output": {
+            "process": "gegl/gradient-map_iqxf9",
+            "port": "output",
+            "metadata": {
+                "x": 756,
+                "y": 288
+            }
+        }
+    },
+    "groups": [],
+    "processes": {
+        "gegl/gradient-map_iqxf9": {
+            "component": "gegl/gradient-map",
+            "metadata": {
+                "label": "gegl/gradient-map",
+                "x": 612,
+                "y": 288
+            }
+        },
+        "gegl/grey_ro3v4": {
+            "component": "gegl/grey",
+            "metadata": {
+                "label": "gegl/grey",
+                "x": 432,
+                "y": 288
+            }
+        }
+    },
+    "connections": [
+        {
+            "src": {
+                "process": "gegl/grey_ro3v4",
+                "port": "output"
+            },
+            "tgt": {
+                "process": "gegl/gradient-map_iqxf9",
+                "port": "input"
+            },
+            "metadata": {}
+        }
+    ]
+}
