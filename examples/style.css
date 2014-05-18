@@ -1,10 +1,12 @@
 /* Main layout */
 #app {
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
     width: 800px;
 }
 
 #topSection {
-
+    width: 800px;
 }
 
 #graphsSection {
@@ -20,7 +22,7 @@
 }
 
 #historySection {
-    float: none;
+    float: left;
     overflow-y: scroll;
     overflow-x: hidden;
     width: 800px;
