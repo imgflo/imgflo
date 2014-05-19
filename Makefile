@@ -40,6 +40,9 @@ env:
 	sed -e 's|@PREFIX@|$(PREFIX)|' env.sh.in > $(PREFIX)/env.sh
 	chmod +x $(PREFIX)/env.sh
 
+travis-deps:
+	cd dependencies && make PREFIX=$(PREFIX) glib
+
 dependencies:
 	cd dependencies && make PREFIX=$(PREFIX) dependencies
 

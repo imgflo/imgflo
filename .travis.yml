@@ -7,7 +7,6 @@ before_install:
 - sudo apt-get install libjson-glib-dev
 - git submodule update --init --recursive
 script:
-- make heroku-deps
 - make dependencies
 - make release
 env:
