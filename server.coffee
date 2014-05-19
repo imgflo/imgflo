@@ -71,6 +71,9 @@ prepareGraph = (def, attributes, inpath, outpath, type) ->
 
 downloadFile = (src, out, finish) ->
     http.get src, (response) ->
+        if response.statusCode == 301
+            return downloadFile response.headers.location, out, finish
+
         response.on 'data', (chunk) ->
             fs.appendFile out, chunk, ->
                 #
