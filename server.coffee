@@ -35,10 +35,14 @@ class Processor extends EventEmitter
         process.stdin.write s
         process.stdin.end()
 
-prepareGraph = (def, attributes, inpath, outpath) ->
+prepareGraph = (def, attributes, inpath, outpath, type) ->
+
+    loader = 'gegl/load'
+    if type
+        loader = "gegl/#{type}-load"
 
     # Add load, save, process nodes
-    def.processes.load = { component: 'gegl/load' }
+    def.processes.load = { component: loader }
     def.processes.save = { component: 'gegl/png-save' }
     def.processes.proc = { component: 'Processor' }
 
@@ -71,7 +75,7 @@ downloadFile = (src, out, finish) ->
             fs.appendFile out, chunk, ->
                 #
         response.on 'end', ->
-            return finish()
+            return finish(response.headers['content-type'])
 
 
 getGraphs = (directory, callback) ->
@@ -193,21 +197,27 @@ class Server
 
         # Add extension so GEGL load op can use the correct file loader
         ext = path.extname src
-        if ext == '' or (ext.indexOf '&') != -1
-            ext = '.png'
+        if (ext.indexOf '&') != -1
+            ext = ''
 
         to = path.join @workdir, (hashFile src) + ext
         if (src.indexOf 'http://') == -1
             src = 'http://localhost:'+@port+'/'+src
 
-        downloadFile src, to, =>
+        downloadFile src, to, (contentType) =>
             fs.readFile graph, (err, contents) =>
                 if err
                     throw err
 
                 def = JSON.parse contents
                 delete attr.input
-                def = prepareGraph def, attr, to, outf
+                type = null
+                if ext == ''
+                    if contentType == 'image/jpeg'
+                        type = 'jpg'
+                    else if contentType == 'image/png'
+                        type = 'png'
+                def = prepareGraph def, attr, to, outf, type
                 @processor.run def, callback
 
 exports.Server = Server
