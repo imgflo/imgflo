@@ -2,7 +2,7 @@
 VERSION=$(shell echo `git describe`)
 #PREFIX=/opt/imgflo
 PREFIX=$(shell echo `pwd`/install)
-FLAGS=-Wall -Werror -std=c99 -g
+FLAGS=-Wall -Werror -std=c99 -g -DHAVE_UUID
 DEBUGPROG=
 PORT=3569
 
@@ -13,7 +13,7 @@ else
 PKGCONFIG_ARGS:=
 endif
 
-LIBS=gegl-0.3 gio-unix-2.0 json-glib-1.0 libsoup-2.4 libpng
+LIBS=gegl-0.3 gio-unix-2.0 json-glib-1.0 libsoup-2.4 libpng uuid
 DEPS=$(shell $(PREFIX)/env.sh pkg-config $(PKGCONFIG_ARGS) --libs --cflags $(LIBS))
 
 

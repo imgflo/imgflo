@@ -78,7 +78,7 @@ To verify that things are working, run the test suite
 
     make check
 
-Register runtime
+Run the runtime
 ----------------
 
 To actually be able to use it from Flowhub, you need to register the runtime (once).
@@ -86,18 +86,22 @@ To actually be able to use it from Flowhub, you need to register the runtime (on
 * Login with your Github account
 * Click "Register" under "runtimes" to find your user ID. Copy it and paste in command below
 
-    ./bin/imgflo-register -u USERUUID
+Set up registration
 
-In Flowhub, refresh the runtimes and you should see your new "imgflo" instance. 
-Note: sometimes a page refresh is needed.
-
-Run the runtime
-----------------
+    export FLOWHUB_USER_ID=MYUSERID
 
 Finally, to run the Flowhub.io runtime use.
 You can customize the port used by setting PORT=3322
 
     make run
+
+If successful, you should see a message 'Registered runtime' with the new id.
+You should save this, and on subsequent runs on same machine use this id.
+
+    export IMGFLO_RUNTIME_ID=MYID
+
+In Flowhub, refresh the runtimes and you should see your new "imgflo" instance. 
+Note: sometimes a page refresh is needed.
 
 You should now be able to create a new project in Flowhub of the "imgflo" type,
 select your local runtime and create image processing graphs!

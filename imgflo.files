@@ -20,3 +20,5 @@ examples/index.html
 examples/style.css
 lib/png.c
 CHANGES.md
+lib/registry.c
+lib/uuid.c

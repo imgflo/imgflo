@@ -13,6 +13,7 @@
 
 typedef struct {
 	SoupServer *server;
+    Registry *registry;
     Graph *graph;
     Network *network;
     gchar *hostname;
@@ -587,6 +588,13 @@ server_callback (SoupServer *server, SoupMessage *msg,
     }
 }
 
+gboolean
+ui_connection_try_register(UiConnection *self) {
+    if (self->registry->info->user_id) {
+        return registry_register(self->registry);
+    }
+    return FALSE;
+}
 
 UiConnection *
 ui_connection_new(const gchar *hostname, int port) {
@@ -595,6 +603,7 @@ ui_connection_new(const gchar *hostname, int port) {
     self->graph = NULL;
     self->network = network_new();
     self->hostname = g_strdup(hostname);
+    self->registry = registry_new(runtime_info_new_from_env(hostname, port));
 
 	self->server = soup_server_new(SOUP_SERVER_PORT, port,
         SOUP_SERVER_SERVER_HEADER, "imgflo-runtime", NULL);

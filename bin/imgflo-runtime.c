@@ -6,6 +6,8 @@
 #include "lib/processor.c"
 #include "lib/graph.c"
 #include "lib/network.c"
+#include "lib/uuid.c"
+#include "lib/registry.c"
 #include "lib/ui.c"
 
 static void
@@ -60,6 +62,8 @@ main (int argc, char **argv)
 		    exit(1);
 	    }
 	    g_print("\nRuntime running on port %d\n", soup_server_get_port(ui->server));
+
+        ui_connection_try_register(ui);
 
 	    g_main_loop_run (loop);
 
