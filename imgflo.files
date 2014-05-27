@@ -22,3 +22,4 @@ lib/png.c
 CHANGES.md
 lib/registry.c
 lib/uuid.c
+spec/graphs.coffee

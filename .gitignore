@@ -6,3 +6,7 @@ install/
 out.png
 node_modules
 *.creator.user
+graphteststemp/
+temp/
+testtemp/
+spec/data/*.out.png

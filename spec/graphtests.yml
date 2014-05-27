@@ -1,0 +1,15 @@
+# Every property except for _name and _graph are passed as graph properties/IIPs
+# The refencence the output is compared is '$_name+.reference.png'
+-
+    _name: 'crop_all_options'
+    _graph: "crop"
+    input: "demo/grid-toastybob.jpg"
+    height: 110
+    width: 130
+    x: 200
+    y: 230
+-
+    _name: 'crop_default'
+    _graph: "crop"
+    input: "demo/grid-toastybob.jpg"
+

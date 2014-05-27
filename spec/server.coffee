@@ -22,6 +22,9 @@ describe 'Server', ->
         s = new server.Server wd
         s.listen 8888
 
+    after ->
+        s.close()
+
     describe 'Get image with custom p', ->
         d =
             input: "demo/grid-toastybob.jpg"
@@ -42,5 +45,4 @@ describe 'Server', ->
                 response.on 'end', ->
                     return finish()
 
-    after ->
-        s.close()
+
