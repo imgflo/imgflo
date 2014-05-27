@@ -95,7 +95,8 @@ registry_register(Registry *self) {
     g_return_val_if_fail(self->info, FALSE);
     g_return_val_if_fail(self->info->user_id, FALSE);
 
-    const gchar *endpoint = "https://api.flowhub.io";
+    // TODO: move back to HTTPs, when we've built libsoup with SSL support on Heroku
+    const gchar *endpoint = "http://api.flowhub.io";
     RuntimeInfo *rt = self->info;
 
     if (!rt->id) {
