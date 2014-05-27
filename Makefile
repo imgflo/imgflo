@@ -22,8 +22,10 @@ all: install
 server: install
 	npm start
 
-run: install
+run-noinstall:
 	$(PREFIX)/env.sh $(DEBUGPROG) ./bin/imgflo-runtime --port $(PORT)
+
+run: install run-noinstall
 
 install: env imgflo imgflo-runtime
 	cp ./bin/imgflo $(PREFIX)/bin/
