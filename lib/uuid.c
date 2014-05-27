@@ -1,7 +1,10 @@
+//     imgflo - Flowhub.io Image-processing runtime
+//     (c) 2014 The Grid
+//     imgflo may be freely distributed under the MIT license
 
 #ifdef HAVE_UUID
 
-#include <uuid/uuid.h>
+#include <uuid.h>
 // xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx
 gchar *
 imgflo_uuid_new_string() {
