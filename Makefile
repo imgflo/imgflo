@@ -5,6 +5,7 @@ PREFIX=$(shell echo `pwd`/install)
 FLAGS=-Wall -Werror -std=c99 -g -DHAVE_UUID -I$(PREFIX)/include/uuid
 DEBUGPROG=
 PORT=3569
+HOST=localhost
 
 ifneq ("$(wildcard /app)","")
 # Heroku build. TODO: find better way to detect
@@ -23,7 +24,7 @@ server: install
 	npm start
 
 run-noinstall:
-	$(PREFIX)/env.sh $(DEBUGPROG) ./bin/imgflo-runtime --port $(PORT)
+	$(PREFIX)/env.sh $(DEBUGPROG) ./bin/imgflo-runtime --port $(PORT) --host $(HOST)
 
 run: install run-noinstall
 
