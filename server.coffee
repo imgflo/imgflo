@@ -15,21 +15,21 @@ async = require 'async'
 
 class Processor extends EventEmitter
 
-    constructor: () ->
-        #
+    constructor: (verbose) ->
+        @verbose = verbose
 
     run: (graph, callback) ->
         s = JSON.stringify graph, null, "  "
         cmd = './install/env.sh'
         args = ['./install/bin/imgflo', "-"]
 
-        console.log 'executing', cmd, args
+        console.log 'executing', cmd, args if @verbose
         process = child_process.spawn cmd, args, { stdio: ['pipe', 'pipe', 'pipe'] }
         process.on 'close', (exitcode) ->
             err = if exitcode then new Error "processor returned exitcode: #{exitcode}" else null
             return callback err
         process.stdout.on 'data', (d)->
-            console.log d.toString()
+            console.log d.toString() if @verbose
         process.stderr.on 'data', (d)->
             console.log d.toString()
         process.stdin.write s
@@ -111,14 +111,14 @@ hashFile = (path) ->
     return hash.digest 'hex'
 
 class Server
-    constructor: (workdir, resourcedir, graphdir) ->
+    constructor: (workdir, resourcedir, graphdir, verbose) ->
         @workdir = workdir
         @resourcedir = resourcedir || './examples'
         @graphdir = graphdir || './graphs'
         @resourceserver = new node_static.Server resourcedir
         @fileserver = new node_static.Server workdir
         @httpserver = http.createServer @handleHttpRequest
-        @processor = new Processor
+        @processor = new Processor verbose
         @port = null
 
         if not fs.existsSync workdir
