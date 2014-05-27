@@ -111,9 +111,10 @@ hashFile = (path) ->
     return hash.digest 'hex'
 
 class Server
-    constructor: (workdir, resourcedir) ->
+    constructor: (workdir, resourcedir, graphdir) ->
         @workdir = workdir
         @resourcedir = resourcedir || './examples'
+        @graphdir = graphdir || './graphs'
         @resourceserver = new node_static.Server resourcedir
         @fileserver = new node_static.Server workdir
         @httpserver = http.createServer @handleHttpRequest
@@ -147,7 +148,7 @@ class Server
 
     getDemoData: (callback) ->
 
-        getGraphs @resourcedir, (err, res) =>
+        getGraphs @graphdir, (err, res) =>
             if err
                 throw err
             d =
@@ -193,7 +194,7 @@ class Server
         attr = u.query
 
         graph = (u.pathname.replace '/graph', '') + '.json'
-        graph = path.join @resourcedir, graph
+        graph = path.join @graphdir, graph
 
         # TODO: transform urls to downloaded images for all attributes, not just "input"
         src = attr.input
