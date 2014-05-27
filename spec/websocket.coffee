@@ -244,6 +244,9 @@ describe 'NoFlo runtime API,', () ->
 
     describe 'graph building', ->
 
+        # TODO: verify responses being received
+        # TODO: add graph identifier
+
         outfile = 'testtemp/protocol-crop.png'
         it 'should not crash', (done) ->
             ui.send "graph", "clear"
@@ -303,6 +306,8 @@ describe 'NoFlo runtime API,', () ->
             ui.send "graph", "removenode", {id: 'filter'}
             ui.send "graph", "removenode", {id: 'out'}
             ui.send "graph", "removenode", {id: 'proc'}
+
+            # TODO: use getgraph command to verify graph is now empty
 
             ui.send "runtime", "getruntime"
             ui.once 'runtime-info-changed', ->
