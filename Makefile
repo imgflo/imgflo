@@ -45,7 +45,7 @@ env:
 	chmod +x $(PREFIX)/env.sh
 
 travis-deps:
-	cd dependencies && make PREFIX=$(PREFIX) glib
+	cd dependencies && make PREFIX=$(PREFIX) travis-deps
 
 dependencies:
 	cd dependencies && make PREFIX=$(PREFIX) dependencies
