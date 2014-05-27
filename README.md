@@ -42,8 +42,27 @@ You should now see the imgflo server running at http://YOURAPP.herokuapps.com
 
 Runtime
 --------
-TODO
+Follow the same steps as for the server, and then
 
+Change Procfile to contain
+
+    web: make run-noinstall PORT=$PORT HOST=$HOSTNAME EXTPORT=80
+
+Commit the change to git, and push
+
+    git commit Procfile -m "Enabling runtime"
+
+Configure. Flowhub user id is found in the Flowhub user interface (Settings or Register runtime)
+
+    heroku config:set HOSTNAME=YOURAPP.herokuapp.com
+    heroku config:set FLOWHUB_USER_ID=MYUSERID
+
+Check the log that the initial registration was successful, and then save the runtime ID permanently
+
+    heroku logs
+    heroku config:set IMGFLO_RUNTIME_ID=MYRUNTIMEID
+
+See "Run the runtime" for more detail
 
 Developing and running locally
 ==========================

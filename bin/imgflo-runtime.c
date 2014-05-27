@@ -18,10 +18,12 @@ quit(int sig)
 }
 
 static int port = 3569;
+static int extport = 3569;
 static gchar *host = "localhost";
 
 static GOptionEntry entries[] = {
 	{ "port", 'p', 0, G_OPTION_ARG_INT, &port, "Port to listen on", NULL },
+    { "external-port", 'e', 0, G_OPTION_ARG_INT, &extport, "Port we are available on for clients", NULL },
     { "host", 'h', 0, G_OPTION_ARG_STRING, &host, "Hostname", NULL },
 	{ NULL }
 };
@@ -54,14 +56,14 @@ main (int argc, char **argv)
 	    signal(SIGINT, quit);
 
         gegl_init(0, NULL);
-	    UiConnection *ui = ui_connection_new(host, port);
+	    UiConnection *ui = ui_connection_new(host, port, extport);
         GMainLoop *loop = g_main_loop_new(NULL, TRUE);
 
 	    if (!ui) {
 		    g_printerr("Unable to bind to server port %d\n", port);
 		    exit(1);
 	    }
-	    g_print("\nRuntime running on port %d\n", soup_server_get_port(ui->server));
+	    g_print("\nRuntime running on port %d, external port %d\n", soup_server_get_port(ui->server), extport);
 
         ui_connection_try_register(ui);
 

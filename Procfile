@@ -1,2 +1,1 @@
-web: node index.js
-runtime: make run-noinstall PORT=$PORT HOST=$HOSTNAME
+web: make run-noinstall PORT=$PORT HOST=$HOSTNAME EXTPORT=80

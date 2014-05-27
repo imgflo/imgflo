@@ -417,12 +417,14 @@ ui_connection_handle_message(UiConnection *self,
 void
 send_preview_invalidated(Network *network, Processor *processor, GeglRectangle rect, gpointer user_data) {
     UiConnection *ui = (UiConnection *)user_data;
+    g_return_if_fail(ui->registry);
+    g_return_if_fail(ui->registry->info);
 
     const gchar *node = graph_find_processor_name(network->graph, processor);
 
     gchar url[1024];
     g_snprintf(url, 1024, "http://%s:%d/process?node=%s",
-               ui->hostname, soup_server_get_port(ui->server), node);
+               ui->hostname, ui->registry->info->port, node);
 
     JsonObject *payload = json_object_new();
     json_object_set_string_member(payload, "type", "previewurl");
@@ -597,15 +599,15 @@ ui_connection_try_register(UiConnection *self) {
 }
 
 UiConnection *
-ui_connection_new(const gchar *hostname, int port) {
+ui_connection_new(const gchar *hostname, int internal_port, int external_port) {
     UiConnection *self = g_new(UiConnection, 1);
 
     self->graph = NULL;
     self->network = network_new();
     self->hostname = g_strdup(hostname);
-    self->registry = registry_new(runtime_info_new_from_env(hostname, port));
+    self->registry = registry_new(runtime_info_new_from_env(hostname, external_port));
 
-	self->server = soup_server_new(SOUP_SERVER_PORT, port,
+	self->server = soup_server_new(SOUP_SERVER_PORT, internal_port,
         SOUP_SERVER_SERVER_HEADER, "imgflo-runtime", NULL);
     if (!self->server) {
         g_free(self);

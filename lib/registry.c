@@ -10,7 +10,7 @@ typedef struct _RuntimeInfo {
     gchar *user_id;
     gchar *label;
     gchar *hostname;
-    gint port;
+    gint port; // external
 } RuntimeInfo;
 
 RuntimeInfo *

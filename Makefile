@@ -6,6 +6,7 @@ FLAGS=-Wall -Werror -std=c99 -g -DHAVE_UUID -I$(PREFIX)/include/uuid
 DEBUGPROG=
 PORT=3569
 HOST=localhost
+EXTPORT=$(PORT)
 
 ifneq ("$(wildcard /app)","")
 # Heroku build. TODO: find better way to detect
@@ -24,7 +25,7 @@ server: install
 	npm start
 
 run-noinstall:
-	$(PREFIX)/env.sh $(DEBUGPROG) ./bin/imgflo-runtime --port $(PORT) --host $(HOST)
+	$(PREFIX)/env.sh $(DEBUGPROG) ./bin/imgflo-runtime --port $(PORT) --host $(HOST) --external-port=$(EXTPORT)
 
 run: install run-noinstall
 
