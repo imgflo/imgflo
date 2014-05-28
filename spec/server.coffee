@@ -19,7 +19,6 @@
 #   e - input parameter missing
 #   e - url gives 404 (404)
 #   e - url does not load for other reasons (504)
-#   e - invalid parameters, return valid params (449)
 #   e - invalid parameter value (422?)
 #      -- too big/small numbers
 #   e - valid ext,content-type, but invalid image
@@ -54,7 +53,7 @@ url = require 'url'
 urlbase = 'localhost:8889'
 port = 8889
 
-request_url = (graph, props) ->
+graph_url = (graph, props) ->
     return url.format { protocol: 'http:', host: urlbase, pathname: '/graph/'+graph, query: props }
 
 describe 'Server', ->
@@ -89,9 +88,24 @@ describe 'Server', ->
             actual = Object.keys d.graphs
             chai.expect(actual).to.deep.equal expected
 
+    describe 'Graph request', ->
+        describe 'with invalid graph parameters', ->
+            u = graph_url 'gradientmap', {skeke: 299, oooor:222, input: "demo/grid-toastybob.jpg"}
+            data = ""
+            it 'should give HTTP 449', (done) ->
+                http.get u, (response) ->
+                    chai.expect(response.statusCode).to.equal 449
+                    response.on 'data', (chunk) ->
+                        data += chunk.toString()
+                    response.on 'end', () ->
+                        done()
+            it 'should list valid parameters', ->
+                d = JSON.parse data
+                chai.expect(Object.keys(d.inports)).to.deep.equal ['input', 'color1', 'color2']
+
     describe 'Get image', ->
         it 'should be created on demand', (done) ->
-            u = request_url 'crop', { height: 110, width: 130, x: 200, y: 230, input: "demo/grid-toastybob.jpg" }
+            u = graph_url 'crop', { height: 110, width: 130, x: 200, y: 230, input: "demo/grid-toastybob.jpg" }
             http.get u, (response) ->
                 chai.expect(response.statusCode).to.equal 200
                 response.on 'data', (chunk) ->

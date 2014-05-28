@@ -112,6 +112,17 @@ hashFile = (path) ->
     hash.update path
     return hash.digest 'hex'
 
+keysNotIn = (A, B) ->
+    notIn = []
+    for a in Object.keys A
+        isIn = false
+        for b in Object.keys B
+            if b == a
+                isIn = true
+        if not isIn
+            notIn.push a
+    return notIn
+
 class Server extends EventEmitter
     constructor: (workdir, resourcedir, graphdir, verbose) ->
         @workdir = workdir
@@ -188,8 +199,12 @@ class Server extends EventEmitter
                 @processGraphRequest workdir_filepath, request.url, (err, stderr) =>
                     @logEvent 'process-request-end', { error: err, stderr: stderr }
                     if err
-                        response.writeHead(500);
-                        response.end();
+                        if err.code?
+                            response.writeHead err.code, { 'Content-Type': 'application/json' }
+                            response.end JSON.stringify err.result
+                        else
+                            response.writeHead 500
+                            response.end()
                     else
                         # requested file shall now be present
                         @fileserver.serveFile filepath, 200, {}, request, response
@@ -217,9 +232,13 @@ class Server extends EventEmitter
         downloadFile src, to, (contentType) =>
             fs.readFile graph, (err, contents) =>
                 if err
-                    throw err
-
+                    return callback err, null
+                # TODO: read graphs once
                 def = JSON.parse contents
+                invalid = keysNotIn attr, def.inports
+                if invalid.length > 0
+                    return callback { code: 449, result: def }, null
+
                 delete attr.input
                 type = null
                 if ext == ''
@@ -227,6 +246,7 @@ class Server extends EventEmitter
                         type = 'jpg'
                     else if contentType == 'image/png'
                         type = 'png'
+
                 def = prepareGraph def, attr, to, outf, type
                 @processor.run def, callback
 
