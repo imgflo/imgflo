@@ -28,14 +28,15 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "websocket": "~1.0.8",
-    "commander": "~2.1.0",
-    "pkginfo": "~0.3.0",
+    "async": "^0.7.0",
     "coffee-script": "^1.7.1",
+    "commander": "~2.1.0",
+    "flowhub-registry": "0.0.2",
     "node-static": "^0.7.3",
     "node-uuid": "^1.4.1",
-    "flowhub-registry": "0.0.2",
-    "async": "^0.7.0"
+    "pkginfo": "~0.3.0",
+    "request": "^2.36.0",
+    "websocket": "~1.0.8"
   },
   "devDependencies": {
     "chai": "~1.8.0",

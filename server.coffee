@@ -7,6 +7,7 @@ url = require 'url'
 querystring = require 'querystring'
 path = require 'path'
 crypto = require 'crypto'
+request = require 'request'
 
 node_static = require 'node-static'
 async = require 'async'
@@ -71,17 +72,17 @@ prepareGraph = (def, attributes, inpath, outpath, type) ->
 
     return def
 
-downloadFile = (src, out, finish) ->
-    http.get src, (response) ->
-        if response.statusCode == 301
-            return downloadFile response.headers.location, out, finish
+downloadFile = (src, out, callback) ->
+    req = request src, (error, response) ->
+        if error
+            return callback error, null
+        if response.statusCode != 200
+            return callback response.statusCode, null
 
-        response.on 'data', (chunk) ->
-            fs.appendFile out, chunk, ->
-                #
-        response.on 'end', ->
-            return finish(response.headers['content-type'])
+        callback null, response.headers['content-type']
 
+    stream = fs.createWriteStream out
+    s = req.pipe stream
 
 getGraphs = (directory, callback) ->
     graphs = {}

@@ -5,6 +5,7 @@
 server = require '../server'
 chai = require 'chai'
 yaml = require 'js-yaml'
+request = require 'request'
 
 http = require 'http'
 fs = require 'fs'
@@ -77,16 +78,12 @@ describe 'Graphs', ->
                 props = {}
                 for key of testcase
                     props[key] = testcase[key] if key != '_name' and key != '_graph'
-                request = url.format { protocol: 'http:', host: urlbase, pathname: '/graph/'+graph, query: props}
+                u = url.format { protocol: 'http:', host: urlbase, pathname: '/graph/'+graph, query: props}
 
                 it 'should output a file', (done) ->
-                    http.get request, (response) ->
-                        chai.expect(response.statusCode).to.equal 200
-                        response.on 'data', (chunk) ->
-                            fs.appendFile output, chunk, ->
-                                #
-                        response.on 'end', ->
-                            return done()
+                    req = request u, (err, response) ->
+                        done()
+                    req.pipe fs.createWriteStream output
 
                 it 'results should be equal to reference', (done) ->
                     compareImages output, reference, (error, msg) ->
