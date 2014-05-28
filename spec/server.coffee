@@ -51,7 +51,11 @@ fs = require 'fs'
 path = require 'path'
 url = require 'url'
 
-urlbase = 'localhost:8888'
+urlbase = 'localhost:8889'
+port = 8889
+
+request_url = (graph, props) ->
+    return url.format { protocol: 'http:', host: urlbase, pathname: '/graph/'+graph, query: props }
 
 describe 'Server', ->
     s = null
@@ -62,29 +66,40 @@ describe 'Server', ->
             for f in fs.readdirSync wd
                 fs.unlinkSync path.join wd, f
         s = new server.Server wd
-        s.listen 8888
+        s.listen port
 
     after ->
         s.close()
 
-    describe 'Get image with custom p', ->
-        d =
-            input: "demo/grid-toastybob.jpg"
-            height: 110
-            width: 130
-            x: 200
-            y: 230
-        u = url.format { protocol: 'http:', host: urlbase, pathname: '/graph/crop', query: d}
-        console.log u
-
-        it 'should be created on demand', (finish) ->
+    describe 'List graphs', ->
+        expected = []
+        for g in fs.readdirSync './graphs'
+            expected.push g.replace '.json', '' if (g.indexOf '.json') != -1
+        responseData = ""
+        it 'HTTP request', (done) ->
+            u = url.format {protocol:'http:',host: urlbase, pathname:'/demo'}
             http.get u, (response) ->
                 chai.expect(response.statusCode).to.equal 200
-                responseData = ""
+                response.on 'data', (chunk) ->
+                    responseData += chunk.toString()
+                response.on 'end', () ->
+                    done()
+        it 'should return all graphs', () ->
+            d = JSON.parse responseData
+            actual = Object.keys d.graphs
+            chai.expect(actual).to.deep.equal expected
+
+    describe 'Get image', ->
+        it 'should be created on demand', (done) ->
+            u = request_url 'crop', { height: 110, width: 130, x: 200, y: 230, input: "demo/grid-toastybob.jpg" }
+            http.get u, (response) ->
+                chai.expect(response.statusCode).to.equal 200
                 response.on 'data', (chunk) ->
                     fs.appendFile 'testout.png', chunk, ->
                         #
                 response.on 'end', ->
-                    return finish()
+                    fs.exists 'testout.png', (exists) ->
+                        chai.assert exists, 'testout.png does not exist'
+                        done()
 
 

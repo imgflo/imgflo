@@ -31,7 +31,8 @@ class LogHandler
         if id == 'process-request-end'
             if data.stderr
                 for e in data.stderr.split '\n'
-                    @errors.push e
+                    e = e.trim()
+                    @errors.push e if e
             if data.err
                 @errors.push data.err
         else
