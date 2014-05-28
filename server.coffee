@@ -24,14 +24,16 @@ class Processor extends EventEmitter
         args = ['./install/bin/imgflo', "-"]
 
         console.log 'executing', cmd, args if @verbose
+        stderr = ""
         process = child_process.spawn cmd, args, { stdio: ['pipe', 'pipe', 'pipe'] }
         process.on 'close', (exitcode) ->
             err = if exitcode then new Error "processor returned exitcode: #{exitcode}" else null
-            return callback err
-        process.stdout.on 'data', (d)->
+            return callback err, stderr
+        process.stdout.on 'data', (d) =>
             console.log d.toString() if @verbose
         process.stderr.on 'data', (d)->
-            console.log d.toString()
+            stderr += d.toString()
+        console.log s if @verbose
         process.stdin.write s
         process.stdin.end()
 
@@ -110,7 +112,7 @@ hashFile = (path) ->
     hash.update path
     return hash.digest 'hex'
 
-class Server
+class Server extends EventEmitter
     constructor: (workdir, resourcedir, graphdir, verbose) ->
         @workdir = workdir
         @resourcedir = resourcedir || './examples'
@@ -129,6 +131,9 @@ class Server
         @httpserver.listen port
     close: ->
         @httpserver.close()
+
+    logEvent: (id, data) ->
+        @emit 'logevent', id, data
 
     handleHttpRequest: (request, response) =>
         request.addListener('end', () =>
@@ -180,7 +185,8 @@ class Server
             if exists
                 @fileserver.serveFile filepath, 200, {}, request, response
             else
-                @processGraphRequest workdir_filepath, request.url, (err) =>
+                @processGraphRequest workdir_filepath, request.url, (err, stderr) =>
+                    @logEvent 'process-request-end', { error: err, stderr: stderr }
                     if err
                         response.writeHead(500);
                         response.end();

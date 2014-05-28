@@ -12,4 +12,11 @@
     _name: 'crop_default'
     _graph: "crop"
     input: "demo/grid-toastybob.jpg"
-
+-
+    _name: 'gradient_unused_params'
+    _graph: gradientmap
+    input: http://s.radar.oreilly.com/wp-files/8/2013/10/noflo-jekyll-700x456.jpg
+    width: 700
+    height: 456
+    color1: '#87a9a7'
+    color2: '#b3dedc'

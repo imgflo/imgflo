@@ -21,10 +21,32 @@ compareImages = (actual, expected, callback) ->
     child.exec cmd, options, (error, stdout, stderr) ->
         return callback error, stderr
 
+class LogHandler
+    @errors = null
+    constructor: (server) ->
+        @errors = []
+        server.on 'logevent', @logEvent
+
+    logEvent: (id, data) =>
+        if id == 'process-request-end'
+            if data.stderr
+                for e in data.stderr.split '\n'
+                    @errors.push e
+            if data.err
+                @errors.push data.err
+        else
+            console.log 'WARNING: unhandled log event', id
+
+    popErrors: () ->
+        errors = (e for e in @errors)
+        @errors = []
+        return errors
+
 # End-to-end tests of image processing pipeline and included graphs
 describe 'Graphs', ->
     s = null
     testcases = yaml.safeLoad fs.readFileSync 'spec/graphtests.yml', 'utf-8'
+    l = null
 
     before ->
         wd = './graphteststemp'
@@ -32,6 +54,7 @@ describe 'Graphs', ->
             for f in fs.readdirSync wd
                 fs.unlinkSync path.join wd, f
         s = new server.Server wd
+        l = new LogHandler s
         s.listen 8888
     after ->
         s.close()
@@ -42,6 +65,7 @@ describe 'Graphs', ->
             datadir = 'spec/data/'
             reference = path.join datadir, "#{testcase._name}.reference.png"
             output = path.join datadir, "#{testcase._name}.out.png"
+            fs.unlinkSync output if fs.existsSync output
 
             it 'should have a reference result', (done) ->
                 fs.exists reference, (exists) ->
@@ -68,4 +92,6 @@ describe 'Graphs', ->
                         chai.assert error == null, msg
                         done()
 
+                it 'should not cause errors', ->
+                    chai.expect(l.popErrors()).to.deep.equal []
 
