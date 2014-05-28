@@ -253,6 +253,9 @@ class Server extends EventEmitter
 exports.Server = Server
 
 exports.main = ->
+    process.on 'uncaughtException', (err) ->
+        console.log 'Uncaught exception: ', err
+
     port = process.env.PORT || 8080
     workdir = './temp'
 
