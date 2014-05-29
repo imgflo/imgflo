@@ -36,6 +36,8 @@ class LogHandler
                     @errors.push e if e
             if data.err
                 @errors.push data.err
+        else if id == 'request-received' or id == 'serve-processed-file'
+            #
         else
             console.log 'WARNING: unhandled log event', id
 

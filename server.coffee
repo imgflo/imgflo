@@ -148,6 +148,7 @@ class Server extends EventEmitter
         @emit 'logevent', id, data
 
     handleHttpRequest: (request, response) =>
+        @logEvent 'request-received', { request: request.url }
         request.addListener('end', () =>
             u = url.parse request.url, true
             if u.pathname == '/'
@@ -158,7 +159,7 @@ class Server extends EventEmitter
             else if (u.pathname.indexOf "/graph") == 0
                 @handleGraphRequest request, response
             else
-                console.log "Got unknown HTTP request: ", u.pathname
+                @logEvent 'unknown-request', { request: request.url, path: u.pathname }
                 response.statusCode = 404
                 response.end "Cannot find #{u.pathname}"
         ).resume()
@@ -195,10 +196,11 @@ class Server extends EventEmitter
 
         fs.exists workdir_filepath, (exists) =>
             if exists
+                @logEvent 'serve-from-cache', { request: request.url, file: filepath }
                 @fileserver.serveFile filepath, 200, {}, request, response
             else
                 @processGraphRequest workdir_filepath, request.url, (err, stderr) =>
-                    @logEvent 'process-request-end', { error: err, stderr: stderr }
+                    @logEvent 'process-request-end', { request: request.url, err: err, stderr: stderr }
                     if err
                         if err.code?
                             response.writeHead err.code, { 'Content-Type': 'application/json' }
@@ -208,6 +210,7 @@ class Server extends EventEmitter
                             response.end()
                     else
                         # requested file shall now be present
+                        @logEvent 'serve-processed-file', { request: request.url, file: filepath }
                         @fileserver.serveFile filepath, 200, {}, request, response
 
     processGraphRequest: (outf, request_url, callback) =>
@@ -230,14 +233,20 @@ class Server extends EventEmitter
         if (src.indexOf 'http://') == -1
             src = 'http://localhost:'+@port+'/'+src
 
-        downloadFile src, to, (contentType) =>
+        downloadFile src, to, (err, contentType) =>
+            if err
+                @logEvent 'download-input-error', { request: request_url, err: err, src: src, to: to }
+                return callback err, null
+
             fs.readFile graph, (err, contents) =>
                 if err
+                    @logEvent 'read-graph-error', { request: request_url, err: err, file: graph }
                     return callback err, null
                 # TODO: read graphs once
                 def = JSON.parse contents
                 invalid = keysNotIn attr, def.inports
                 if invalid.length > 0
+                    @logEvent 'invalid-graph-properties-error', { request: request_url, props: invalid }
                     return callback { code: 449, result: def }, null
 
                 delete attr.input
@@ -262,5 +271,7 @@ exports.main = ->
 
     server = new Server workdir
     server.listen port
+    server.on 'logevent', (id, data) ->
+        console.log "EVENT: #{id}:", data
 
     console.log 'Server listening at port', port, "with workdir", workdir
