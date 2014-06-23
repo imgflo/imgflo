@@ -36,6 +36,8 @@ clone = (obj) ->
 
 # TODO: support using long-lived workers as Processors, use FBP WebSocket API to control
 
+installdir = __dirname + '/install/'
+
 class Processor extends EventEmitter
 
     constructor: (verbose) ->
@@ -43,8 +45,8 @@ class Processor extends EventEmitter
 
     run: (graph, callback) ->
         s = JSON.stringify graph, null, "  "
-        cmd = './install/env.sh'
-        args = ['./install/bin/imgflo', "-"]
+        cmd = installdir+'env.sh'
+        args = [ installdir+'bin/imgflo', "-"]
 
         console.log 'executing', cmd, args if @verbose
         stderr = ""
