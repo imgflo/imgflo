@@ -12,6 +12,28 @@ request = require 'request'
 node_static = require 'node-static'
 async = require 'async'
 
+clone = (obj) ->
+  if not obj? or typeof obj isnt 'object'
+    return obj
+
+  if obj instanceof Date
+    return new Date(obj.getTime())
+
+  if obj instanceof RegExp
+    flags = ''
+    flags += 'g' if obj.global?
+    flags += 'i' if obj.ignoreCase?
+    flags += 'm' if obj.multiline?
+    flags += 'y' if obj.sticky?
+    return new RegExp(obj.source, flags)
+
+  newInstance = new obj.constructor()
+
+  for key of obj
+    newInstance[key] = clone obj[key]
+
+  return newInstance
+
 # TODO: support using long-lived workers as Processors, use FBP WebSocket API to control
 
 class Processor extends EventEmitter
@@ -38,7 +60,10 @@ class Processor extends EventEmitter
         process.stdin.write s
         process.stdin.end()
 
-prepareGraph = (def, attributes, inpath, outpath, type) ->
+prepareGraph = (basegraph, attributes, inpath, outpath, type) ->
+
+    # Avoid mutating original
+    def = clone basegraph
 
     loader = 'gegl/load'
     if type
