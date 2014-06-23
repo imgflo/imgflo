@@ -260,7 +260,9 @@ class Server extends EventEmitter
                 def = prepareGraph def, attr, to, outf, type
                 @processor.run def, callback
 
+exports.Processor = Processor
 exports.Server = Server
+exports.prepareGraph = prepareGraph
 
 exports.main = ->
     process.on 'uncaughtException', (err) ->
