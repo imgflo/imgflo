@@ -167,10 +167,12 @@ describe 'NoFlo runtime API,', () ->
         it 'should result in a created PNG file', (done) ->
             # TODO: add better API for getting notified of results
             # Maybe have a Processor node which sends string with URL of output when done?
+            checkInterval = null
             checkExistence = ->
                 fs.exists outfile, (exists) ->
                     done() if exists
-            setInterval checkExistence, 50
+                    clearInterval checkInterval
+            checkInterval = setInterval checkExistence, 50
         it 'should not have produced any errors', ->
             chai.expect(runtime.popErrors()).to.eql []
 
