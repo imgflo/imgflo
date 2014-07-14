@@ -295,7 +295,6 @@ describe 'NoFlo runtime API,', () ->
     describe 'graph tear down', ->
 
         it 'should not crash', (done) ->
-            # FIXME: check and assert no errors on stderr of runtime process
 
             ui.send "graph", "removeinitial", {tgt: {node: 'in', port: 'path'}}
             ui.send "graph", "removeinitial", {tgt: {node: 'out', port: 'path'}}

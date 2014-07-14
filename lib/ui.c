@@ -194,7 +194,9 @@ inports_for_operation(const gchar *name)
         const gchar *type_name = noflo_type_for_gtype(type);
         const GValue *def = g_param_spec_get_default_value(prop);
         JsonNode *def_json = json_from_gvalue(def);
-        const gchar *description = g_param_spec_get_blurb(prop);
+        const gchar *blurb = g_param_spec_get_blurb(prop);
+        const gchar *nick = g_param_spec_get_nick(prop);
+        const gchar *description = (blurb) ? blurb : nick;
 
         JsonObject *port = json_object_new();
         json_object_set_string_member(port, "id", id);
