@@ -24,6 +24,8 @@ class MockUi extends EventEmitter
             @connection = connection
             @connection.on 'error', (error) =>
                 throw error
+            @connection.on 'close', (error) =>
+                @emit 'disconnected'
             @connection.on 'message', (message) =>
                 @handleMessage message
             @emit 'connected', connection
@@ -55,7 +57,8 @@ class MockUi extends EventEmitter
     connect: ->
         @client.connect 'ws://localhost:3888/', "noflo"
     disconnect: ->
-        #
+        @connection.close()
+        @emit 'disconnected'
 
     send: (protocol, command, payload) ->
         msg =
@@ -86,7 +89,7 @@ class RuntimeProcess
             throw err
         @process.on 'exit', (code, signal) ->
             if code != 0
-                throw new Error 'Runtime exited with non-zero code: ' + code
+                throw new Error 'Runtime exited with non-zero code: ' + code + " " + signal
 
         @process.stderr.on 'data', (d) =>
             output = d.toString()
