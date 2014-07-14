@@ -187,11 +187,12 @@ processor_set_target(Processor *self, GeglNode *node)
     }
 }
 
-void
+gboolean
 processor_blit(Processor *self, const Babl *format, GeglRectangle *roi_out, gchar **buffer_out) {
-    g_return_if_fail(self);
-    g_return_if_fail(buffer_out);
-    g_return_if_fail(roi_out);
+    g_return_val_if_fail(self, FALSE);
+    g_return_val_if_fail(buffer_out, FALSE);
+    g_return_val_if_fail(roi_out, FALSE);
+    g_return_val_if_fail(self->node, FALSE);
 
     GeglRectangle roi = gegl_node_get_bounding_box(self->node);
     roi = sanitized_roi(self, roi);
@@ -204,4 +205,5 @@ processor_blit(Processor *self, const Babl *format, GeglRectangle *roi_out, gcha
                    GEGL_AUTO_ROWSTRIDE, GEGL_BLIT_DEFAULT);
     *buffer_out = buffer;
     *roi_out = roi;
+    return TRUE;
 }

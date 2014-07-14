@@ -206,6 +206,22 @@ describe 'NoFlo runtime API,', () ->
         it 'should not have produced any errors', ->
             chai.expect(runtime.popErrors()).to.eql []
 
+    describe 'processing a node without anything connected', ->
+
+        it 'should give 404', (done) ->
+            ui.send "graph", "clear"
+            ui.send "graph", "addnode", {id: 'proc', component: 'Processor'}
+            ui.send "runtime", "getruntime"
+            ui.once 'runtime-info-changed', ->
+                utils.processNode 'proc', (err, resp) ->
+                    chai.expect(err).to.equal null
+                    chai.expect(resp.statusCode).to.equal 400
+                    done()
+
+        it 'should have produced an error', ->
+            errors = runtime.popErrors()
+            chai.expect(errors).to.have.length 1
+
     describe 'processing a node with infinite bounding box', ->
 
         it 'should give 200 OK', (done) ->
@@ -214,7 +230,7 @@ describe 'NoFlo runtime API,', () ->
             ui.send "graph", "addnode", {id: 'proc', component: 'Processor'}
             ui.send "graph", "addedge", {src: {node: 'in', port: 'output'}, tgt: {node: 'proc', port: 'input'}}
 
-            # TODO: test, and should be cropped
+            # TODO: test that image is should be cropped
             ui.send "runtime", "getruntime"
             ui.once 'runtime-info-changed', ->
                 utils.processNode 'proc', (err, resp) ->

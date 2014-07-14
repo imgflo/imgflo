@@ -541,24 +541,21 @@ process_image_callback (SoupServer *server, SoupMessage *msg,
         // FIXME: allow region-of-interest and scale as query params
         gchar *buffer = NULL;
         GeglRectangle roi;
-        processor_blit(processor, babl_format("R'G'B'A u8"), &roi, &buffer);
-        if (roi.width > 0 && roi.height > 0) {
+        const gboolean success = processor_blit(processor, babl_format("R'G'B'A u8"), &roi, &buffer);
+        if (success && roi.width > 0 && roi.height > 0) {
             png_encoder_encode_rgba(encoder, roi.width, roi.height, buffer);
+            const gchar *mime_type = "image/png";
+            char *buf = encoder->buffer;
+            const size_t len = encoder->size;
+            soup_message_set_status(msg, SOUP_STATUS_OK);
+            soup_message_set_response(msg, mime_type, SOUP_MEMORY_COPY, buf, len);
+        } else {
+            soup_message_set_status(msg, SOUP_STATUS_BAD_REQUEST);
         }
         g_free(buffer);
-    } else {
-        g_warning("Rendering fallback image");
-        png_encoder_encode_rgba(encoder, 100, 100, NULL);
     }
 
-    const gchar *mime_type = "image/png";
-    char *buf = encoder->buffer;
-    const size_t len = encoder->size;
-
-    soup_message_set_status(msg, SOUP_STATUS_OK);
-    soup_message_set_response(msg, mime_type, SOUP_MEMORY_COPY, buf, len);
-
-    //png_encoder_free(encoder);
+    png_encoder_free(encoder);
 }
 
 static void
