@@ -1,3 +1,21 @@
+imgflo 0.2.0
+=============
+Released: N/A
+
+runtime
+--------
+Registration as Flowhub.io runtime now done in main executable, use environment variables to specify.
+Support for running on Heroku as a runtime, not just as a server.
+
+Added annotations for many more port types; including number, enums, colors.
+This lets Flowhub bring up more suitable UIs than the general string input.
+Added support for default values for IIPs.
+
+server
+-------
+Improvements to API stability, many tests added
+
+
 imgflo 0.1.0
 =============
 Released: April 30th, 2014
