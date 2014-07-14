@@ -55,6 +55,10 @@ png_encoder_free(PngEncoder *self) {
 
 void
 png_encoder_encode_rgba(PngEncoder *self, int width, int height, gchar *buffer) {
+    g_return_if_fail(self);
+    g_return_if_fail(width > 0);
+    g_return_if_fail(height > 0);
+    g_return_if_fail(buffer);
 
     png_byte color_type = PNG_COLOR_TYPE_RGBA;
     png_byte bit_depth = 8;

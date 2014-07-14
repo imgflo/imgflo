@@ -19,6 +19,7 @@ typedef struct _Processor {
     GeglProcessor *processor;
     ProcessorInvalidatedCallback on_invalidated;
     gpointer on_invalidated_data;
+    gint max_size;
 } Processor;
 
 static gboolean
@@ -36,12 +37,27 @@ processor_new(void) {
     self->currently_processed_rect = NULL;
     self->on_invalidated = NULL;
     self->on_invalidated_data = NULL;
+    self->max_size = 1000; // Mainly to avoid DoS, or bugs causing out-of-memory
     return self;
 }
 
 void
 processor_free(Processor *self) {
     g_free(self);
+}
+
+static GeglRectangle
+sanitized_roi(Processor *self, GeglRectangle in) {
+    GeglRectangle out = in;
+    if (out.width > self->max_size) {
+        g_warning("Processor: requested width exceeded max: %d", out.width);
+        out.width = self->max_size;
+    }
+    if (out.height > self->max_size) {
+        g_warning("Processor: requested height exceeded max: %d", out.height);
+        out.height = self->max_size;
+    }
+    return out;
 }
 
 static void
@@ -65,11 +81,10 @@ trigger_processing(Processor *self, GeglRectangle roi)
 
     // Add the invalidated region to the dirty
     GeglRectangle *rect = g_new(GeglRectangle, 1);
-    rect->x = roi.x;
-    rect->y = roi.y;
-    rect->width = roi.width;
-    rect->height = roi.height;
-    g_queue_push_head(self->processing_queue, rect);
+    *rect = sanitized_roi(self, roi);
+    if (rect->width >= 0 && rect->height >= 0) {
+        g_queue_push_head(self->processing_queue, rect);
+    }
 }
 
 static void
@@ -170,4 +185,23 @@ processor_set_target(Processor *self, GeglNode *node)
     } else {
         self->node = NULL;
     }
+}
+
+void
+processor_blit(Processor *self, const Babl *format, GeglRectangle *roi_out, gchar **buffer_out) {
+    g_return_if_fail(self);
+    g_return_if_fail(buffer_out);
+    g_return_if_fail(roi_out);
+
+    GeglRectangle roi = gegl_node_get_bounding_box(self->node);
+    roi = sanitized_roi(self, roi);
+    // FIXME: take region-of-interest as parameter
+    // FIXME: take size as parameter, set scale to give approx that
+    const double scale = 1.0;
+    gchar *buffer = g_malloc(roi.width*roi.height*babl_format_get_bytes_per_pixel(format));
+    // XXX: maybe use GEGL_BLIT_DIRTY?
+    gegl_node_blit(self->node, scale, &roi, format, buffer,
+                   GEGL_AUTO_ROWSTRIDE, GEGL_BLIT_DEFAULT);
+    *buffer_out = buffer;
+    *roi_out = roi;
 }

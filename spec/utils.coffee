@@ -6,6 +6,7 @@ child_process = require 'child_process'
 EventEmitter = (require 'events').EventEmitter
 
 websocket = require 'websocket'
+needle = require 'needle'
 
 # TODO: move into library, also use in MicroFlo and other FBP runtime implementations?
 class MockUi extends EventEmitter
@@ -114,5 +115,13 @@ class RuntimeProcess
         @errors = []
         return errors
 
+processNode = (nodeId, callback) ->
+    base = "http://localhost:3888"
+    data =
+        node: nodeId
+    needle.request 'get', base+'/process', data, callback
+
 exports.MockUi = MockUi
 exports.RuntimeProcess = RuntimeProcess
+exports.processNode = processNode
+

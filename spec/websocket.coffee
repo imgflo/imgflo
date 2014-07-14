@@ -205,3 +205,24 @@ describe 'NoFlo runtime API,', () ->
 
         it 'should not have produced any errors', ->
             chai.expect(runtime.popErrors()).to.eql []
+
+    describe 'processing a node with infinite bounding box', ->
+
+        it 'should give 200 OK', (done) ->
+            ui.send "graph", "clear"
+            ui.send "graph", "addnode", {id: 'in', component: 'gegl/checkerboard'}
+            ui.send "graph", "addnode", {id: 'proc', component: 'Processor'}
+            ui.send "graph", "addedge", {src: {node: 'in', port: 'output'}, tgt: {node: 'proc', port: 'input'}}
+
+            # TODO: test, and should be cropped
+            ui.send "runtime", "getruntime"
+            ui.once 'runtime-info-changed', ->
+                utils.processNode 'proc', (err, resp) ->
+                    chai.expect(err).to.equal null
+                    chai.expect(resp.statusCode).to.equal 200
+                    chai.expect(resp.headers['content-type']).to.equal "image/png"
+                    done()
+
+        it 'should have produced two errors', ->
+            errors = runtime.popErrors()
+            chai.expect(errors).to.have.length 2

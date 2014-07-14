@@ -538,17 +538,13 @@ process_image_callback (SoupServer *server, SoupMessage *msg,
     }
 
     if (processor) {
-        const Babl *format = babl_format("R'G'B'A u8");
-        // FIXME: take region-of-interest as parameter
-        GeglRectangle roi = gegl_node_get_bounding_box(processor->node);
-        // FIXME: take size as parameter, set scale to give approx that
-        const double scale = 1.0;
-        gchar *buffer = g_malloc(roi.width*roi.height*babl_format_get_bytes_per_pixel(format));
-        // XXX: maybe use GEGL_BLIT_DIRTY?
-        gegl_node_blit(processor->node, scale, &roi, format, buffer,
-                       GEGL_AUTO_ROWSTRIDE, GEGL_BLIT_DEFAULT);
-        png_encoder_encode_rgba(encoder, roi.width, roi.height, buffer);
-
+        // FIXME: allow region-of-interest and scale as query params
+        gchar *buffer = NULL;
+        GeglRectangle roi;
+        processor_blit(processor, babl_format("R'G'B'A u8"), &roi, &buffer);
+        if (roi.width > 0 && roi.height > 0) {
+            png_encoder_encode_rgba(encoder, roi.width, roi.height, buffer);
+        }
         g_free(buffer);
     } else {
         g_warning("Rendering fallback image");
