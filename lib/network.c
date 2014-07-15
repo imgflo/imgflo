@@ -8,16 +8,17 @@ typedef void (* NetworkProcessorInvalidatedCallback)
     (struct _Network *network, struct _Processor *processor, GeglRectangle rect, gpointer user_data);
 
 typedef struct _Network {
-    Graph *graph; // unowned
+    Graph *graph; // owned
     gboolean running;
     NetworkProcessorInvalidatedCallback on_processor_invalidated;
     gpointer on_processor_invalidated_data;
 } Network;
 
 Network *
-network_new(void)
+network_new(Graph *graph)
 {
     Network *self = g_new(Network, 1);
+    self->graph = graph;
     self->running = FALSE;
     self->on_processor_invalidated = NULL;
     self->on_processor_invalidated_data = NULL;
@@ -27,6 +28,9 @@ network_new(void)
 void
 network_free(Network *self)
 {
+    if (self->graph) {
+        graph_free(self->graph);
+    }
     g_free(self);
 }
 
@@ -37,13 +41,6 @@ emit_invalidated(Processor *processor, GeglRectangle rect, gpointer user_data) {
         network->on_processor_invalidated(network, processor, rect,
                                           network->on_processor_invalidated_data);
     }
-}
-
-
-void
-network_set_graph(Network *self, Graph *graph)
-{
-    self->graph = graph;
 }
 
 void 
@@ -81,3 +78,11 @@ network_process(Network *self) {
     g_hash_table_foreach(self->graph->processor_map, (GHFunc)process_func, NULL);
 }
 
+Processor *
+network_processor(Network *self, const gchar *node_name) {
+    g_return_val_if_fail(self, NULL);
+    g_return_val_if_fail(self->graph, NULL);
+    g_return_val_if_fail(node_name, NULL);
+
+    return g_hash_table_lookup(self->graph->processor_map, node_name);
+}

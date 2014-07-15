@@ -31,9 +31,8 @@ int main(int argc, char *argv[]) {
 
     //print_available_ops();
 
-    Graph *graph = graph_new();
-    Network *net = network_new();
-    network_set_graph(net, graph);
+    Graph *graph = graph_new("stdin");
+    Network *net = network_new(graph);
 
     if (g_strcmp0(path, "-") == 0) {
         if (!graph_load_stdin(graph, NULL)) {
@@ -51,7 +50,6 @@ int main(int argc, char *argv[]) {
     network_process(net);
 
     network_free(net);
-    graph_free(graph);
 
     gegl_exit();
 	return 0;

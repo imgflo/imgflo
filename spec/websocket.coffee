@@ -134,19 +134,19 @@ describe 'NoFlo runtime API,', () ->
 
 
     describe 'graph building', ->
-
+        graph = 'graph1'
         # TODO: verify responses being received
-        send = (protocol, cmd, pay, graph) ->
+        send = (protocol, cmd, pay, g) ->
             if graph?
-                pay.graph = graph
+                pay.graph = g
             ui.send protocol, cmd, pay
         ui.graph1 =
             send: (cmd, pay) ->
-                send "graph", cmd, pay, 'graph1'
+                send "graph", cmd, pay, graph
 
         outfile = 'testtemp/protocol-crop.png'
         it 'should not crash', (done) ->
-            ui.send "graph", "clear", {id: 'graph1'}
+            ui.send "graph", "clear", {id: graph}
             ui.graph1.send "addnode", {id: 'in', component: 'gegl/load'}
             ui.graph1.send "addnode", {id: 'filter', component: 'gegl/crop'}
             ui.graph1.send "addnode", {id: 'out', component: 'gegl/png-save'}
@@ -165,9 +165,10 @@ describe 'NoFlo runtime API,', () ->
             chai.expect(runtime.popErrors()).to.eql []
 
     describe 'starting the network', ->
+        graph = 'graph1'
 
         it 'should respond with network started', (done) ->
-            ui.send "network", "start"
+            ui.send "network", "start", {graph: graph}
             ui.once 'network-running', (running) ->
                 done() if running
         it 'should result in a created PNG file', (done) ->
@@ -183,9 +184,10 @@ describe 'NoFlo runtime API,', () ->
             chai.expect(runtime.popErrors()).to.eql []
 
     describe 'stopping the network', ->
+        graph = 'graph1'
 
         it 'should respond with network stopped', (done) ->
-            ui.send "network", "stop"
+            ui.send "network", "stop", {graph: graph}
             ui.once 'network-running', (running) ->
                 done() if not running
         it 'should not have produced any errors', ->
@@ -222,7 +224,7 @@ describe 'NoFlo runtime API,', () ->
             ui.send "graph", "addnode", {id: 'proc', component: 'Processor', graph: graph}
             ui.send "runtime", "getruntime"
             ui.once 'runtime-info-changed', ->
-                utils.processNode 'proc', (err, resp) ->
+                utils.processNode graph, 'proc', (err, resp) ->
                     chai.expect(err).to.equal null
                     chai.expect(resp.statusCode).to.equal 400
                     done()
@@ -243,7 +245,7 @@ describe 'NoFlo runtime API,', () ->
             # TODO: test that image is should be cropped
             ui.send "runtime", "getruntime"
             ui.once 'runtime-info-changed', ->
-                utils.processNode 'proc', (err, resp) ->
+                utils.processNode graph, 'proc', (err, resp) ->
                     chai.expect(err).to.equal null
                     chai.expect(resp.statusCode).to.equal 200
                     chai.expect(resp.headers['content-type']).to.equal "image/png"

@@ -81,6 +81,7 @@ set_property(GeglNode *t, const gchar *port, GParamSpec *paramspec, GValue *valu
 }
 
 typedef struct {
+    gchar *id;
     GeglNode *top;
     GHashTable *node_map;
     GHashTable *processor_map;
@@ -88,8 +89,11 @@ typedef struct {
 
 
 Graph *
-graph_new() {
+graph_new(const gchar *id) {
+    g_return_val_if_fail(id, NULL);
+
     Graph *self = g_new(Graph, 1);
+    self->id = g_strdup(id);
     self->top = gegl_node_new();
     self->node_map = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
     self->processor_map = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
@@ -98,7 +102,11 @@ graph_new() {
 
 void
 graph_free(Graph *self) {
+    if (!self) {
+        return;
+    }
 
+    g_free(self->id);
     g_object_unref(self->top);
     // FIXME: leaks memeory. Go through all nodes and processors and free
     g_hash_table_destroy(self->node_map);

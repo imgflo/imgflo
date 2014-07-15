@@ -14,8 +14,7 @@
 typedef struct {
 	SoupServer *server;
     Registry *registry;
-    Graph *graph;
-    Network *network;
+    GHashTable *network_map; // graph_id(string) -> Network. Network contains Graph instance
     gchar *hostname;
     SoupWebsocketConnection *connection; // TODO: allow multiple clients
 } UiConnection;
@@ -49,30 +48,48 @@ send_response(SoupWebsocketConnection *ws,
     g_object_unref(generator);
 }
 
+void
+send_preview_invalidated(Network *network, Processor *processor, GeglRectangle rect, gpointer user_data) {
+    UiConnection *ui = (UiConnection *)user_data;
+    g_return_if_fail(ui->registry);
+    g_return_if_fail(ui->registry->info);
+    g_return_if_fail(network->graph);
+
+    const gchar *node = graph_find_processor_name(network->graph, processor);
+
+    gchar url[1024];
+    g_snprintf(url, 1024, "http://%s:%d/process?graph=%s&node=%s",
+               ui->hostname, ui->registry->info->port, network->graph->id, node);
+
+    JsonObject *payload = json_object_new();
+    json_object_set_string_member(payload, "type", "previewurl");
+    json_object_set_string_member(payload, "url", url);
+    send_response(ui->connection, "network", "output", payload);
+}
+
 static void
 handle_graph_message(UiConnection *self, const gchar *command, JsonObject *payload,
                 SoupWebsocketConnection *ws)
 {
-    Graph *graph = self->graph;
-    /*
-    const gchar *graph_id = json_object_get_string_member(payload, "graph");
-    if (graph_id) {
-        graph = self->graph;
-    } else {
-        g_return_if_fail(g_strcmp0(command, "clear") == 0);
+    g_return_if_fail(payload);
+
+    Graph *graph = NULL;
+    if (g_strcmp0(command, "clear") != 0) {
+        // All other commands must have graph
+        // TODO: change FBP protocol to use 'graph' instead of 'id'?
+        const gchar *graph_id = json_object_get_string_member(payload, "graph");
+        Network *net = (graph_id) ? g_hash_table_lookup(self->network_map, graph_id) : NULL;
+        graph = (net) ? net->graph : NULL;
+        g_return_if_fail(graph);
     }
-    */
 
     if (g_strcmp0(command, "clear") == 0) {
-        network_set_graph(self->network, NULL);
-        if (self->graph) {
-            graph_free(self->graph);
-            self->graph = NULL;
-        }
-        // TODO: respect id/label
-        self->graph = graph_new();
-        network_set_graph(self->network, self->graph);
-
+        const gchar *graph_id = json_object_get_string_member(payload, "id");
+        Graph *graph = graph_new(graph_id);
+        Network *network = network_new(graph);
+        network->on_processor_invalidated_data = (gpointer)self;
+        network->on_processor_invalidated = send_preview_invalidated;
+        g_hash_table_insert(self->network_map, (gpointer)g_strdup(graph_id), (gpointer)network);
     } else if (g_strcmp0(command, "addnode") == 0) {
         graph_add_node(graph,
             json_object_get_string_member(payload, "id"),
@@ -126,7 +143,14 @@ static void
 handle_network_message(UiConnection *self, const gchar *command, JsonObject *payload,
                        SoupWebsocketConnection *ws)
 {
-    Network *network = self->network;
+    g_return_if_fail(payload);
+
+    Network *network = NULL;
+    {
+        const gchar *graph_id = json_object_get_string_member(payload, "graph");
+        network = (graph_id) ? g_hash_table_lookup(self->network_map, graph_id) : NULL;
+    }
+    g_return_if_fail(network);
 
     if (g_strcmp0(command, "start") == 0) {
         // FIXME: response should be done in callback monitoring network state changes
@@ -199,24 +223,6 @@ ui_connection_handle_message(UiConnection *self,
     }
 }
 
-void
-send_preview_invalidated(Network *network, Processor *processor, GeglRectangle rect, gpointer user_data) {
-    UiConnection *ui = (UiConnection *)user_data;
-    g_return_if_fail(ui->registry);
-    g_return_if_fail(ui->registry->info);
-
-    const gchar *node = graph_find_processor_name(network->graph, processor);
-
-    gchar url[1024];
-    g_snprintf(url, 1024, "http://%s:%d/process?node=%s",
-               ui->hostname, ui->registry->info->port, node);
-
-    JsonObject *payload = json_object_new();
-    json_object_set_string_member(payload, "type", "previewurl");
-    json_object_set_string_member(payload, "url", url);
-    send_response(ui->connection, "network", "output", payload);
-}
-
 static void
 on_web_socket_open(SoupWebsocketConnection *ws, gpointer user_data)
 {
@@ -226,8 +232,6 @@ on_web_socket_open(SoupWebsocketConnection *ws, gpointer user_data)
     UiConnection *self = (UiConnection *)user_data;
     g_assert(self);
     self->connection = ws;
-    self->network->on_processor_invalidated_data = (gpointer)self;
-    self->network->on_processor_invalidated = send_preview_invalidated;
 
 	g_free(url);
 }
@@ -310,35 +314,55 @@ process_image_callback (SoupServer *server, SoupMessage *msg,
 		 SoupClientContext *context, gpointer user_data) {
 
     UiConnection *self = (UiConnection *)user_data;
-    PngEncoder *encoder = png_encoder_new();
 
-    const gchar *node_name = g_hash_table_lookup(query, "node");
+    // Lookup network
+    Network *network = NULL;
+    {
+        const gchar *graph_id = g_hash_table_lookup(query, "graph");
+        network = (graph_id) ? g_hash_table_lookup(self->network_map, graph_id) : NULL;
+    }
+    if (!network) {
+        soup_message_set_status_full(msg, SOUP_STATUS_BAD_REQUEST, "'graph' not specified or wrong");
+        return;
+    }
 
-    // TODO: move code into backend somewhere
+    // Lookup node
     Processor *processor = NULL;
-    if (self->graph && node_name) {
-        processor = g_hash_table_lookup(self->graph->processor_map, node_name);
+    {
+        const gchar *node_id = g_hash_table_lookup(query, "node");
+        processor = (node_id) ? network_processor(network, node_id) : NULL;
+    }
+    if (!processor) {
+        soup_message_set_status_full(msg, SOUP_STATUS_BAD_REQUEST, "'node' not specified or wrong");
+        return;
     }
 
-    if (processor) {
-        // FIXME: allow region-of-interest and scale as query params
-        gchar *buffer = NULL;
-        GeglRectangle roi;
-        const gboolean success = processor_blit(processor, babl_format("R'G'B'A u8"), &roi, &buffer);
-        if (success && roi.width > 0 && roi.height > 0) {
-            png_encoder_encode_rgba(encoder, roi.width, roi.height, buffer);
-            const gchar *mime_type = "image/png";
-            char *buf = encoder->buffer;
-            const size_t len = encoder->size;
-            soup_message_set_status(msg, SOUP_STATUS_OK);
-            soup_message_set_response(msg, mime_type, SOUP_MEMORY_COPY, buf, len);
-        } else {
-            soup_message_set_status(msg, SOUP_STATUS_BAD_REQUEST);
-        }
-        g_free(buffer);
+    // Render output
+    // FIXME: allow region-of-interest and scale as query params
+    gchar *rgba = NULL;
+    GeglRectangle roi;
+    const gboolean success = processor_blit(processor, babl_format("R'G'B'A u8"), &roi, &rgba);
+    if (!success) {
+        soup_message_set_status(msg, SOUP_STATUS_BAD_REQUEST);
+        g_free(rgba);
+        return;
+    }
+    if (!(roi.width > 0 && roi.height > 0)) {
+        soup_message_set_status(msg, SOUP_STATUS_BAD_REQUEST);
+        g_free(rgba);
+        return;
     }
 
-    png_encoder_free(encoder);
+    // Compress to PNG
+    {
+        PngEncoder *encoder = png_encoder_new();
+        png_encoder_encode_rgba(encoder, roi.width, roi.height, rgba);
+        char *png = encoder->buffer;
+        const size_t len = encoder->size;
+        soup_message_set_status(msg, SOUP_STATUS_OK);
+        soup_message_set_response(msg, "image/png", SOUP_MEMORY_COPY, png, len);
+        png_encoder_free(encoder);
+    }
 }
 
 static void
@@ -380,8 +404,8 @@ UiConnection *
 ui_connection_new(const gchar *hostname, int internal_port, int external_port) {
     UiConnection *self = g_new(UiConnection, 1);
 
-    self->graph = NULL;
-    self->network = network_new();
+    self->network_map = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                              (GDestroyNotify)network_free, NULL);
     self->hostname = g_strdup(hostname);
     self->registry = registry_new(runtime_info_new_from_env(hostname, external_port));
 
@@ -405,13 +429,8 @@ ui_connection_new(const gchar *hostname, int internal_port, int external_port) {
 void
 ui_connection_free(UiConnection *self) {
 
-    network_free(self->network);
+    g_hash_table_destroy(self->network_map);
     g_free(self->hostname);
-
-    if (self->graph) {
-        graph_free(self->graph);
-        self->graph = NULL;
-    }
     g_object_unref(self->server);
 
     g_free(self);

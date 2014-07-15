@@ -115,9 +115,10 @@ class RuntimeProcess
         @errors = []
         return errors
 
-processNode = (nodeId, callback) ->
+processNode = (graphId, nodeId, callback) ->
     base = "http://localhost:3888"
     data =
+        graph: graphId
         node: nodeId
     needle.request 'get', base+'/process', data, callback
 
