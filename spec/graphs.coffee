@@ -79,11 +79,15 @@ describe 'Graphs', ->
                     chai.assert exists, 'Not found: '+reference
                     done()
             describe 'graph execution', ->
-                graph = testcase._graph
-                props = {}
-                for key of testcase
-                    props[key] = testcase[key] if key != '_name' and key != '_graph'
-                u = url.format { protocol: 'http:', host: urlbase, pathname: '/graph/'+graph, query: props}
+                u = null
+                if testcase._url
+                    u = 'http://'+ urlbase + testcase._url
+                else
+                    graph = testcase._graph
+                    props = {}
+                    for key of testcase
+                        props[key] = testcase[key] if key != '_name' and key != '_graph'
+                    u = url.format { protocol: 'http:', host: urlbase, pathname: '/graph/'+graph, query: props}
 
                 it 'should output a file', (done) ->
                     req = request u, (err, response) ->

@@ -18,3 +18,9 @@
     input: http://s.radar.oreilly.com/wp-files/8/2013/10/noflo-jekyll-700x456.jpg
     color1: '#87a9a7'
     color2: '#b3dedc'
+-
+    _name: regcheck_https_protocol
+    _url: '/graph/gradientmap?input=https%3A%2F%2Fpbs.twimg.com%2Fmedia%2FBo5budLIcAAWEAB.jpg%3Alarge&color1=%23082A31&color2=%23FFE79B'
+-
+    _name: regcheck_colon_in_input_extension
+    _url: '/graph/gradientmap?input=https%3A%2F%2Fs3.amazonaws.com%2Fksr%2Fassets%2F000%2F921%2F889%2F0f93b56c15adf6737b7f725162851e50_large.png%3F1379220875&color1=%23082A31&color2=%23FFE79B'
