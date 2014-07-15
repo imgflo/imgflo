@@ -8,6 +8,9 @@ fs = require 'fs'
 chai = require 'chai'
 
 debug = process.env.IMGFLO_TESTS_DEBUG?
+# Used for checks which cannot be evaluated when running in debug,
+# when we don't get the stdout of the runtime for instance.
+itSkipDebug = if debug then it.skip else it
 
 describe 'NoFlo runtime API,', () ->
     runtime = new utils.RuntimeProcess debug
@@ -161,7 +164,7 @@ describe 'NoFlo runtime API,', () ->
             ui.once 'runtime-info-changed', ->
                 done()
 
-        it 'should not have produced any errors', ->
+        itSkipDebug 'should not have produced any errors', ->
             chai.expect(runtime.popErrors()).to.eql []
 
     describe 'starting the network', ->
@@ -180,7 +183,7 @@ describe 'NoFlo runtime API,', () ->
                     done() if exists
                     clearInterval checkInterval
             checkInterval = setInterval checkExistence, 50
-        it 'should not have produced any errors', ->
+        itSkipDebug 'should not have produced any errors', ->
             chai.expect(runtime.popErrors()).to.eql []
 
     describe 'stopping the network', ->
@@ -190,7 +193,7 @@ describe 'NoFlo runtime API,', () ->
             ui.send "network", "stop", {graph: graph}
             ui.once 'network-running', (running) ->
                 done() if not running
-        it 'should not have produced any errors', ->
+        itSkipDebug 'should not have produced any errors', ->
             chai.expect(runtime.popErrors()).to.eql []
 
     describe 'graph tear down', ->
@@ -229,9 +232,9 @@ describe 'NoFlo runtime API,', () ->
                     chai.expect(resp.statusCode).to.equal 400
                     done()
 
-        it 'should have produced an error', ->
+        itSkipDebug 'should have produced 1 error', ->
             errors = runtime.popErrors()
-            chai.expect(errors).to.have.length 1
+            chai.expect(errors).to.have.length 1, errors.toString()
 
     describe 'processing a node with infinite bounding box', ->
 
@@ -251,6 +254,6 @@ describe 'NoFlo runtime API,', () ->
                     chai.expect(resp.headers['content-type']).to.equal "image/png"
                     done()
 
-        it 'should have produced two errors', ->
+        itSkipDebug 'should have produced 2 errors', ->
             errors = runtime.popErrors()
-            chai.expect(errors).to.have.length 2
+            chai.expect(errors).to.have.length 2, errors.toString()
