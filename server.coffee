@@ -253,7 +253,7 @@ class Server extends EventEmitter
 
         # Add extension so GEGL load op can use the correct file loader
         ext = path.extname src
-        if ext != '.png' or ext != '.jpg'
+        if ext not in ['.png', '.jpg', '.jpeg']
             ext = ''
 
         to = path.join @workdir, (hashFile src) + ext

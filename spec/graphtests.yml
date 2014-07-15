@@ -24,3 +24,6 @@
 -
     _name: regcheck_colon_in_input_extension
     _url: '/graph/gradientmap?input=https%3A%2F%2Fs3.amazonaws.com%2Fksr%2Fassets%2F000%2F921%2F889%2F0f93b56c15adf6737b7f725162851e50_large.png%3F1379220875&color1=%23082A31&color2=%23FFE79B'
+-
+    _name: regcheck_unsniffable_png
+    _url: '/graph/gradientmap?input=http%3A%2F%2Febmedia.eventbrite.com%2Fs3-build%2Fimages%2F4783149%2F5973734463%2F1%2Flogo.png&color1=%23082A31&color2=%23FFE79B'
