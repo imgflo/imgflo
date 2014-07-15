@@ -25,3 +25,4 @@ lib/uuid.c
 spec/graphs.coffee
 spec/graphtests.yml
 spec/utils.coffee
+lib/library.c

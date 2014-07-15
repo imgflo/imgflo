@@ -8,6 +8,7 @@
 #include "lib/network.c"
 #include "lib/uuid.c"
 #include "lib/registry.c"
+#include "lib/library.c"
 #include "lib/ui.c"
 
 static void
