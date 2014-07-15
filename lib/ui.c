@@ -341,13 +341,42 @@ handle_graph_message(UiConnection *self, const gchar *command, JsonObject *paylo
 }
 
 static void
+handle_network_message(UiConnection *self, const gchar *command, JsonObject *payload,
+                       SoupWebsocketConnection *ws)
+{
+    Network *network = self->network;
+
+    if (g_strcmp0(command, "start") == 0) {
+        // FIXME: response should be done in callback monitoring network state changes
+        // TODO: send timestamp, graph id
+        JsonObject *info = json_object_new();
+        send_response(ws, "network", "started", info);
+
+        g_print("\tNetwork START\n");
+        network_set_running(network, TRUE);
+
+    } else if (g_strcmp0(command, "stop") == 0) {
+        // FIXME: response should be done in callback monitoring network state changes
+        // TODO: send timestamp, graph id
+        JsonObject *info = json_object_new();
+        send_response(ws, "network", "stopped", info);
+
+        g_print("\tNetwork STOP\n");
+        network_set_running(network, FALSE);
+    } else {
+        g_printerr("Unhandled message on protocol 'network', command='%s'", command);
+    }
+}
+
+static void
 ui_connection_handle_message(UiConnection *self,
                 const gchar *protocol, const gchar *command, JsonObject *payload,
                 SoupWebsocketConnection *ws)
 {
     if (g_strcmp0(protocol, "graph") == 0) {
         handle_graph_message(self, command, payload, ws);
-
+    } else if (g_strcmp0(protocol, "network") == 0) {
+        handle_network_message(self, command, payload, ws);
     } else if (g_strcmp0(protocol, "component") == 0 && g_strcmp0(command, "list") == 0) {
 
         // Our special Processor component
@@ -397,28 +426,6 @@ ui_connection_handle_message(UiConnection *self,
         json_object_set_array_member(runtime, "capabilities", capabilities);
 
         send_response(ws, "runtime", "runtime", runtime);
-
-    } else if (g_strcmp0(protocol, "network") == 0 && g_strcmp0(command, "start") == 0) {
-        g_return_if_fail(self->graph);
-
-        // FIXME: should be done in callback monitoring network state changes
-        // TODO: send timestamp, graph id
-        JsonObject *info = json_object_new();
-        send_response(ws, "network", "started", info);
-
-        g_print("\tNetwork START\n");
-        network_set_running(self->network, TRUE);
-
-    } else if (g_strcmp0(protocol, "network") == 0 && g_strcmp0(command, "stop") == 0) {
-        g_return_if_fail(self->graph);
-
-        // FIXME: should be done in callback monitoring network state changes
-        // TODO: send timestamp, graph id
-        JsonObject *info = json_object_new();
-        send_response(ws, "network", "stopped", info);
-
-        g_print("\tNetwork STOP\n");
-        network_set_running(self->network, FALSE);
 
     } else {
         g_printerr("Unhandled message: protocol='%s', command='%s'", protocol, command);
