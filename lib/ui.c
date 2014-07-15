@@ -405,7 +405,7 @@ ui_connection_new(const gchar *hostname, int internal_port, int external_port) {
     UiConnection *self = g_new(UiConnection, 1);
 
     self->network_map = g_hash_table_new_full(g_str_hash, g_str_equal,
-                                              (GDestroyNotify)network_free, NULL);
+                                              g_free, (GDestroyNotify)network_free);
     self->hostname = g_strdup(hostname);
     self->registry = registry_new(runtime_info_new_from_env(hostname, external_port));
 
