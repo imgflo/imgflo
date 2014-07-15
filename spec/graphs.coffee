@@ -18,7 +18,7 @@ urlbase = 'localhost:8888'
 compareImages = (actual, expected, callback) ->
     cmd = "./install/env.sh ./install/bin/gegl-imgcmp #{actual} #{expected}"
     options =
-        timeout: 1000
+        timeout: 2000
     child.exec cmd, options, (error, stdout, stderr) ->
         return callback error, stderr
 
@@ -96,7 +96,7 @@ describe 'Graphs', ->
 
                 it 'results should be equal to reference', (done) ->
                     compareImages output, reference, (error, msg) ->
-                        chai.assert error == null, msg
+                        chai.assert.isNull error, msg.toString()
                         done()
 
                 it 'should not cause errors', ->
