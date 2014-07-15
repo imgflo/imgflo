@@ -136,20 +136,26 @@ describe 'NoFlo runtime API,', () ->
     describe 'graph building', ->
 
         # TODO: verify responses being received
-        # TODO: add graph identifier
+        send = (protocol, cmd, pay, graph) ->
+            if graph?
+                pay.graph = graph
+            ui.send protocol, cmd, pay
+        ui.graph1 =
+            send: (cmd, pay) ->
+                send "graph", cmd, pay, 'graph1'
 
         outfile = 'testtemp/protocol-crop.png'
         it 'should not crash', (done) ->
-            ui.send "graph", "clear"
-            ui.send "graph", "addnode", {id: 'in', component: 'gegl/load'}
-            ui.send "graph", "addnode", {id: 'filter', component: 'gegl/crop'}
-            ui.send "graph", "addnode", {id: 'out', component: 'gegl/png-save'}
-            ui.send "graph", "addnode", {id: 'proc', component: 'Processor'}
-            ui.send "graph", "addedge", {src: {node: 'in', port: 'output'}, tgt: {node: 'filter', port: 'input'}}
-            ui.send "graph", "addedge", {src: {node: 'filter', port: 'output'}, tgt: {node: 'out', port: 'input'}}
-            ui.send "graph", "addedge", {src: {node: 'out', port: 'ANY'}, tgt: {node: 'proc', port: 'node'}}
-            ui.send "graph", "addinitial", {src: {data: 'examples/grid-toastybob.jpg'}, tgt: {node: 'in', port: 'path'}}
-            ui.send "graph", "addinitial", {src: {data: outfile}, tgt: {node: 'out', port: 'path'}}
+            ui.send "graph", "clear", {id: 'graph1'}
+            ui.graph1.send "addnode", {id: 'in', component: 'gegl/load'}
+            ui.graph1.send "addnode", {id: 'filter', component: 'gegl/crop'}
+            ui.graph1.send "addnode", {id: 'out', component: 'gegl/png-save'}
+            ui.graph1.send "addnode", {id: 'proc', component: 'Processor'}
+            ui.graph1.send "addedge", {src: {node: 'in', port: 'output'}, tgt: {node: 'filter', port: 'input'}}
+            ui.graph1.send "addedge", {src: {node: 'filter', port: 'output'}, tgt: {node: 'out', port: 'input'}}
+            ui.graph1.send "addedge", {src: {node: 'out', port: 'ANY'}, tgt: {node: 'proc', port: 'node'}}
+            ui.graph1.send "addinitial", {src: {data: 'examples/grid-toastybob.jpg'}, tgt: {node: 'in', port: 'path'}}
+            ui.graph1.send "addinitial", {src: {data: outfile}, tgt: {node: 'out', port: 'path'}}
 
             ui.send "runtime", "getruntime"
             ui.once 'runtime-info-changed', ->
@@ -189,15 +195,15 @@ describe 'NoFlo runtime API,', () ->
 
         it 'should not crash', (done) ->
 
-            ui.send "graph", "removeinitial", {tgt: {node: 'in', port: 'path'}}
-            ui.send "graph", "removeinitial", {tgt: {node: 'out', port: 'path'}}
-            ui.send "graph", "removeedge", {src: {node: 'in', port: 'output'}, tgt: {node: 'filter', port: 'input'}}
-            ui.send "graph", "removeedge", {src: {node: 'filter', port: 'output'}, tgt: {node: 'out', port: 'input'}}
-            ui.send "graph", "removeedge", {src: {node: 'out', port: 'ANY'}, tgt: {node: 'proc', port: 'node'}}
-            ui.send "graph", "removenode", {id: 'in'}
-            ui.send "graph", "removenode", {id: 'filter'}
-            ui.send "graph", "removenode", {id: 'out'}
-            ui.send "graph", "removenode", {id: 'proc'}
+            ui.graph1.send "removeinitial", {tgt: {node: 'in', port: 'path'}}
+            ui.graph1.send "removeinitial", {tgt: {node: 'out', port: 'path'}}
+            ui.graph1.send "removeedge", {src: {node: 'in', port: 'output'}, tgt: {node: 'filter', port: 'input'}}
+            ui.graph1.send "removeedge", {src: {node: 'filter', port: 'output'}, tgt: {node: 'out', port: 'input'}}
+            ui.graph1.send "removeedge", {src: {node: 'out', port: 'ANY'}, tgt: {node: 'proc', port: 'node'}}
+            ui.graph1.send "removenode", {id: 'in'}
+            ui.graph1.send "removenode", {id: 'filter'}
+            ui.graph1.send "removenode", {id: 'out'}
+            ui.graph1.send "removenode", {id: 'proc'}
 
             # TODO: use getgraph command to verify graph is now empty
 
@@ -211,8 +217,9 @@ describe 'NoFlo runtime API,', () ->
     describe 'processing a node without anything connected', ->
 
         it 'should give 404', (done) ->
-            ui.send "graph", "clear"
-            ui.send "graph", "addnode", {id: 'proc', component: 'Processor'}
+            graph = 'not-connected-graph'
+            ui.send "graph", "clear", {id: graph}
+            ui.send "graph", "addnode", {id: 'proc', component: 'Processor', graph: graph}
             ui.send "runtime", "getruntime"
             ui.once 'runtime-info-changed', ->
                 utils.processNode 'proc', (err, resp) ->
@@ -227,10 +234,11 @@ describe 'NoFlo runtime API,', () ->
     describe 'processing a node with infinite bounding box', ->
 
         it 'should give 200 OK', (done) ->
-            ui.send "graph", "clear"
-            ui.send "graph", "addnode", {id: 'in', component: 'gegl/checkerboard'}
-            ui.send "graph", "addnode", {id: 'proc', component: 'Processor'}
-            ui.send "graph", "addedge", {src: {node: 'in', port: 'output'}, tgt: {node: 'proc', port: 'input'}}
+            graph = 'infinite-graph'
+            ui.send "graph", "clear", {id: graph}
+            ui.send "graph", "addnode", {id: 'in', component: 'gegl/checkerboard', graph: graph}
+            ui.send "graph", "addnode", {id: 'proc', component: 'Processor', graph: graph}
+            ui.send "graph", "addedge", {src: {node: 'in', port: 'output'}, tgt: {node: 'proc', port: 'input'}, graph: graph}
 
             # TODO: test that image is should be cropped
             ui.send "runtime", "getruntime"
