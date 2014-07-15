@@ -253,11 +253,11 @@ class Server extends EventEmitter
 
         # Add extension so GEGL load op can use the correct file loader
         ext = path.extname src
-        if (ext.indexOf '&') != -1
+        if ext != '.png' or ext != '.jpg'
             ext = ''
 
         to = path.join @workdir, (hashFile src) + ext
-        if (src.indexOf 'http://') == -1
+        if (src.indexOf 'http://') == -1 and (src.indexOf 'https://') == -1
             src = 'http://localhost:'+@port+'/'+src
 
         downloadFile src, to, (err, contentType) =>
