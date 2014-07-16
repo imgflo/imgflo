@@ -23,15 +23,18 @@ Design
 ==========
 
 imgflo is split into two parts:
+
 1. A [HTTP server](./server.coffee), implemented with CoffeeScript and node.js
 2. A [Flowhub.io runtime](./lib), implemented in C using GEGL and libsoup
 
 server
 -------
 The imgflo server provides a HTTP API for processing images: 
+
     GET /graphs/mygraph?input=http://example.com/input-image.png&attr1=value1&....
 
 When the server gets the request, it will:
+
 1. Download the specified 'input' image over HTTP(s)
 2. Find and load the graph 'mygraph'
 3. Set attribute,value pairs as IIPs to the exported ports of the graph
@@ -52,10 +55,12 @@ It also provides an executable that can load and run a FBP graph defined as
 
 The runtime uses GEGLs native graph structure, wrapped to be compatible with
 FBP conventions and protocols:
-* All *GEGL operations* are automatically made available as *imgflo components*
-* Each *FBP process* is a *GeglNode*
-* FBP *edges* can only pass data that can flow between *GeglPad*s, meaning *GeglBuffer*s (image data)
 
+* All *GEGL operations* are automatically made available as *imgflo components*
+* Each *imgflo process* is a *GeglNode*
+* *imgflo edges* can pass data flowing between *GeglPad*
+
+The edge limitation means that only ports with type *GeglBuffer* (image data) can be connected together.
 Other data-types are in GEGL exposed as a *GProperty*, and can currently only be set it to a *FBP IIP* literal.
 In the future, support for streaming property changes from outside is planned.
 
