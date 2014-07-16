@@ -38,12 +38,26 @@ clone = (obj) ->
 
 installdir = __dirname + '/install/'
 
-class Processor extends EventEmitter
+class Processor
+    constructor: (verbose) ->
+        @verbose = verbose
+
+    # FIXME: clean up interface
+    # callback should be called with (err, error_string)
+    process: (outputFile, graph, iips, inputFile, inputType, callback) ->
+        throw new Error 'Processor.process() not implemented'
+
+class ImgfloProcessor extends Processor
 
     constructor: (verbose) ->
         @verbose = verbose
 
+    process: (outputFile, graph, iips, inputFile, inputType, callback) ->
+        g = prepareImgfloGraph graph, iips, inputFile, outputFile, inputType
+        @run g, callback
+
     run: (graph, callback) ->
+
         s = JSON.stringify graph, null, "  "
         cmd = installdir+'env.sh'
         args = [ installdir+'bin/imgflo', "-"]
@@ -62,7 +76,7 @@ class Processor extends EventEmitter
         process.stdin.write s
         process.stdin.end()
 
-prepareGraph = (basegraph, attributes, inpath, outpath, type) ->
+prepareImgfloGraph = (basegraph, attributes, inpath, outpath, type) ->
 
     # Avoid mutating original
     def = clone basegraph
@@ -151,6 +165,20 @@ keysNotIn = (A, B) ->
             notIn.push a
     return notIn
 
+typeFromMime = (mime) ->
+    type = null
+    if mime == 'image/jpeg'
+        type = 'jpg'
+    else if mime == 'image/png'
+        type = 'png'
+    return type
+
+runtimeForGraph = (g) ->
+    runtime = 'imgflo'
+    if g.properties and g.properties.environment and g.properties.environment.type
+        runtime = g.properties.environment.type
+    return runtime
+
 class Server extends EventEmitter
     constructor: (workdir, resourcedir, graphdir, verbose) ->
         @workdir = workdir
@@ -159,7 +187,8 @@ class Server extends EventEmitter
         @resourceserver = new node_static.Server resourcedir
         @fileserver = new node_static.Server workdir
         @httpserver = http.createServer @handleHttpRequest
-        @processor = new Processor verbose
+        @processors =
+            imgflo: new ImgfloProcessor verbose
         @port = null
 
         if not fs.existsSync workdir
@@ -249,7 +278,8 @@ class Server extends EventEmitter
         graph = path.join @graphdir, graph
 
         # TODO: transform urls to downloaded images for all attributes, not just "input"
-        src = attr.input
+        src = attr.input.toString()
+        delete attr.input
 
         # Add extension so GEGL load op can use the correct file loader
         ext = path.extname src
@@ -276,20 +306,22 @@ class Server extends EventEmitter
                     @logEvent 'invalid-graph-properties-error', { request: request_url, props: invalid }
                     return callback { code: 449, result: def }, null
 
-                delete attr.input
-                type = null
-                if ext == ''
-                    if contentType == 'image/jpeg'
-                        type = 'jpg'
-                    else if contentType == 'image/png'
-                        type = 'png'
+                runtime = runtimeForGraph def
+                processor = @processors[runtime]
+                if not processor?
+                    e =
+                        request: request_url
+                        runtime: runtime
+                        valid: Object.keys @processors
+                    @logEvent 'no-processor-for-runtime-error', e
+                    return callback { code: 500, result: {} }, null
 
-                def = prepareGraph def, attr, to, outf, type
-                @processor.run def, callback
+                type = typeFromMime contentType
+                processor.process outf, def, attr, to, type, callback
+
 
 exports.Processor = Processor
 exports.Server = Server
-exports.prepareGraph = prepareGraph
 
 exports.main = ->
     process.on 'uncaughtException', (err) ->
