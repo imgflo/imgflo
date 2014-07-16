@@ -47,6 +47,69 @@ class Processor
     process: (outputFile, graph, iips, inputFile, inputType, callback) ->
         throw new Error 'Processor.process() not implemented'
 
+class NoFloProcessor extends Processor
+    constructor: (verbose) ->
+        @verbose = verbose
+
+    process: (outputFile, graph, iips, inputFile, inputType, callback) ->
+        g = prepareNoFloGraph graph, iips, inputFile, outputFile, inputType
+        @run g, callback
+
+    run: (graph, callback) ->
+        s = JSON.stringify graph, null, "  "
+        cmd = 'node_modules/noflo-canvas/node_modules/.bin/noflo'
+        # HACK
+        graphPath = 'noflocanvas.json'
+        fs.writeFileSync graphPath, s
+        args = [ graphPath ]
+
+        console.log 'executing', cmd, args if @verbose
+        stderr = ""
+        process = child_process.spawn cmd, args, { stdio: ['pipe', 'pipe', 'pipe'] }
+        process.on 'close', (exitcode) ->
+            err = if exitcode then new Error "processor returned exitcode: #{exitcode}" else null
+            return callback err, stderr
+        process.stdout.on 'data', (d) =>
+            console.log d.toString() if @verbose
+        process.stderr.on 'data', (d)->
+            stderr += d.toString()
+        console.log s if @verbose
+        process.stdin.write s
+        process.stdin.end()
+
+
+prepareNoFloGraph = (basegraph, attributes, inpath, outpath, type) ->
+
+    # Avoid mutating original
+    def = clone basegraph
+
+    # Note: We drop inpath on the floor, only support pure generative for now
+
+    # Add a output node
+    def.processes.repeat = { component: 'core/RepeatAsync' }
+    def.processes.save = { component: 'canvas/SavePNG' }
+
+    # Attach filepaths as IIPs
+    def.connections.push { data: outpath, tgt: { process: 'save', port: 'filename'} }
+
+    # Connect to actual graph
+    out = def.outports.output
+
+    def.connections.push { src: out, tgt: {process: 'repeat', port: 'in'} }
+    def.connections.push { src: {process: 'repeat', port: 'out'}, tgt: {process: 'save', port: 'canvas'} }
+
+    # Attach processing parameters as IIPs
+    for k, v of attributes
+        tgt = def.inports[k]
+        def.connections.push { data: v, tgt: tgt }
+
+    # Clean up
+    delete def.inports
+    delete def.outports
+
+    return def
+
+
 class ImgfloProcessor extends Processor
 
     constructor: (verbose) ->
@@ -187,9 +250,13 @@ class Server extends EventEmitter
         @resourceserver = new node_static.Server resourcedir
         @fileserver = new node_static.Server workdir
         @httpserver = http.createServer @handleHttpRequest
+        @port = null
+
+        n = new NoFloProcessor verbose
         @processors =
             imgflo: new ImgfloProcessor verbose
-        @port = null
+            'noflo-browser': n
+            'noflo-nodejs': n
 
         if not fs.existsSync workdir
             fs.mkdirSync workdir
