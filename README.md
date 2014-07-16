@@ -18,6 +18,53 @@ MIT
 
 Note: GEGL itself is under LGPLv3.
 
+
+Design
+==========
+
+imgflo is split into two parts:
+1. A [HTTP server](./server.coffee), implemented with CoffeeScript and node.js
+2. A [Flowhub.io runtime](./lib), implemented in C using GEGL and libsoup
+
+server
+-------
+The imgflo server provides a HTTP API for processing images: 
+    GET /graphs/mygraph?input=http://example.com/input-image.png&attr1=value1&....
+
+When the server gets the request, it will:
+1. Download the specified 'input' image over HTTP(s)
+2. Find and load the graph 'mygraph'
+3. Set attribute,value pairs as IIPs to the exported ports of the graph
+4. Processes the graph using a runtime*
+5. Stores the output image to disk
+6. Serve the output image over HTTP
+
+Note: In step 4, currently a new runtime is spawned for each request, and communication done through stdin.
+In the future, the runtime will be a long-running worker, and communication done using the FBP runtime protocol.
+Currently only the imgflo runtime is supported, but this could be extended to other runtimes as well.
+
+runtime
+--------
+The imgflo runtime implements the [FBP runtime protocol]
+(http://noflojs.org/documentation/protocol) over WebSockets.
+It also provides an executable that can load and run a FBP graph defined as
+[JSON]((http://noflojs.org/documentation/json).
+
+The runtime uses GEGLs native graph structure, wrapped to be compatible with
+FBP conventions and protocols:
+* All *GEGL operations* are automatically made available as *imgflo components*
+* Each *FBP process* is a *GeglNode*
+* FBP *edges* can only pass data that can flow between *GeglPad*s, meaning *GeglBuffer*s (image data)
+
+Other data-types are in GEGL exposed as a *GProperty*, and can currently only be set it to a *FBP IIP* literal.
+In the future, support for streaming property changes from outside is planned.
+
+One exception is for the special *Processor* component, which is specific to imgflo.
+This component is attached to outputs which are to be computed interactively.
+Because GEGL does processing fully *on-demand*, something needs to *pull* at the edges
+where image data should be realized.
+
+
 Deploying to Heroku
 ==========================
 
@@ -132,4 +179,22 @@ Running server
 
 You should see your server running at http://localhost:8080
 
+
+Creating new graphs for server
+=============================
+
+By using [Flowhub](http://app.flowhub.io) with an imgflo runtime,
+one can create new image processing pipelines visually.
+
+By convention a graph should export
+* One inport named 'input', which receives the input image
+* One outport named 'output', which provides the output image
+All other exported inports will be accessible as attributes which can be set.
+
+From Flowhub one can export a .json file. To use in the server put it in the 'graphs' directory.
+If you use the git integration in Flowhub, new graphs will automatically be put in the right place.
+
+Following the same conventions, you can also hand-write the graph using the .fbp DSL, 
+and convert it to JSON using the [fbp](http://github.com/noflo/fbp) command-line tool.
+You could also generate it programatically.
 
