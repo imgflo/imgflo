@@ -188,6 +188,16 @@ downloadFile = (src, out, callback) ->
     stream = fs.createWriteStream out
     s = req.pipe stream
 
+waitForDownloads = (files, callback) ->
+    f = files.input
+    if f?
+        downloadFile f.src, f.path, (err, contentType) ->
+            return callback err, null if err
+            f.type = contentType
+            return callback null, files
+    else
+        return callback null, files
+
 getGraphs = (directory, callback) ->
     graphs = {}
 
@@ -242,6 +252,31 @@ runtimeForGraph = (g) ->
         runtime = g.properties.environment.type
     return runtime
 
+parseRequestUrl = (u) ->
+    parsedUrl = url.parse u, true
+
+    files = {} # port -> {}
+    # TODO: transform urls to downloaded images for all attributes, not just "input"
+    if parsedUrl.query.input
+        src = parsedUrl.query.input.toString()
+
+        # Add extension so GEGL load op can use the correct file loader
+        ext = path.extname src
+        if ext not in ['.png', '.jpg', '.jpeg']
+            ext = ''
+
+        files.input = { src: src, extension: ext, path: null }
+
+    iips = {}
+    for key, value of parsedUrl.query
+        iips[key] = value if key != 'input'
+
+    out =
+        graph: (parsedUrl.pathname.replace '/graph', '')
+        files: files
+        iips: iips
+    return out
+
 class Server extends EventEmitter
     constructor: (workdir, resourcedir, graphdir, verbose) ->
         @workdir = workdir
@@ -289,6 +324,7 @@ class Server extends EventEmitter
 
     getDemoData: (callback) ->
 
+        # FIXME: noflo-canvas graphs definitionshould be enriched with height+width
         getGraphs @graphdir, (err, res) =>
             if err
                 throw err
@@ -296,7 +332,6 @@ class Server extends EventEmitter
                 graphs: res
                 images: ["demo/grid-toastybob.jpg", "http://thegrid.io/img/thegrid-overlay.png"]
             return callback null, d
-
 
     serveDemoPage: (request, response) ->
         u = url.parse request.url
@@ -311,6 +346,14 @@ class Server extends EventEmitter
             @getDemoData (err, data) ->
                 response.statusCode = 200
                 response.end JSON.stringify data
+
+    getGraph: (name, callback) ->
+        # TODO: cache graphs
+        graphPath = path.join @graphdir, name + '.json'
+        fs.readFile graphPath, (err, contents) =>
+            return callback err, null if err
+            def = JSON.parse contents
+            return callback null, def
 
     handleGraphRequest: (request, response) ->
         u = url.parse request.url, true
@@ -337,55 +380,41 @@ class Server extends EventEmitter
                         @fileserver.serveFile filepath, 200, {}, request, response
 
     processGraphRequest: (outf, request_url, callback) =>
+        req = parseRequestUrl request_url
 
-        u = url.parse request_url, true
-        attr = u.query
+        for port, file of req.files
+            file.path = path.join @workdir, (hashFile file.src) + file.extension
+            if (file.src.indexOf 'http://') == -1 and (file.src.indexOf 'https://') == -1
+                file.src = 'http://localhost:'+@port+'/'+file.src
 
-        graph = (u.pathname.replace '/graph', '') + '.json'
-        graph = path.join @graphdir, graph
-
-        # TODO: transform urls to downloaded images for all attributes, not just "input"
-        src = attr.input.toString()
-        delete attr.input
-
-        # Add extension so GEGL load op can use the correct file loader
-        ext = path.extname src
-        if ext not in ['.png', '.jpg', '.jpeg']
-            ext = ''
-
-        to = path.join @workdir, (hashFile src) + ext
-        if (src.indexOf 'http://') == -1 and (src.indexOf 'https://') == -1
-            src = 'http://localhost:'+@port+'/'+src
-
-        downloadFile src, to, (err, contentType) =>
+        @getGraph req.graph, (err, graph) =>
             if err
-                @logEvent 'download-input-error', { request: request_url, err: err, src: src, to: to }
+                @logEvent 'read-graph-error', { request: request_url, err: err, file: graph }
                 return callback err, null
 
-            fs.readFile graph, (err, contents) =>
+            invalid = keysNotIn req.iips, graph.inports
+            if invalid.length > 0
+                @logEvent 'invalid-graph-properties-error', { request: request_url, props: invalid }
+                return callback { code: 449, result: graph }, null
+
+            runtime = runtimeForGraph graph
+            processor = @processors[runtime]
+            if not processor?
+                e =
+                    request: request_url
+                    runtime: runtime
+                    valid: Object.keys @processors
+                @logEvent 'no-processor-for-runtime-error', e
+                return callback { code: 500, result: {} }, null
+
+            waitForDownloads req.files, (err, downloads) =>
                 if err
-                    @logEvent 'read-graph-error', { request: request_url, err: err, file: graph }
-                    return callback err, null
-                # TODO: read graphs once
-                def = JSON.parse contents
-                invalid = keysNotIn attr, def.inports
-                if invalid.length > 0
-                    @logEvent 'invalid-graph-properties-error', { request: request_url, props: invalid }
-                    return callback { code: 449, result: def }, null
+                    @logEvent 'download-input-error', { request: request_url, err: err }
+                    return callback { code: 504, result: {} }, null
 
-                runtime = runtimeForGraph def
-                processor = @processors[runtime]
-                if not processor?
-                    e =
-                        request: request_url
-                        runtime: runtime
-                        valid: Object.keys @processors
-                    @logEvent 'no-processor-for-runtime-error', e
-                    return callback { code: 500, result: {} }, null
-
-                type = typeFromMime contentType
-                processor.process outf, def, attr, to, type, callback
-
+                inputType = if downloads.input? then typeFromMime downloads.input.type else null
+                inputFile = if downloads.input? then downloads.input.path else null
+                processor.process outf, graph, req.iips, inputFile, inputType, callback
 
 exports.Processor = Processor
 exports.Server = Server
