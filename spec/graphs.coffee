@@ -20,7 +20,7 @@ compareImages = (actual, expected, callback) ->
     options =
         timeout: 2000
     child.exec cmd, options, (error, stdout, stderr) ->
-        return callback error, stderr
+        return callback error, stderr, stdout
 
 class LogHandler
     @errors = null
@@ -96,7 +96,7 @@ describe 'Graphs', ->
 
                 it 'results should be equal to reference', (done) ->
                     compareImages output, reference, (error, msg) ->
-                        chai.assert.isNull error, msg.toString()
+                        chai.assert not error?, msg.toString()
                         done()
 
                 it 'should not cause errors', ->
