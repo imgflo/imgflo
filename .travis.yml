@@ -4,7 +4,7 @@ node_js:
 before_install:
 - sudo apt-get update -qq
 - sudo apt-get build-dep gegl
-- sudo apt-get install libjson-glib-dev
+- sudo apt-get install libjson-glib-dev libsdl1.2-dev
 - git submodule update --init --recursive
 script:
 - make travis-deps
