@@ -8,6 +8,7 @@ querystring = require 'querystring'
 path = require 'path'
 crypto = require 'crypto'
 request = require 'request'
+tmp = require 'tmp'
 
 node_static = require 'node-static'
 async = require 'async'
@@ -58,11 +59,15 @@ class NoFloProcessor extends Processor
     run: (graph, callback) ->
         s = JSON.stringify graph, null, "  "
         cmd = 'node_modules/noflo-canvas/node_modules/.bin/noflo'
-        # HACK
-        graphPath = 'noflocanvas.json'
-        fs.writeFileSync graphPath, s
-        args = [ graphPath ]
+        console.log s if @verbose
 
+        # TODO: add support for reading from stdin to NoFlo?
+        tmp.file {postfix: '.json'}, (err, graphPath) =>
+            return callback err, null if err
+            fs.writeFile graphPath, s, () =>
+                @execute cmd, [ graphPath ], callback
+
+    execute: (cmd, args, callback) ->
         console.log 'executing', cmd, args if @verbose
         stderr = ""
         process = child_process.spawn cmd, args, { stdio: ['pipe', 'pipe', 'pipe'] }
@@ -73,10 +78,6 @@ class NoFloProcessor extends Processor
             console.log d.toString() if @verbose
         process.stderr.on 'data', (d)->
             stderr += d.toString()
-        console.log s if @verbose
-        process.stdin.write s
-        process.stdin.end()
-
 
 prepareNoFloGraph = (basegraph, attributes, inpath, outpath, type) ->
 

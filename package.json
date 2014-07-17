@@ -39,6 +39,7 @@
     "noflo-objects": "^0.1.12",
     "pkginfo": "~0.3.0",
     "request": "^2.36.0",
+    "tmp": "0.0.24",
     "websocket": "~1.0.8"
   },
   "devDependencies": {
