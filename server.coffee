@@ -8,6 +8,7 @@ querystring = require 'querystring'
 path = require 'path'
 crypto = require 'crypto'
 request = require 'request'
+tmp = require 'tmp'
 
 node_static = require 'node-static'
 async = require 'async'
@@ -46,6 +47,78 @@ class Processor
     # callback should be called with (err, error_string)
     process: (outputFile, graph, iips, inputFile, inputType, callback) ->
         throw new Error 'Processor.process() not implemented'
+
+class NoFloProcessor extends Processor
+    constructor: (verbose) ->
+        @verbose = verbose
+
+    process: (outputFile, graph, iips, inputFile, inputType, callback) ->
+        g = prepareNoFloGraph graph, iips, inputFile, outputFile, inputType
+        @run g, callback
+
+    run: (graph, callback) ->
+        s = JSON.stringify graph, null, "  "
+        cmd = 'node_modules/noflo-canvas/node_modules/.bin/noflo'
+        console.log s if @verbose
+
+        # TODO: add support for reading from stdin to NoFlo?
+        tmp.file {postfix: '.json'}, (err, graphPath) =>
+            return callback err, null if err
+            fs.writeFile graphPath, s, () =>
+                @execute cmd, [ graphPath ], callback
+
+    execute: (cmd, args, callback) ->
+        console.log 'executing', cmd, args if @verbose
+        stderr = ""
+        process = child_process.spawn cmd, args, { stdio: ['pipe', 'pipe', 'pipe'] }
+        process.on 'close', (exitcode) ->
+            err = if exitcode then new Error "processor returned exitcode: #{exitcode}" else null
+            return callback err, stderr
+        process.stdout.on 'data', (d) =>
+            console.log d.toString() if @verbose
+        process.stderr.on 'data', (d)->
+            stderr += d.toString()
+
+prepareNoFloGraph = (basegraph, attributes, inpath, outpath, type) ->
+
+    # Avoid mutating original
+    def = clone basegraph
+
+    # Note: We drop inpath on the floor, only support pure generative for now
+
+    # Add a input node
+    def.processes.canvas = { component: 'canvas/CreateCanvas' }
+
+    # Add a output node
+    def.processes.repeat = { component: 'core/RepeatAsync' }
+    def.processes.save = { component: 'canvas/SavePNG' }
+
+    # Attach filepaths as IIPs
+    def.connections.push { data: outpath, tgt: { process: 'save', port: 'filename'} }
+
+    # Connect to actual graph
+    canvas = def.inports.canvas
+    def.connections.push { src: {process: 'canvas', port: 'canvas'}, tgt: canvas }
+
+    out = def.outports.output
+    def.connections.push { src: out, tgt: {process: 'repeat', port: 'in'} }
+    def.connections.push { src: {process: 'repeat', port: 'out'}, tgt: {process: 'save', port: 'canvas'} }
+
+    # Defaults
+    attributes.height |= 400;
+    attributes.width |= 600;
+
+    # Attach processing parameters as IIPs
+    for k, v of attributes
+        tgt = def.inports[k]
+        def.connections.push { data: v, tgt: tgt }
+
+    # Clean up
+    delete def.inports
+    delete def.outports
+
+    return def
+
 
 class ImgfloProcessor extends Processor
 
@@ -125,6 +198,16 @@ downloadFile = (src, out, callback) ->
     stream = fs.createWriteStream out
     s = req.pipe stream
 
+waitForDownloads = (files, callback) ->
+    f = files.input
+    if f?
+        downloadFile f.src, f.path, (err, contentType) ->
+            return callback err, null if err
+            f.type = contentType
+            return callback null, files
+    else
+        return callback null, files
+
 getGraphs = (directory, callback) ->
     graphs = {}
 
@@ -144,6 +227,7 @@ getGraphs = (directory, callback) ->
                 name = path.basename graphfiles[i]
                 name = (name.split '.')[0]
                 def = JSON.parse results[i]
+                enrichGraphDefinition def
                 graphs[name] = def
 
             return callback null, graphs
@@ -179,6 +263,42 @@ runtimeForGraph = (g) ->
         runtime = g.properties.environment.type
     return runtime
 
+enrichGraphDefinition = (graph) ->
+    runtime = runtimeForGraph graph
+    if (runtime.indexOf 'noflo') != -1
+        # All noflo-canvas graphs take height+width, set up by NoFloProcessor
+        graph.inports.height =
+            process: 'canvas'
+            port: 'height'
+        graph.inports.width =
+            process: 'canvas'
+            port: 'width'
+
+parseRequestUrl = (u) ->
+    parsedUrl = url.parse u, true
+
+    files = {} # port -> {}
+    # TODO: transform urls to downloaded images for all attributes, not just "input"
+    if parsedUrl.query.input
+        src = parsedUrl.query.input.toString()
+
+        # Add extension so GEGL load op can use the correct file loader
+        ext = path.extname src
+        if ext not in ['.png', '.jpg', '.jpeg']
+            ext = ''
+
+        files.input = { src: src, extension: ext, path: null }
+
+    iips = {}
+    for key, value of parsedUrl.query
+        iips[key] = value if key != 'input'
+
+    out =
+        graph: (parsedUrl.pathname.replace '/graph', '')
+        files: files
+        iips: iips
+    return out
+
 class Server extends EventEmitter
     constructor: (workdir, resourcedir, graphdir, verbose) ->
         @workdir = workdir
@@ -187,9 +307,13 @@ class Server extends EventEmitter
         @resourceserver = new node_static.Server resourcedir
         @fileserver = new node_static.Server workdir
         @httpserver = http.createServer @handleHttpRequest
+        @port = null
+
+        n = new NoFloProcessor verbose
         @processors =
             imgflo: new ImgfloProcessor verbose
-        @port = null
+            'noflo-browser': n
+            'noflo-nodejs': n
 
         if not fs.existsSync workdir
             fs.mkdirSync workdir
@@ -230,7 +354,6 @@ class Server extends EventEmitter
                 images: ["demo/grid-toastybob.jpg", "http://thegrid.io/img/thegrid-overlay.png"]
             return callback null, d
 
-
     serveDemoPage: (request, response) ->
         u = url.parse request.url
         p = u.pathname
@@ -244,6 +367,15 @@ class Server extends EventEmitter
             @getDemoData (err, data) ->
                 response.statusCode = 200
                 response.end JSON.stringify data
+
+    getGraph: (name, callback) ->
+        # TODO: cache graphs
+        graphPath = path.join @graphdir, name + '.json'
+        fs.readFile graphPath, (err, contents) =>
+            return callback err, null if err
+            def = JSON.parse contents
+            enrichGraphDefinition def
+            return callback null, def
 
     handleGraphRequest: (request, response) ->
         u = url.parse request.url, true
@@ -270,55 +402,41 @@ class Server extends EventEmitter
                         @fileserver.serveFile filepath, 200, {}, request, response
 
     processGraphRequest: (outf, request_url, callback) =>
+        req = parseRequestUrl request_url
 
-        u = url.parse request_url, true
-        attr = u.query
+        for port, file of req.files
+            file.path = path.join @workdir, (hashFile file.src) + file.extension
+            if (file.src.indexOf 'http://') == -1 and (file.src.indexOf 'https://') == -1
+                file.src = 'http://localhost:'+@port+'/'+file.src
 
-        graph = (u.pathname.replace '/graph', '') + '.json'
-        graph = path.join @graphdir, graph
-
-        # TODO: transform urls to downloaded images for all attributes, not just "input"
-        src = attr.input.toString()
-        delete attr.input
-
-        # Add extension so GEGL load op can use the correct file loader
-        ext = path.extname src
-        if ext not in ['.png', '.jpg', '.jpeg']
-            ext = ''
-
-        to = path.join @workdir, (hashFile src) + ext
-        if (src.indexOf 'http://') == -1 and (src.indexOf 'https://') == -1
-            src = 'http://localhost:'+@port+'/'+src
-
-        downloadFile src, to, (err, contentType) =>
+        @getGraph req.graph, (err, graph) =>
             if err
-                @logEvent 'download-input-error', { request: request_url, err: err, src: src, to: to }
+                @logEvent 'read-graph-error', { request: request_url, err: err, file: graph }
                 return callback err, null
 
-            fs.readFile graph, (err, contents) =>
+            invalid = keysNotIn req.iips, graph.inports
+            if invalid.length > 0
+                @logEvent 'invalid-graph-properties-error', { request: request_url, props: invalid }
+                return callback { code: 449, result: graph }, null
+
+            runtime = runtimeForGraph graph
+            processor = @processors[runtime]
+            if not processor?
+                e =
+                    request: request_url
+                    runtime: runtime
+                    valid: Object.keys @processors
+                @logEvent 'no-processor-for-runtime-error', e
+                return callback { code: 500, result: {} }, null
+
+            waitForDownloads req.files, (err, downloads) =>
                 if err
-                    @logEvent 'read-graph-error', { request: request_url, err: err, file: graph }
-                    return callback err, null
-                # TODO: read graphs once
-                def = JSON.parse contents
-                invalid = keysNotIn attr, def.inports
-                if invalid.length > 0
-                    @logEvent 'invalid-graph-properties-error', { request: request_url, props: invalid }
-                    return callback { code: 449, result: def }, null
+                    @logEvent 'download-input-error', { request: request_url, err: err }
+                    return callback { code: 504, result: {} }, null
 
-                runtime = runtimeForGraph def
-                processor = @processors[runtime]
-                if not processor?
-                    e =
-                        request: request_url
-                        runtime: runtime
-                        valid: Object.keys @processors
-                    @logEvent 'no-processor-for-runtime-error', e
-                    return callback { code: 500, result: {} }, null
-
-                type = typeFromMime contentType
-                processor.process outf, def, attr, to, type, callback
-
+                inputType = if downloads.input? then typeFromMime downloads.input.type else null
+                inputFile = if downloads.input? then downloads.input.path else null
+                processor.process outf, graph, req.iips, inputFile, inputType, callback
 
 exports.Processor = Processor
 exports.Server = Server

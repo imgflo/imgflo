@@ -20,7 +20,7 @@ compareImages = (actual, expected, callback) ->
     options =
         timeout: 2000
     child.exec cmd, options, (error, stdout, stderr) ->
-        return callback error, stderr
+        return callback error, stderr, stdout
 
 class LogHandler
     @errors = null
@@ -90,13 +90,14 @@ describe 'Graphs', ->
                     u = url.format { protocol: 'http:', host: urlbase, pathname: '/graph/'+graph, query: props}
 
                 it 'should output a file', (done) ->
+                    @timeout 8000
                     req = request u, (err, response) ->
                         done()
                     req.pipe fs.createWriteStream output
 
                 it 'results should be equal to reference', (done) ->
                     compareImages output, reference, (error, msg) ->
-                        chai.assert.isNull error, msg.toString()
+                        chai.assert not error?, msg.toString()
                         done()
 
                 it 'should not cause errors', ->

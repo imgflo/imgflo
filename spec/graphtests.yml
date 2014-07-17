@@ -27,3 +27,6 @@
 -
     _name: regcheck_unsniffable_png
     _url: '/graph/gradientmap?input=http%3A%2F%2Febmedia.eventbrite.com%2Fs3-build%2Fimages%2F4783149%2F5973734463%2F1%2Flogo.png&color1=%23082A31&color2=%23FFE79B'
+-
+    _name: regcheck_canvas
+    _url: '/graph/canvas?color=%2387a9a7'
