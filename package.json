@@ -34,6 +34,8 @@
     "flowhub-registry": "0.0.2",
     "node-static": "^0.7.3",
     "node-uuid": "^1.4.1",
+    "noflo-core": "^0.1.11",
+    "noflo-canvas": "^0.1.8",
     "pkginfo": "~0.3.0",
     "request": "^2.36.0",
     "websocket": "~1.0.8"
