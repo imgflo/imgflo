@@ -1,5 +1,5 @@
 
-VERSION=$(shell echo `git describe`)
+VERSION=$(shell echo `git describe --tags`)
 #PREFIX=/opt/imgflo
 PREFIX=$(shell echo `pwd`/install)
 FLAGS=-Wall -Werror -std=c99 -g -DHAVE_UUID -I$(PREFIX)/include/uuid
@@ -17,7 +17,8 @@ endif
 
 LIBS=gegl-0.3 gio-unix-2.0 json-glib-1.0 libsoup-2.4 libpng uuid
 DEPS=$(shell $(PREFIX)/env.sh pkg-config $(PKGCONFIG_ARGS) --libs --cflags $(LIBS))
-
+TRAVIS_DEPENDENCIES=$(shell echo `cat .vendor_urls | sed -e "s/heroku/travis/" | tr -d '\n'`)
+TRAVIS_DEPENDENCIES=ftp://vps.jonnor.com/imgflo/imgflo-dependencies-22-4-gb8557d5-travis.tgz
 
 all: install
 
@@ -45,7 +46,8 @@ env:
 	chmod +x $(PREFIX)/env.sh
 
 travis-deps:
-	cd dependencies && make PREFIX=$(PREFIX) travis-deps
+	wget -O imgflo-dependencies.tgz $(TRAVIS_DEPENDENCIES)
+	tar -xf imgflo-dependencies.tgz
 
 dependencies:
 	cd dependencies && make PREFIX=$(PREFIX) dependencies
