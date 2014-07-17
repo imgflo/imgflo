@@ -90,6 +90,7 @@ describe 'Graphs', ->
                     u = url.format { protocol: 'http:', host: urlbase, pathname: '/graph/'+graph, query: props}
 
                 it 'should output a file', (done) ->
+                    @timeout 3000
                     req = request u, (err, response) ->
                         done()
                     req.pipe fs.createWriteStream output

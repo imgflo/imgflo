@@ -85,6 +85,9 @@ prepareNoFloGraph = (basegraph, attributes, inpath, outpath, type) ->
 
     # Note: We drop inpath on the floor, only support pure generative for now
 
+    # Add a input node
+    def.processes.canvas = { component: 'canvas/CreateCanvas' }
+
     # Add a output node
     def.processes.repeat = { component: 'core/RepeatAsync' }
     def.processes.save = { component: 'canvas/SavePNG' }
@@ -93,10 +96,16 @@ prepareNoFloGraph = (basegraph, attributes, inpath, outpath, type) ->
     def.connections.push { data: outpath, tgt: { process: 'save', port: 'filename'} }
 
     # Connect to actual graph
-    out = def.outports.output
+    canvas = def.inports.canvas
+    def.connections.push { src: {process: 'canvas', port: 'canvas'}, tgt: canvas }
 
+    out = def.outports.output
     def.connections.push { src: out, tgt: {process: 'repeat', port: 'in'} }
     def.connections.push { src: {process: 'repeat', port: 'out'}, tgt: {process: 'save', port: 'canvas'} }
+
+    # Defaults
+    attributes.height |= 400;
+    attributes.width |= 600;
 
     # Attach processing parameters as IIPs
     for k, v of attributes
@@ -217,6 +226,7 @@ getGraphs = (directory, callback) ->
                 name = path.basename graphfiles[i]
                 name = (name.split '.')[0]
                 def = JSON.parse results[i]
+                enrichGraphDefinition def
                 graphs[name] = def
 
             return callback null, graphs
@@ -251,6 +261,17 @@ runtimeForGraph = (g) ->
     if g.properties and g.properties.environment and g.properties.environment.type
         runtime = g.properties.environment.type
     return runtime
+
+enrichGraphDefinition = (graph) ->
+    runtime = runtimeForGraph graph
+    if (runtime.indexOf 'noflo') != -1
+        # All noflo-canvas graphs take height+width, set up by NoFloProcessor
+        graph.inports.height =
+            process: 'canvas'
+            port: 'height'
+        graph.inports.width =
+            process: 'canvas'
+            port: 'width'
 
 parseRequestUrl = (u) ->
     parsedUrl = url.parse u, true
@@ -324,7 +345,6 @@ class Server extends EventEmitter
 
     getDemoData: (callback) ->
 
-        # FIXME: noflo-canvas graphs definitionshould be enriched with height+width
         getGraphs @graphdir, (err, res) =>
             if err
                 throw err
@@ -353,6 +373,7 @@ class Server extends EventEmitter
         fs.readFile graphPath, (err, contents) =>
             return callback err, null if err
             def = JSON.parse contents
+            enrichGraphDefinition def
             return callback null, def
 
     handleGraphRequest: (request, response) ->
