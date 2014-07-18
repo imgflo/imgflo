@@ -22,6 +22,17 @@ compareImages = (actual, expected, callback) ->
     child.exec cmd, options, (error, stdout, stderr) ->
         return callback error, stderr, stdout
 
+requestUrl = (testcase) ->
+    u = null
+    if testcase._url
+        u = 'http://'+ urlbase + testcase._url
+    else
+        graph = testcase._graph
+        props = {}
+        for key of testcase
+            props[key] = testcase[key] if key != '_name' and key != '_graph'
+        u = url.format { protocol: 'http:', host: urlbase, pathname: '/graph/'+graph, query: props}
+
 class LogHandler
     @errors = null
     constructor: (server) ->
@@ -72,26 +83,18 @@ describe 'Graphs', ->
             datadir = 'spec/data/'
             reference = path.join datadir, "#{testcase._name}.reference.png"
             output = path.join datadir, "#{testcase._name}.out.png"
+            reqUrl = requestUrl testcase
             fs.unlinkSync output if fs.existsSync output
 
             it 'should have a reference result', (done) ->
                 fs.exists reference, (exists) ->
                     chai.assert exists, 'Not found: '+reference
                     done()
-            describe 'graph execution', ->
-                u = null
-                if testcase._url
-                    u = 'http://'+ urlbase + testcase._url
-                else
-                    graph = testcase._graph
-                    props = {}
-                    for key of testcase
-                        props[key] = testcase[key] if key != '_name' and key != '_graph'
-                    u = url.format { protocol: 'http:', host: urlbase, pathname: '/graph/'+graph, query: props}
 
+            describe "GET #{reqUrl}", ->
                 it 'should output a file', (done) ->
                     @timeout 8000
-                    req = request u, (err, response) ->
+                    req = request reqUrl, (err, response) ->
                         done()
                     req.pipe fs.createWriteStream output
 
