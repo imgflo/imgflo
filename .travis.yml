@@ -3,12 +3,10 @@ node_js:
 - '0.10'
 before_install:
 - sudo apt-get update -qq
-- sudo apt-get build-dep gegl
-- sudo apt-get install libjson-glib-dev libsdl1.2-dev libgif-dev
-- git submodule update --init --recursive
+- sudo apt-get install libjson-glib-dev libsdl1.2-dev libgif-dev gdb
 script:
 - make travis-deps
-- make release
+- make release RELOCATE_DEPS=true
 env:
   global:
   - secure: CEEU3wEYghclP+xxrNOh0SrrHpviu9eDfVTOAlez4YLKKy4MTriB4+MyTPdWV6nvGji3hh4bFAAfEw8aaQtNKSDYxpcqoUVaMhnqITzhd/6J+zuRTXNZqsk13ybtTE+gfvdVIOREcEyeh2n7gXut+T2lC+p8H4ZDvHM8VKx3I4Q=

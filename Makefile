@@ -10,6 +10,10 @@ EXTPORT=$(PORT)
 
 ifneq ("$(wildcard /app)","")
 # Heroku build. TODO: find better way to detect
+RELOCATE_DEPS:=true
+endif
+
+ifdef RELOCATE_DEPS
 PKGCONFIG_ARGS:=--define-variable=prefix=$(PREFIX)
 else
 PKGCONFIG_ARGS:=
@@ -18,7 +22,7 @@ endif
 LIBS=gegl-0.3 gio-unix-2.0 json-glib-1.0 libsoup-2.4 libpng uuid
 DEPS=$(shell $(PREFIX)/env.sh pkg-config $(PKGCONFIG_ARGS) --libs --cflags $(LIBS))
 TRAVIS_DEPENDENCIES=$(shell echo `cat .vendor_urls | sed -e "s/heroku/travis/" | tr -d '\n'`)
-TRAVIS_DEPENDENCIES=ftp://vps.jonnor.com/imgflo/imgflo-dependencies-22-4-gb8557d5-travis.tgz
+TRAVIS_DEPENDENCIES=ftp://vps.jonnor.com/imgflo/imgflo-dependencies-26-travis.tgz
 
 all: install
 
@@ -56,7 +60,7 @@ gegl:
 	cd dependencies && make PREFIX=$(PREFIX) gegl
 
 check: install
-	npm test
+	$(PREFIX)/env.sh npm test
 
 clean:
 	git clean -dfx --exclude node_modules --exclude install
