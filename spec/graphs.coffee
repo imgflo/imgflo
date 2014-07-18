@@ -99,8 +99,9 @@ describe 'Graphs', ->
                     req.pipe fs.createWriteStream output
 
                 it 'results should be equal to reference', (done) ->
-                    compareImages output, reference, (error, msg) ->
-                        chai.assert not error?, msg.toString()
+                    compareImages output, reference, (error, stderr, stdout) ->
+                        msg = "image comparison failed\n#{stderr}\n#{stdout}"
+                        chai.assert not error?, msg
                         done()
 
                 it 'should not cause errors', ->
