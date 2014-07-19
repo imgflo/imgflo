@@ -11,10 +11,14 @@ env:
   global:
   - secure: CEEU3wEYghclP+xxrNOh0SrrHpviu9eDfVTOAlez4YLKKy4MTriB4+MyTPdWV6nvGji3hh4bFAAfEw8aaQtNKSDYxpcqoUVaMhnqITzhd/6J+zuRTXNZqsk13ybtTE+gfvdVIOREcEyeh2n7gXut+T2lC+p8H4ZDvHM8VKx3I4Q=
   - secure: Hc++pZNwr3i3YL0jqVzubrtcYm8cztXh7Bg9XOO2lg68Gn6GFvM8tojeM1BrHQsvfu40ps2IGFsPLVXlOSQd2KNjpMq/aJpxBvA0+15sB1n0NivarrnUurJ5YNtRnIh9Yte/Oe29XlAp5Zyeklqw+4BJEHVA8FgoIwHQ9A8UOUs=
+before_deploy:
+- if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 deploy:
   provider: heroku
+  strategy: git
   api_key:
     secure: Jic6RBBHQSxY394YhGqIx/MTRVgo7X2lgvfGbVBpQxXfEDlBjEy52oa0lkoEuMe1fNbJKtwNdsrMmUBMZPrmVwDUZHPP6eRvw8J68D7KsCJcx0yfI1ohvbjYq6cjzXTIZjOz9DuJnqlhuXNnbVtSgjbqEHBW6FMuKS1sSPnLcBU=
   app: imgflo
   on:
     repo: jonnor/imgflo
+    all_branches: true
