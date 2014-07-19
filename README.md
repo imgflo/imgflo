@@ -79,9 +79,9 @@ Server
 --------
 Register/log-in with [Heroku](http://heroku.com), and create a new app. First one is free.
 
-Specify the multi buildpack, either at app creation time, in Heroku webui or using
+Specify the multi buildpack with build-env support, either at app creation time, in Heroku webui or using
 
-    heroku config:set BUILDPACK_URL=https://github.com/ddollar/heroku-buildpack-multi.git
+    heroku config:set BUILDPACK_URL=https://github.com/mojodna/heroku-buildpack-multi.git#build-env
 
 In your git checkout of imgflo, add your Heroku app as a remote.
 
