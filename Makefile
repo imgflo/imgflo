@@ -22,7 +22,6 @@ endif
 LIBS=gegl-0.3 gio-unix-2.0 json-glib-1.0 libsoup-2.4 libpng uuid
 DEPS=$(shell $(PREFIX)/env.sh pkg-config $(PKGCONFIG_ARGS) --libs --cflags $(LIBS))
 TRAVIS_DEPENDENCIES=$(shell echo `cat .vendor_urls | sed -e "s/heroku/travis/" | tr -d '\n'`)
-TRAVIS_DEPENDENCIES=ftp://vps.jonnor.com/imgflo/imgflo-dependencies-26-travis.tgz
 
 all: install
 
