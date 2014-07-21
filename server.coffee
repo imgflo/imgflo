@@ -227,7 +227,7 @@ getGraphs = (directory, callback) ->
                 name = path.basename graphfiles[i]
                 name = (name.split '.')[0]
                 def = JSON.parse results[i]
-                enrichGraphDefinition def
+                enrichGraphDefinition def, true
                 graphs[name] = def
 
             return callback null, graphs
@@ -263,10 +263,12 @@ runtimeForGraph = (g) ->
         runtime = g.properties.environment.type
     return runtime
 
-enrichGraphDefinition = (graph) ->
+enrichGraphDefinition = (graph, publicOnly) ->
     runtime = runtimeForGraph graph
     if (runtime.indexOf 'noflo') != -1
         # All noflo-canvas graphs take height+width, set up by NoFloProcessor
+        # This is wired up using an internal canvas inport
+        delete graph.inports.canvas if publicOnly
         graph.inports.height =
             process: 'canvas'
             port: 'height'
