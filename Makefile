@@ -58,6 +58,9 @@ dependencies:
 gegl:
 	cd dependencies && make PREFIX=$(PREFIX) gegl
 
+glib:
+	cd dependencies && make PREFIX=$(PREFIX) glib
+
 check: install
 	$(PREFIX)/env.sh npm test
 
