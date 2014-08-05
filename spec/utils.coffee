@@ -110,10 +110,12 @@ class RuntimeProcess
                     @started = true
                     success process.pid
 
-    stop: ->
+    stop: (callback) ->
         if @debug
-            return
-        @process.kill()
+            return callback()
+        @process.once 'exit', ->
+            return callback()
+        @process.kill 'SIGINT'
 
     popErrors: ->
         errors = @errors
