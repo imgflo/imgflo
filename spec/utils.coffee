@@ -87,9 +87,11 @@ class RuntimeProcess
         @process = child_process.spawn exec, args
         @process.on 'error', (err) ->
             throw err
-        @process.on 'exit', (code, signal) ->
+        @process.on 'exit', (code, signal) =>
             if code != 0
-                throw new Error 'Runtime exited with non-zero code: ' + code + " " + signal
+                e = @errors.join '\n '
+                m = "Runtime exited with non-zero code: #{code} #{signal}, errors(#{@errors.length}): " + e
+                throw new Error m
 
         @process.stderr.on 'data', (d) =>
             output = d.toString()
