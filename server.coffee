@@ -105,8 +105,15 @@ prepareNoFloGraph = (basegraph, attributes, inpath, outpath, type) ->
     def.connections.push { src: {process: 'repeat', port: 'out'}, tgt: {process: 'save', port: 'canvas'} }
 
     # Defaults
-    attributes.height |= 400;
-    attributes.width |= 600;
+    if attributes.height?
+        attributes.height = parseInt attributes.height
+    else
+        attributes.height = 400
+
+    if attributes.width?
+        attributes.width = parseInt attributes.width
+    else
+        attributes.width = 600
 
     # Attach processing parameters as IIPs
     for k, v of attributes
