@@ -1,0 +1,883 @@
+{
+    "properties": {
+        "name": "Genflo",
+        "id": "l16wr",
+        "project": "genflo",
+        "environment": {
+            "type": "noflo-nodejs",
+            "content": ""
+        },
+        "description": "Generates a random Delaunay triangulation with a seed"
+    },
+    "inports": {
+        "canvas": {
+            "process": "split",
+            "port": "in",
+            "metadata": {
+                "x": 72,
+                "y": 468
+            }
+        },
+        "seed": {
+            "process": "hash",
+            "port": "in",
+            "metadata": {
+                "x": 72,
+                "y": 1404
+            }
+        }
+    },
+    "outports": {
+        "output": {
+            "process": "draw",
+            "port": "canvas",
+            "metadata": {
+                "x": 1584,
+                "y": 360
+            }
+        }
+    },
+    "groups": [
+        {
+            "name": "triangles",
+            "nodes": [
+                "b",
+                "delaunay",
+                "fill",
+                "g",
+                "points",
+                "r",
+                "rgbcolor",
+                "x_b6xcu",
+                "y"
+            ],
+            "metadata": {
+                "description": ""
+            }
+        },
+        {
+            "name": "background",
+            "nodes": [
+                "bg",
+                "fill_mpv0u",
+                "origin"
+            ],
+            "metadata": {
+                "description": ""
+            }
+        },
+        {
+            "name": "hash",
+            "nodes": [
+                "first10",
+                "first15",
+                "first20",
+                "first5",
+                "hash",
+                "split_tz7j6"
+            ],
+            "metadata": {
+                "description": ""
+            }
+        },
+        {
+            "name": "canvas",
+            "nodes": [
+                "add",
+                "add_f8niw",
+                "height",
+                "split",
+                "width"
+            ],
+            "metadata": {
+                "description": ""
+            }
+        }
+    ],
+    "processes": {
+        "points": {
+            "component": "canvas/MakePoint",
+            "metadata": {
+                "label": "points",
+                "x": 900,
+                "y": 756
+            }
+        },
+        "fill": {
+            "component": "canvas/Fill",
+            "metadata": {
+                "label": "fill",
+                "x": 1224,
+                "y": 1152
+            }
+        },
+        "draw": {
+            "component": "canvas/Draw",
+            "metadata": {
+                "label": "draw",
+                "x": 1440,
+                "y": 324
+            }
+        },
+        "delaunay": {
+            "component": "geometry/Delaunay",
+            "metadata": {
+                "label": "delaunay",
+                "x": 1044,
+                "y": 756
+            }
+        },
+        "rgbcolor": {
+            "component": "canvas/MakeRGBColor",
+            "metadata": {
+                "label": "rgbcolor",
+                "x": 1044,
+                "y": 1188
+            }
+        },
+        "origin": {
+            "component": "canvas/MakePoint",
+            "metadata": {
+                "label": "origin",
+                "x": 828,
+                "y": 180
+            }
+        },
+        "bg": {
+            "component": "canvas/MakeRectangle",
+            "metadata": {
+                "label": "bg",
+                "x": 972,
+                "y": 324
+            }
+        },
+        "fill_mpv0u": {
+            "component": "canvas/Fill",
+            "metadata": {
+                "label": "fill",
+                "x": 1080,
+                "y": 324
+            }
+        },
+        "width": {
+            "component": "objects/ExtractProperty",
+            "metadata": {
+                "label": "width",
+                "x": 396,
+                "y": 360
+            }
+        },
+        "split": {
+            "component": "core/Split",
+            "metadata": {
+                "label": "split",
+                "x": 252,
+                "y": 468
+            }
+        },
+        "add": {
+            "component": "math/Add",
+            "metadata": {
+                "label": "add",
+                "x": 540,
+                "y": 252
+            }
+        },
+        "height": {
+            "component": "objects/ExtractProperty",
+            "metadata": {
+                "label": "height",
+                "x": 396,
+                "y": 108
+            }
+        },
+        "add_f8niw": {
+            "component": "math/Add",
+            "metadata": {
+                "label": "add",
+                "x": 540,
+                "y": 108
+            }
+        },
+        "x_b6xcu": {
+            "component": "seedrandom/RandomArray",
+            "metadata": {
+                "label": "x",
+                "x": 756,
+                "y": 612
+            }
+        },
+        "y": {
+            "component": "seedrandom/RandomArray",
+            "metadata": {
+                "label": "y",
+                "x": 756,
+                "y": 756
+            }
+        },
+        "r": {
+            "component": "seedrandom/RandomArray",
+            "metadata": {
+                "label": "r",
+                "x": 900,
+                "y": 900
+            }
+        },
+        "g": {
+            "component": "seedrandom/RandomArray",
+            "metadata": {
+                "label": "g",
+                "x": 900,
+                "y": 1044
+            }
+        },
+        "b": {
+            "component": "seedrandom/RandomArray",
+            "metadata": {
+                "label": "b",
+                "x": 900,
+                "y": 1188
+            }
+        },
+        "split_tz7j6": {
+            "component": "core/Split",
+            "metadata": {
+                "label": "split",
+                "x": 360,
+                "y": 1404
+            }
+        },
+        "hash": {
+            "component": "md5/CalculateHash",
+            "metadata": {
+                "label": "hash",
+                "x": 252,
+                "y": 1404
+            }
+        },
+        "first5": {
+            "component": "strings/SubStr",
+            "metadata": {
+                "label": "first5",
+                "x": 540,
+                "y": 1368
+            }
+        },
+        "first10": {
+            "component": "strings/SubStr",
+            "metadata": {
+                "label": "first10",
+                "x": 540,
+                "y": 864
+            }
+        },
+        "first15": {
+            "component": "strings/SubStr",
+            "metadata": {
+                "label": "first15",
+                "x": 540,
+                "y": 1008
+            }
+        },
+        "first20": {
+            "component": "strings/SubStr",
+            "metadata": {
+                "label": "first20",
+                "x": 540,
+                "y": 1152
+            }
+        }
+    },
+    "connections": [
+        {
+            "src": {
+                "process": "points",
+                "port": "point"
+            },
+            "tgt": {
+                "process": "delaunay",
+                "port": "points"
+            },
+            "metadata": {
+                "route": null
+            }
+        },
+        {
+            "src": {
+                "process": "delaunay",
+                "port": "paths"
+            },
+            "tgt": {
+                "process": "fill",
+                "port": "items"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "rgbcolor",
+                "port": "color"
+            },
+            "tgt": {
+                "process": "fill",
+                "port": "fillstyle"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "origin",
+                "port": "point"
+            },
+            "tgt": {
+                "process": "bg",
+                "port": "point"
+            },
+            "metadata": {
+                "route": null
+            }
+        },
+        {
+            "src": {
+                "process": "bg",
+                "port": "rectangle"
+            },
+            "tgt": {
+                "process": "fill_mpv0u",
+                "port": "items"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "fill_mpv0u",
+                "port": "fill"
+            },
+            "tgt": {
+                "process": "draw",
+                "port": "commands"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "fill",
+                "port": "fill"
+            },
+            "tgt": {
+                "process": "draw",
+                "port": "commands"
+            },
+            "metadata": {
+                "route": null
+            }
+        },
+        {
+            "src": {
+                "process": "split",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "draw",
+                "port": "canvas"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "split",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "width",
+                "port": "in"
+            },
+            "metadata": {
+                "route": 0
+            }
+        },
+        {
+            "src": {
+                "process": "width",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "add",
+                "port": "augend"
+            },
+            "metadata": {
+                "route": 0
+            }
+        },
+        {
+            "src": {
+                "process": "split",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "height",
+                "port": "in"
+            },
+            "metadata": {
+                "route": 0
+            }
+        },
+        {
+            "src": {
+                "process": "height",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "add_f8niw",
+                "port": "augend"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "width",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "bg",
+                "port": "width"
+            },
+            "metadata": {
+                "route": 0
+            }
+        },
+        {
+            "src": {
+                "process": "height",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "bg",
+                "port": "height"
+            },
+            "metadata": {
+                "route": 0
+            }
+        },
+        {
+            "src": {
+                "process": "add",
+                "port": "sum"
+            },
+            "tgt": {
+                "process": "x_b6xcu",
+                "port": "max"
+            },
+            "metadata": {
+                "route": 0
+            }
+        },
+        {
+            "src": {
+                "process": "x_b6xcu",
+                "port": "numbers"
+            },
+            "tgt": {
+                "process": "points",
+                "port": "x"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "add_f8niw",
+                "port": "sum"
+            },
+            "tgt": {
+                "process": "y",
+                "port": "max"
+            },
+            "metadata": {
+                "route": null
+            }
+        },
+        {
+            "src": {
+                "process": "y",
+                "port": "numbers"
+            },
+            "tgt": {
+                "process": "points",
+                "port": "y"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "r",
+                "port": "numbers"
+            },
+            "tgt": {
+                "process": "rgbcolor",
+                "port": "red"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "g",
+                "port": "numbers"
+            },
+            "tgt": {
+                "process": "rgbcolor",
+                "port": "green"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "b",
+                "port": "numbers"
+            },
+            "tgt": {
+                "process": "rgbcolor",
+                "port": "blue"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "split_tz7j6",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "x_b6xcu",
+                "port": "seed"
+            },
+            "metadata": {
+                "route": 0
+            }
+        },
+        {
+            "src": {
+                "process": "hash",
+                "port": "hash"
+            },
+            "tgt": {
+                "process": "split_tz7j6",
+                "port": "in"
+            },
+            "metadata": {
+                "route": null
+            }
+        },
+        {
+            "src": {
+                "process": "split_tz7j6",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "first5",
+                "port": "in"
+            },
+            "metadata": {
+                "route": 0
+            }
+        },
+        {
+            "src": {
+                "process": "first5",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "y",
+                "port": "seed"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "split_tz7j6",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "first10",
+                "port": "in"
+            },
+            "metadata": {
+                "route": 0
+            }
+        },
+        {
+            "src": {
+                "process": "first10",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "r",
+                "port": "seed"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "split_tz7j6",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "first15",
+                "port": "in"
+            },
+            "metadata": {
+                "route": 0
+            }
+        },
+        {
+            "src": {
+                "process": "first15",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "g",
+                "port": "seed"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "split_tz7j6",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "first20",
+                "port": "in"
+            },
+            "metadata": {
+                "route": 0
+            }
+        },
+        {
+            "src": {
+                "process": "first20",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "b",
+                "port": "seed"
+            },
+            "metadata": {}
+        },
+        {
+            "data": true,
+            "tgt": {
+                "process": "draw",
+                "port": "drawevery"
+            }
+        },
+        {
+            "data": true,
+            "tgt": {
+                "process": "draw",
+                "port": "clearevery"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "origin",
+                "port": "x"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "origin",
+                "port": "y"
+            }
+        },
+        {
+            "data": "width",
+            "tgt": {
+                "process": "width",
+                "port": "key"
+            }
+        },
+        {
+            "data": "height",
+            "tgt": {
+                "process": "height",
+                "port": "key"
+            }
+        },
+        {
+            "data": 200,
+            "tgt": {
+                "process": "add",
+                "port": "addend"
+            }
+        },
+        {
+            "data": 200,
+            "tgt": {
+                "process": "add_f8niw",
+                "port": "addend"
+            }
+        },
+        {
+            "data": 0.9,
+            "tgt": {
+                "process": "rgbcolor",
+                "port": "alpha"
+            }
+        },
+        {
+            "data": "#ddd",
+            "tgt": {
+                "process": "fill_mpv0u",
+                "port": "fillstyle"
+            }
+        },
+        {
+            "data": -200,
+            "tgt": {
+                "process": "x_b6xcu",
+                "port": "min"
+            }
+        },
+        {
+            "data": 50,
+            "tgt": {
+                "process": "x_b6xcu",
+                "port": "count"
+            }
+        },
+        {
+            "data": -200,
+            "tgt": {
+                "process": "y",
+                "port": "min"
+            }
+        },
+        {
+            "data": 50,
+            "tgt": {
+                "process": "y",
+                "port": "count"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "r",
+                "port": "min"
+            }
+        },
+        {
+            "data": 255,
+            "tgt": {
+                "process": "r",
+                "port": "max"
+            }
+        },
+        {
+            "data": 10,
+            "tgt": {
+                "process": "r",
+                "port": "count"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "g",
+                "port": "min"
+            }
+        },
+        {
+            "data": 255,
+            "tgt": {
+                "process": "g",
+                "port": "max"
+            }
+        },
+        {
+            "data": 10,
+            "tgt": {
+                "process": "g",
+                "port": "count"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "b",
+                "port": "min"
+            }
+        },
+        {
+            "data": 255,
+            "tgt": {
+                "process": "b",
+                "port": "max"
+            }
+        },
+        {
+            "data": 10,
+            "tgt": {
+                "process": "b",
+                "port": "count"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "first5",
+                "port": "index"
+            }
+        },
+        {
+            "data": 5,
+            "tgt": {
+                "process": "first5",
+                "port": "limit"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "first10",
+                "port": "index"
+            }
+        },
+        {
+            "data": 10,
+            "tgt": {
+                "process": "first10",
+                "port": "limit"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "first15",
+                "port": "index"
+            }
+        },
+        {
+            "data": 15,
+            "tgt": {
+                "process": "first15",
+                "port": "limit"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "first20",
+                "port": "index"
+            }
+        },
+        {
+            "data": 20,
+            "tgt": {
+                "process": "first20",
+                "port": "limit"
+            }
+        }
+    ]
+}

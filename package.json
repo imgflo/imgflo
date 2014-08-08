@@ -43,6 +43,7 @@
     "websocket": "~1.0.8",
     "noflo-geometry": "automata/noflo-geometry",
     "noflo-seedrandom": "automata/noflo-seedrandom",
+    "noflo-md5": "automata/noflo-md5",
     "noflo-math": "0.0.6",
     "noflo-strings": "~0.1.9"
   },
