@@ -409,8 +409,7 @@ ui_connection_new(const gchar *hostname, int internal_port, int external_port) {
     self->hostname = g_strdup(hostname);
     self->registry = registry_new(runtime_info_new_from_env(hostname, external_port));
 
-	self->server = soup_server_new(SOUP_SERVER_PORT, internal_port,
-        SOUP_SERVER_SERVER_HEADER, "imgflo-runtime", NULL);
+	self->server = soup_server_new(SOUP_SERVER_SERVER_HEADER, "imgflo-runtime", NULL);
     if (!self->server) {
         g_free(self);
         return NULL;
@@ -418,10 +417,10 @@ ui_connection_new(const gchar *hostname, int internal_port, int external_port) {
 
     soup_server_add_websocket_handler(self->server, NULL, NULL, NULL,
         websocket_callback, self, NULL);
-	soup_server_add_handler(self->server, NULL,
+    soup_server_add_handler(self->server, NULL,
         server_callback, self, NULL);
 
-	soup_server_run_async (self->server);
+    soup_server_listen_all(self->server, internal_port, SOUP_SERVER_LISTEN_IPV4_ONLY, NULL);
 
     return self;
 }

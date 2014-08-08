@@ -23,9 +23,11 @@ describe 'NoFlo runtime API,', () ->
             ui.connect()
             ui.on 'connected', () ->
                 done()
-    after ->
-        runtime.stop()
+    after (done) ->
         ui.disconnect()
+        ui.on 'disconnected', () ->
+            runtime.stop () ->
+                done()
 
     describe 'runtime info', ->
         info = null

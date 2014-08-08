@@ -64,7 +64,7 @@ main (int argc, char **argv)
 		    g_printerr("Unable to bind to server port %d\n", port);
 		    exit(1);
 	    }
-	    g_print("\nRuntime running on port %d, external port %d\n", soup_server_get_port(ui->server), extport);
+	    g_print("\nRuntime running on port %d, external port %d\n", port, extport);
 
         ui_connection_try_register(ui);
 

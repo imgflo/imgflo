@@ -1,0 +1,589 @@
+{
+    "properties": {
+        "name": "Genflo",
+        "id": "l16wr",
+        "project": "genflo",
+        "environment": {
+            "type": "noflo-nodejs",
+            "content": ""
+        },
+        "description": "Generates a random Delaunay triangulation"
+    },
+    "inports": {
+        "canvas": {
+            "process": "split",
+            "port": "in",
+            "metadata": {
+                "x": 36,
+                "y": 252
+            }
+        }
+    },
+    "outports": {
+        "output": {
+            "process": "draw",
+            "port": "canvas",
+            "metadata": {
+                "x": 1260,
+                "y": 108
+            }
+        }
+    },
+    "groups": [],
+    "processes": {
+        "x": {
+            "component": "canvas/MakeRandom",
+            "metadata": {
+                "label": "x",
+                "x": 576,
+                "y": 288
+            }
+        },
+        "points": {
+            "component": "canvas/MakePoint",
+            "metadata": {
+                "label": "points",
+                "x": 720,
+                "y": 324
+            }
+        },
+        "y": {
+            "component": "canvas/MakeRandom",
+            "metadata": {
+                "label": "y",
+                "x": 576,
+                "y": 468
+            }
+        },
+        "fill": {
+            "component": "canvas/Fill",
+            "metadata": {
+                "label": "fill",
+                "x": 1008,
+                "y": 324
+            }
+        },
+        "draw": {
+            "component": "canvas/Draw",
+            "metadata": {
+                "label": "draw",
+                "x": 1152,
+                "y": 108
+            }
+        },
+        "delaunay": {
+            "component": "geometry/Delaunay",
+            "metadata": {
+                "label": "delaunay",
+                "x": 864,
+                "y": 324
+            }
+        },
+        "rgbcolor": {
+            "component": "canvas/MakeRGBColor",
+            "metadata": {
+                "label": "rgbcolor",
+                "x": 864,
+                "y": 468
+            }
+        },
+        "r": {
+            "component": "canvas/MakeRandom",
+            "metadata": {
+                "label": "r",
+                "x": 720,
+                "y": 468
+            }
+        },
+        "g": {
+            "component": "canvas/MakeRandom",
+            "metadata": {
+                "label": "g",
+                "x": 720,
+                "y": 612
+            }
+        },
+        "b": {
+            "component": "canvas/MakeRandom",
+            "metadata": {
+                "label": "b",
+                "x": 720,
+                "y": 756
+            }
+        },
+        "origin": {
+            "component": "canvas/MakePoint",
+            "metadata": {
+                "label": "origin",
+                "x": 324,
+                "y": 108
+            }
+        },
+        "bg": {
+            "component": "canvas/MakeRectangle",
+            "metadata": {
+                "label": "bg",
+                "x": 468,
+                "y": 108
+            }
+        },
+        "fill_mpv0u": {
+            "component": "canvas/Fill",
+            "metadata": {
+                "label": "fill",
+                "x": 1008,
+                "y": 108
+            }
+        },
+        "width": {
+            "component": "objects/ExtractProperty",
+            "metadata": {
+                "label": "width",
+                "x": 324,
+                "y": 288
+            }
+        },
+        "split": {
+            "component": "core/Split",
+            "metadata": {
+                "label": "split",
+                "x": 144,
+                "y": 252
+            }
+        },
+        "add": {
+            "component": "math/Add",
+            "metadata": {
+                "label": "add",
+                "x": 468,
+                "y": 288
+            }
+        },
+        "height": {
+            "component": "objects/ExtractProperty",
+            "metadata": {
+                "label": "height",
+                "x": 324,
+                "y": 432
+            }
+        },
+        "add_f8niw": {
+            "component": "math/Add",
+            "metadata": {
+                "label": "add",
+                "x": 468,
+                "y": 468
+            }
+        }
+    },
+    "connections": [
+        {
+            "src": {
+                "process": "x",
+                "port": "numbers"
+            },
+            "tgt": {
+                "process": "points",
+                "port": "x"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "y",
+                "port": "numbers"
+            },
+            "tgt": {
+                "process": "points",
+                "port": "y"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "points",
+                "port": "point"
+            },
+            "tgt": {
+                "process": "delaunay",
+                "port": "points"
+            },
+            "metadata": {
+                "route": null
+            }
+        },
+        {
+            "src": {
+                "process": "delaunay",
+                "port": "paths"
+            },
+            "tgt": {
+                "process": "fill",
+                "port": "items"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "rgbcolor",
+                "port": "color"
+            },
+            "tgt": {
+                "process": "fill",
+                "port": "fillstyle"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "r",
+                "port": "numbers"
+            },
+            "tgt": {
+                "process": "rgbcolor",
+                "port": "red"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "g",
+                "port": "numbers"
+            },
+            "tgt": {
+                "process": "rgbcolor",
+                "port": "green"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "b",
+                "port": "numbers"
+            },
+            "tgt": {
+                "process": "rgbcolor",
+                "port": "blue"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "origin",
+                "port": "point"
+            },
+            "tgt": {
+                "process": "bg",
+                "port": "point"
+            },
+            "metadata": {
+                "route": null
+            }
+        },
+        {
+            "src": {
+                "process": "bg",
+                "port": "rectangle"
+            },
+            "tgt": {
+                "process": "fill_mpv0u",
+                "port": "items"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "fill_mpv0u",
+                "port": "fill"
+            },
+            "tgt": {
+                "process": "draw",
+                "port": "commands"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "fill",
+                "port": "fill"
+            },
+            "tgt": {
+                "process": "draw",
+                "port": "commands"
+            },
+            "metadata": {
+                "route": null
+            }
+        },
+        {
+            "src": {
+                "process": "split",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "draw",
+                "port": "canvas"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "split",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "width",
+                "port": "in"
+            },
+            "metadata": {
+                "route": 0
+            }
+        },
+        {
+            "src": {
+                "process": "width",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "add",
+                "port": "augend"
+            },
+            "metadata": {
+                "route": 0
+            }
+        },
+        {
+            "src": {
+                "process": "add",
+                "port": "sum"
+            },
+            "tgt": {
+                "process": "x",
+                "port": "max"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "split",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "height",
+                "port": "in"
+            },
+            "metadata": {
+                "route": 0
+            }
+        },
+        {
+            "src": {
+                "process": "height",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "add_f8niw",
+                "port": "augend"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "add_f8niw",
+                "port": "sum"
+            },
+            "tgt": {
+                "process": "y",
+                "port": "max"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "width",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "bg",
+                "port": "width"
+            },
+            "metadata": {
+                "route": 0
+            }
+        },
+        {
+            "src": {
+                "process": "height",
+                "port": "out"
+            },
+            "tgt": {
+                "process": "bg",
+                "port": "height"
+            },
+            "metadata": {
+                "route": 0
+            }
+        },
+        {
+            "data": true,
+            "tgt": {
+                "process": "draw",
+                "port": "drawevery"
+            }
+        },
+        {
+            "data": true,
+            "tgt": {
+                "process": "draw",
+                "port": "clearevery"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "r",
+                "port": "min"
+            }
+        },
+        {
+            "data": 10,
+            "tgt": {
+                "process": "r",
+                "port": "count"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "g",
+                "port": "min"
+            }
+        },
+        {
+            "data": 255,
+            "tgt": {
+                "process": "g",
+                "port": "max"
+            }
+        },
+        {
+            "data": 10,
+            "tgt": {
+                "process": "g",
+                "port": "count"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "b",
+                "port": "min"
+            }
+        },
+        {
+            "data": 255,
+            "tgt": {
+                "process": "b",
+                "port": "max"
+            }
+        },
+        {
+            "data": 10,
+            "tgt": {
+                "process": "b",
+                "port": "count"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "origin",
+                "port": "x"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "origin",
+                "port": "y"
+            }
+        },
+        {
+            "data": 255,
+            "tgt": {
+                "process": "r",
+                "port": "max"
+            }
+        },
+        {
+            "data": "width",
+            "tgt": {
+                "process": "width",
+                "port": "key"
+            }
+        },
+        {
+            "data": "height",
+            "tgt": {
+                "process": "height",
+                "port": "key"
+            }
+        },
+        {
+            "data": -200,
+            "tgt": {
+                "process": "y",
+                "port": "min"
+            }
+        },
+        {
+            "data": 200,
+            "tgt": {
+                "process": "add",
+                "port": "addend"
+            }
+        },
+        {
+            "data": 200,
+            "tgt": {
+                "process": "add_f8niw",
+                "port": "addend"
+            }
+        },
+        {
+            "data": 0.9,
+            "tgt": {
+                "process": "rgbcolor",
+                "port": "alpha"
+            }
+        },
+        {
+            "data": -200,
+            "tgt": {
+                "process": "x",
+                "port": "min"
+            }
+        },
+        {
+            "data": "#ddd",
+            "tgt": {
+                "process": "fill_mpv0u",
+                "port": "fillstyle"
+            }
+        },
+        {
+            "data": 50,
+            "tgt": {
+                "process": "x",
+                "port": "count"
+            }
+        },
+        {
+            "data": 50,
+            "tgt": {
+                "process": "y",
+                "port": "count"
+            }
+        }
+    ]
+}
