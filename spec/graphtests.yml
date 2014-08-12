@@ -36,3 +36,7 @@
 -
     _name: regcheck_canvas
     _url: '/graph/canvas?color=%2387a9a7'
+-
+    _name: regcheck_cmyk_jpeg
+    _url: '/graph/passthrough?input=http%3A%2F%2Fi1.sndcdn.com%2Fartworks-000082002645-fhibur-t500x500.jpg'
+
