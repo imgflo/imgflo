@@ -1,14 +1,62 @@
 
 Usecases
----------
-* Interactive GUI applications/tools
-* Image processing server (see jonnor/gegl-server)
-* Commandline, batch processing jobs
+=========
+
+Interactive GUI applications/tools
+----------------------------------
+
+Could be used as
+* Configurable plugin system, for post/pre-processing
+* Non-destructive image processing core
+
+Would benefit from integration with
+* NoFlo, noflo-gnome for general-purpose computation
+* gegl-gtk/qt/clutter, for interactive preview
+* libmypaint, for high-performance brush engine
+
+Would benefit a lot from pre-build versions, including dependencies,
+for Windows and OSX. Ideally also for Android and iOS.
+
+Possible demos:
+* FilterFun. Allow to apply filters to your images
+* Sketchy. Paint/draw interactively on canvas
+
+Image processing server
+-------------------------
+
+Offload image processing to "the cloud".
+Especially interesting for non-interactive workloads,
+where only one-time setup of the graphs are needed, or provided by image-analytics.
+
+Possible demos:
+* Facefinder. Gives you images cropped around faces
+* Resizor. Resizes & optimizes images to fit within given envelope
+
+Batch-processing usecases would benefit from an API where one can
+queue new jobs, monitor and manipulate existing ones.
+Film/3d-animation renderfarms might be interested in this type functionality
+
+Commandline tool
+-----------------------------------
+
+Replacement for tools like imagemagick/graphicmagick
+Should be easy to integrate into build-systems for software, like grunt/Make etc
+Would benefit from PSD, XCF and good SVG support.
+Would maybe benefit from internal support for .fbp files. Hack using noflo/fbp perhaps good-enough?
+
+Possible demos:
+* FilmTinter. Filter frames for 3d movies through a pipeline
+* AssetGenerator. Exports/generates size/color variations of an design asset, like icons from SVG
+
+Ideally there would be a "imgflo-client" executable that would
+* Allow file uploads to a public service (could be imgflo server)
+* Be able to start/stop/monitor jobs for batch-processing
+
 
 Combined client+server-side processing
---------------------------------------
+======================================
 
-Major challenge: getting identical results on the two widely different
+Major challenge: getting identical results on the two widely different platforms
 
 Two technologies may allow to implement operations in the same way for both targets.
 * WebGL, using OpenGL ES 2.0 GLSL shaders for processing. Also uses GPU.
@@ -26,4 +74,11 @@ WebGL:
 * http://schibum.blogspot.no/2013/03/webgl-image-processing.html
 
 
+General purpose FBP support
+===========================
+Scary extension of scope....
 
+One could also generalize the current abstraction that represents "Processor"
+as a FBP component into a mini C/glib-based FBP runtime.
+It should then have solid GObject Introspection bindings, and be possible to use
+the operations without modification in noflo-gnome.
