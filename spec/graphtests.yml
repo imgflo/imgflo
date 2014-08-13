@@ -38,6 +38,7 @@
     stop3: 0.5
     stop4: 0.7
     stop5: 0.9
+    srgb: True
 -
     _name: regcheck_https_protocol
     _url: '/graph/gradientmap?input=https%3A%2F%2Fpbs.twimg.com%2Fmedia%2FBo5budLIcAAWEAB.jpg%3Alarge&color1=%23082A31&color2=%23FFE79B'

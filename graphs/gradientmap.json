@@ -95,6 +95,14 @@
                 "x": 576,
                 "y": 180
             }
+        },
+        "srgb": {
+            "process": "gegl/gradient-map_iqxf9",
+            "port": "srgb",
+            "metadata": {
+                "x": 576,
+                "y": 180
+            }
         }
     },
     "outports": {
