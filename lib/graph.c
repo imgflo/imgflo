@@ -70,6 +70,9 @@ set_property(GeglNode *t, const gchar *port, GParamSpec *paramspec, GValue *valu
 
             g_value_set_enum(&dest_value, val->value);
             g_type_class_unref((gpointer)klass);
+        } else if (g_type_is_a(target_type, G_TYPE_BOOLEAN)) {
+            gboolean b = g_ascii_strcasecmp("true", iip) == 0;
+            g_value_set_boolean(&dest_value, b);
         } else {
             return FALSE;
         }
