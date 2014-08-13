@@ -25,6 +25,20 @@
     color1: '#87a9a7'
     color2: '#b3dedc'
 -
+    _name: 'gradient_multiple_stops'
+    _graph: gradientmap
+    input: "demo/gradient-black-white.png"
+    color1: '#555555'
+    color2: '#ff0000'
+    color3: '#00ff00'
+    color4: '#0000ff'
+    color5: '#dddddd'
+    stop1: 0.0
+    stop2: 0.3
+    stop3: 0.5
+    stop4: 0.7
+    stop5: 0.9
+-
     _name: regcheck_https_protocol
     _url: '/graph/gradientmap?input=https%3A%2F%2Fpbs.twimg.com%2Fmedia%2FBo5budLIcAAWEAB.jpg%3Alarge&color1=%23082A31&color2=%23FFE79B'
 -

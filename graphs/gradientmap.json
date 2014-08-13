@@ -31,6 +31,70 @@
                 "x": 576,
                 "y": 180
             }
+        },
+        "color3": {
+            "process": "gegl/gradient-map_iqxf9",
+            "port": "color3",
+            "metadata": {
+                "x": 576,
+                "y": 180
+            }
+        },
+        "color4": {
+            "process": "gegl/gradient-map_iqxf9",
+            "port": "color4",
+            "metadata": {
+                "x": 576,
+                "y": 180
+            }
+        },
+        "color5": {
+            "process": "gegl/gradient-map_iqxf9",
+            "port": "color5",
+            "metadata": {
+                "x": 576,
+                "y": 180
+            }
+        },
+        "stop1": {
+            "process": "gegl/gradient-map_iqxf9",
+            "port": "stop1",
+            "metadata": {
+                "x": 576,
+                "y": 180
+            }
+        },
+        "stop2": {
+            "process": "gegl/gradient-map_iqxf9",
+            "port": "stop2",
+            "metadata": {
+                "x": 576,
+                "y": 180
+            }
+        },
+        "stop3": {
+            "process": "gegl/gradient-map_iqxf9",
+            "port": "stop3",
+            "metadata": {
+                "x": 576,
+                "y": 180
+            }
+        },
+        "stop4": {
+            "process": "gegl/gradient-map_iqxf9",
+            "port": "stop4",
+            "metadata": {
+                "x": 576,
+                "y": 180
+            }
+        },
+        "stop5": {
+            "process": "gegl/gradient-map_iqxf9",
+            "port": "stop5",
+            "metadata": {
+                "x": 576,
+                "y": 180
+            }
         }
     },
     "outports": {
