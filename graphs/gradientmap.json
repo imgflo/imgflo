@@ -9,7 +9,7 @@
     },
     "inports": {
         "input": {
-            "process": "gegl/grey_ro3v4",
+            "process": "gegl/nop_cw9dg",
             "port": "input",
             "metadata": {
                 "x": 288,
@@ -103,11 +103,19 @@
                 "x": 576,
                 "y": 180
             }
+        },
+        "opacity": {
+            "process": "gradient-opacity",
+            "port": "value",
+            "metadata": {
+                "x": 576,
+                "y": -144
+            }
         }
     },
     "outports": {
         "output": {
-            "process": "gegl/gradient-map_iqxf9",
+            "process": "blend",
             "port": "output",
             "metadata": {
                 "x": 756,
@@ -117,6 +125,14 @@
     },
     "groups": [],
     "processes": {
+        "gegl/nop_cw9dg": {
+            "component": "gegl/nop",
+            "metadata": {
+                "label": "gegl/nop",
+                "x": 324,
+                "y": 108
+            }
+        },
         "gegl/gradient-map_iqxf9": {
             "component": "gegl/gradient-map",
             "metadata": {
@@ -132,9 +148,51 @@
                 "x": 432,
                 "y": 288
             }
+        },
+        "gradient-opacity": {
+            "component": "gegl/opacity",
+            "metadata": {
+                "label": "gradient-opacity",
+                "x": 684,
+                "y": 0
+            }
+        },
+        "blend": {
+            "component": "svg/src-over",
+            "metadata": {
+                "label": "blend",
+                "x": 792,
+                "y": 108
+            }
         }
     },
     "connections": [
+        {
+            "src": {
+                "process": "gegl/nop_cw9dg",
+                "port": "output"
+            },
+            "tgt": {
+                "process": "gegl/grey_ro3v4",
+                "port": "input"
+            },
+            "metadata": {
+                "route": null
+            }
+        },
+        {
+            "src": {
+                "process": "gegl/nop_cw9dg",
+                "port": "output"
+            },
+            "tgt": {
+                "process": "blend",
+                "port": "input"
+            },
+            "metadata": {
+                "route": 0
+            }
+        },
         {
             "src": {
                 "process": "gegl/grey_ro3v4",
@@ -143,6 +201,30 @@
             "tgt": {
                 "process": "gegl/gradient-map_iqxf9",
                 "port": "input"
+            },
+            "metadata": {}
+        },
+        {
+            "src": {
+                "process": "gegl/gradient-map_iqxf9",
+                "port": "output"
+            },
+            "tgt": {
+                "process": "gradient-opacity",
+                "port": "input"
+            },
+            "metadata": {
+                "route": null
+            }
+        },
+        {
+            "src": {
+                "process": "gradient-opacity",
+                "port": "output"
+            },
+            "tgt": {
+                "process": "blend",
+                "port": "aux"
             },
             "metadata": {}
         }
