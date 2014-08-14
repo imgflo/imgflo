@@ -101,7 +101,9 @@ describe 'Server', ->
                         done()
             it 'should list valid parameters', ->
                 d = JSON.parse data
-                chai.expect(Object.keys(d.inports)).to.deep.equal ['input', 'color1', 'color2']
+                e = ['input', 'color1', 'color2', "color3", "color4", "color5",
+                    "stop1", "stop2", "stop3", "stop4", "stop5", "srgb", "opacity"]
+                chai.expect(Object.keys(d.inports)).to.deep.equal
 
     describe 'Get image', ->
         it 'should be created on demand', (done) ->
