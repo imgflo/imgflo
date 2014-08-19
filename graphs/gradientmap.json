@@ -227,6 +227,13 @@
                 "port": "aux"
             },
             "metadata": {}
+        },
+        {
+          "data": true,
+          "tgt": {
+            "process": "blend",
+            "port": "srgb"
+          }
         }
     ]
 }
