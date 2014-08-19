@@ -447,7 +447,7 @@ class Server extends EventEmitter
 
             waitForDownloads req.files, (err, downloads) =>
                 if err
-                    @logEvent 'download-input-error', { request: request_url, err: err }
+                    @logEvent 'download-input-error', { request: request_url, files: req.files, err: err }
                     return callback { code: 504, result: {} }, null
 
                 inputType = if downloads.input? then typeFromMime downloads.input.type else null

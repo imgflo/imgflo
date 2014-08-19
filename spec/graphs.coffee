@@ -56,7 +56,7 @@ class LogHandler
                 @errors.push data.err
         else if (id.indexOf 'error') != -1
             if data.err
-                @errors.push data.err
+                @errors.push data
         else if id == 'request-received' or id == 'serve-processed-file'
             #
         else
