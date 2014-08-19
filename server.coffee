@@ -388,7 +388,7 @@ class Server extends EventEmitter
 
     handleGraphRequest: (request, response) ->
         u = url.parse request.url, true
-        filepath = hashFile u.search
+        filepath = hashFile u.path
         workdir_filepath = path.join @workdir, filepath
 
         fs.exists workdir_filepath, (exists) =>
