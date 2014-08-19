@@ -45,14 +45,14 @@ class Processor
 
     # FIXME: clean up interface
     # callback should be called with (err, error_string)
-    process: (outputFile, graph, iips, inputFile, inputType, callback) ->
+    process: (outputFile, outType, graph, iips, inputFile, inputType, callback) ->
         throw new Error 'Processor.process() not implemented'
 
 class NoFloProcessor extends Processor
     constructor: (verbose) ->
         @verbose = verbose
 
-    process: (outputFile, graph, iips, inputFile, inputType, callback) ->
+    process: (outputFile, outputType, graph, iips, inputFile, inputType, callback) ->
         g = prepareNoFloGraph graph, iips, inputFile, outputFile, inputType
         @run g, callback
 
@@ -132,8 +132,8 @@ class ImgfloProcessor extends Processor
     constructor: (verbose) ->
         @verbose = verbose
 
-    process: (outputFile, graph, iips, inputFile, inputType, callback) ->
-        g = prepareImgfloGraph graph, iips, inputFile, outputFile, inputType
+    process: (outputFile, outputType, graph, iips, inputFile, inputType, callback) ->
+        g = prepareImgfloGraph graph, iips, inputFile, outputFile, inputType, outputType
         @run g, callback
 
     run: (graph, callback) ->
@@ -156,7 +156,7 @@ class ImgfloProcessor extends Processor
         process.stdin.write s
         process.stdin.end()
 
-prepareImgfloGraph = (basegraph, attributes, inpath, outpath, type) ->
+prepareImgfloGraph = (basegraph, attributes, inpath, outpath, type, outtype) ->
 
     # Avoid mutating original
     def = clone basegraph
@@ -167,7 +167,7 @@ prepareImgfloGraph = (basegraph, attributes, inpath, outpath, type) ->
 
     # Add load, save, process nodes
     def.processes.load = { component: loader }
-    def.processes.save = { component: 'gegl/png-save' }
+    def.processes.save = { component: "gegl/#{outtype}-save" }
     def.processes.proc = { component: 'Processor' }
 
     # Connect them to actual graph
@@ -302,10 +302,17 @@ parseRequestUrl = (u) ->
     for key, value of parsedUrl.query
         iips[key] = value if key != 'input'
 
+    p = parsedUrl.pathname.replace '/graph/', ''
+    outtype = (path.extname p).replace '.', ''
+    graph = path.basename p, path.extname p
+    if not outtype
+        outtype = 'png'
+
     out =
-        graph: (parsedUrl.pathname.replace '/graph', '')
+        graph: graph
         files: files
         iips: iips
+        outtype: outtype
     return out
 
 class Server extends EventEmitter
@@ -445,7 +452,7 @@ class Server extends EventEmitter
 
                 inputType = if downloads.input? then typeFromMime downloads.input.type else null
                 inputFile = if downloads.input? then downloads.input.path else null
-                processor.process outf, graph, req.iips, inputFile, inputType, callback
+                processor.process outf, req.outtype, graph, req.iips, inputFile, inputType, callback
 
 exports.Processor = Processor
 exports.Server = Server

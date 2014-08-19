@@ -32,6 +32,13 @@ requestUrl = (testcase) ->
         for key of testcase
             props[key] = testcase[key] if key != '_name' and key != '_graph'
         u = url.format { protocol: 'http:', host: urlbase, pathname: '/graph/'+graph, query: props}
+    return u
+
+requestFileFormat = (u) ->
+    parsed = url.parse u
+    graph = parsed.pathname.replace '/graph/', ''
+    ext = (path.extname graph).replace '.', ''
+    return ext || 'png'
 
 class LogHandler
     @errors = null
@@ -80,10 +87,11 @@ describe 'Graphs', ->
     for testcase in testcases
 
         describe "#{testcase._name}", ->
-            datadir = 'spec/data/'
-            reference = path.join datadir, "#{testcase._name}.reference.png"
-            output = path.join datadir, "#{testcase._name}.out.png"
             reqUrl = requestUrl testcase
+            ext = requestFileFormat reqUrl
+            datadir = 'spec/data/'
+            reference = path.join datadir, "#{testcase._name}.reference.#{ext}"
+            output = path.join datadir, "#{testcase._name}.out.#{ext}"
             fs.unlinkSync output if fs.existsSync output
 
             it 'should have a reference result', (done) ->

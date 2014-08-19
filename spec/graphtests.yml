@@ -19,6 +19,10 @@
     _graph: "crop"
     input: "demo/grid-toastybob.jpg"
 -
+    _name: 'crop_default_jpeg'
+    _graph: "crop.jpg"
+    input: "demo/grid-toastybob.jpg"
+-
     _name: 'gradient_unused_params'
     _graph: gradientmap
     input: http://s.radar.oreilly.com/wp-files/8/2013/10/noflo-jekyll-700x456.jpg
