@@ -15,6 +15,8 @@ child = require 'child_process'
 
 urlbase = 'localhost:8888'
 
+verbose = process.env.IMGFLO_TESTS_VERBOSE?
+
 compareImages = (actual, expected, callback) ->
     cmd = "./install/env.sh ./install/bin/gegl-imgcmp #{actual} #{expected}"
     options =
@@ -78,7 +80,7 @@ describe 'Graphs', ->
         if fs.existsSync wd
             for f in fs.readdirSync wd
                 fs.unlinkSync path.join wd, f
-        s = new server.Server wd
+        s = new server.Server wd, null, null, verbose
         l = new LogHandler s
         s.listen 8888
     after ->
