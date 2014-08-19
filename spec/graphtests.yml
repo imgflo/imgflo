@@ -45,6 +45,25 @@
     srgb: True
     opacity: 0.9
 -
+    _name: gradient_pscompat_bw100
+    _graph: gradientmap
+    input: "demo/gradient-black-white.png"
+    color1: '#0A2A2F'
+    color2: '#FDE7A0'
+    stop1: 0.0
+    stop2: 1.0
+    srgb: True
+-
+    _name: gradient_pscompat_bw80
+    _graph: gradientmap
+    input: "demo/gradient-black-white.png"
+    color1: '#0A2A2F'
+    color2: '#FDE7A0'
+    stop1: 0.0
+    stop2: 1.0
+    opacity: 0.8
+    srgb: True
+-
     _name: regcheck_https_protocol
     _url: '/graph/gradientmap?input=https%3A%2F%2Fpbs.twimg.com%2Fmedia%2FBo5budLIcAAWEAB.jpg%3Alarge&color1=%23082A31&color2=%23FFE79B'
 -
