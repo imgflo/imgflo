@@ -2,5 +2,8 @@
   "name": "imgflo",
   "description": "Image processing server built with Flowhub & GEGL",
   "repository": "https://github.com/jonnor/imgflo",
-  "keywords": ["node", "image processing", "gegl", "flowhub", "graphics"]
+  "keywords": ["node", "image processing", "gegl", "flowhub", "graphics"],
+  "env": {
+    "BUILDPACK_URL": "https://github.com/mojodna/heroku-buildpack-multi.git#build-env"
+  }
 }
