@@ -57,7 +57,8 @@ dependencies:
 
 gegl:
 	cd dependencies && make PREFIX=$(PREFIX) gegl
-
+libsoup:
+	cd dependencies && make PREFIX=$(PREFIX) libsoup
 glib:
 	cd dependencies && make PREFIX=$(PREFIX) glib
 
