@@ -1,7 +1,0 @@
-in(gegl/load) OUTPUT -> INPUT f(gegl/crop)
-f() OUTPUT -> INPUT out(gegl/png-save)
-out NODE -> TARGET p(Processor)
-
-'examples/grid-toastybob.jpg' -> PATH in
-'testtemp/out.png' -> PATH out
-'200' -> WIDTH f, '200' -> HEIGHT f

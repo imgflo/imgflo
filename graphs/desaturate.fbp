@@ -1,7 +1,0 @@
-INPORT=in.INPUT:INPUT
-INPORT=desaturate.RADIUS:GRAINSIZE
-INPORT=desaturate.RADIUS:GRAINSIZE
-INPORT=desaturate.SAMPLES:SAMPLES
-OUTPORT=desaturate.OUTPUT:OUTPUT
-
-in(gegl/nop) OUTPUT -> INPUT desaturate(gegl/c2g)
