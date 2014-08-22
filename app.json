@@ -1,0 +1,6 @@
+{
+  "name": "imgflo",
+  "description": "Image processing server built with Flowhub & GEGL",
+  "repository": "https://github.com/jonnor/imgflo",
+  "keywords": ["node", "image processing", "gegl", "flowhub", "graphics"]
+}

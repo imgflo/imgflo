@@ -7,6 +7,7 @@ which can be visually programmed using [Flowhub.io](http://flowhub.io).
 
 imgflo is pronounced "Imageflo(w)".
 
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
 
 Changelog
 ----------
