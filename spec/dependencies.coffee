@@ -31,6 +31,7 @@ describe 'Dependencies', ->
 
     describe "for Travis", ->
         it 'should be released', (done) ->
+            @timeout 5000
             listVendorUrls 'travis', (err, urls) ->
                 for u in urls
                     ftpFileExists u, (err, res) ->
@@ -39,6 +40,7 @@ describe 'Dependencies', ->
 
     describe "for Heroku", ->
         it 'should be released', (done) ->
+            @timeout 5000
             listVendorUrls 'heroku', (err, urls) ->
                 for u in urls
                     ftpFileExists u, (err, res) ->

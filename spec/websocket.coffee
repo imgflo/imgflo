@@ -149,7 +149,7 @@ describe 'NoFlo runtime API,', () ->
             send: (cmd, pay) ->
                 send "graph", cmd, pay, graph
 
-        outfile = 'testtemp/protocol-crop.png'
+        outfile = 'spec/out/protocol-crop.png'
         it 'should not crash', (done) ->
             ui.send "graph", "clear", {id: graph}
             ui.graph1.send "addnode", {id: 'in', component: 'gegl/load'}
@@ -159,7 +159,7 @@ describe 'NoFlo runtime API,', () ->
             ui.graph1.send "addedge", {src: {node: 'in', port: 'output'}, tgt: {node: 'filter', port: 'input'}}
             ui.graph1.send "addedge", {src: {node: 'filter', port: 'output'}, tgt: {node: 'out', port: 'input'}}
             ui.graph1.send "addedge", {src: {node: 'out', port: 'ANY'}, tgt: {node: 'proc', port: 'node'}}
-            ui.graph1.send "addinitial", {src: {data: 'examples/grid-toastybob.jpg'}, tgt: {node: 'in', port: 'path'}}
+            ui.graph1.send "addinitial", {src: {data: 'spec/data/grid-toastybob.jpg'}, tgt: {node: 'in', port: 'path'}}
             ui.graph1.send "addinitial", {src: {data: outfile}, tgt: {node: 'out', port: 'path'}}
 
             ui.send "runtime", "getruntime"
