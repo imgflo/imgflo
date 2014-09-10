@@ -13,6 +13,9 @@ typedef struct _RuntimeInfo {
     gint port; // external
 } RuntimeInfo;
 
+// TODO: move back to HTTPs, when we've built libsoup with SSL support on Heroku
+const gchar *api_endpoint = "http://api.flowhub.io";
+
 RuntimeInfo *
 runtime_info_new_from_env(const gchar *host, gint port) {
     RuntimeInfo *self = g_new(RuntimeInfo, 1);
@@ -49,6 +52,7 @@ runtime_info_free(RuntimeInfo *self) {
 typedef struct _Registry {
     RuntimeInfo *info;
     SoupSession *session;
+    guint ping_timeout;
 } Registry;
 
 Registry *
@@ -56,6 +60,7 @@ registry_new(RuntimeInfo *info) {
     Registry *self = g_new(Registry, 1);
     self->info = info;
     self->session = soup_session_new_with_options(SOUP_SESSION_MAX_CONNS, 10, NULL);
+    self->ping_timeout = 0;
     return self;
 }
 
@@ -68,7 +73,60 @@ registry_free(Registry *self) {
     g_object_unref(self->session);
 }
 
-gchar *
+/* Pinging */
+gboolean
+registry_ping(Registry *self) {
+    g_return_val_if_fail(self->info, FALSE);
+    g_return_val_if_fail(self->info->user_id, FALSE);
+    g_return_val_if_fail(self->info->id, FALSE);
+
+    gchar url[200];
+    g_snprintf(url, sizeof(url), "%s/runtimes/%s", api_endpoint, self->info->id);
+    SoupMessage *msg = soup_message_new("POST", url);
+    soup_message_set_request(msg, "application/json", SOUP_MEMORY_STATIC, "", 0);
+
+    // XXX: syncronous HTTP call
+    const guint status = soup_session_send_message(self->session, msg);
+    gboolean success = FALSE;
+    if (status == 201 || status == 200) {
+        success = TRUE;
+    } else {
+        // Could be intermittent failure
+    }
+    g_object_unref(msg);
+    return success;
+}
+
+static gboolean
+ping_func(gpointer data) {
+    Registry *r = (Registry *)data;
+    registry_ping(r);
+    return TRUE;
+}
+
+void
+registry_start_pinging(Registry *self) {
+    if (self->ping_timeout) {
+        // already registered
+        return;
+    }
+    const guint ping_interval_seconds = 10*60;
+    registry_ping(self); // Fire initial ping right away
+    self->ping_timeout = g_timeout_add_seconds(ping_interval_seconds,
+                                               (GSourceFunc)ping_func, self);
+}
+
+void
+registry_stop_pinging(Registry *self) {
+    if (!self->ping_timeout) {
+        // not registered
+        return;
+    }
+    g_source_remove(self->ping_timeout);
+}
+
+/* Registration */
+static gchar *
 register_msg_body(RuntimeInfo *rt, gsize *body_length_out) {
     gchar address[100];
     g_snprintf(address, sizeof(address), "ws://%s:%d", rt->hostname, rt->port);
@@ -80,6 +138,7 @@ register_msg_body(RuntimeInfo *rt, gsize *body_length_out) {
     json_object_set_string_member(root, "protocol", "websocket");
     json_object_set_string_member(root, "user", rt->user_id);
     json_object_set_string_member(root, "id", rt->id);
+    json_object_set_string_member(root, "secret", "abracadacbra"); // XXX: let user specify
     json_object_set_string_member(root, "label", rt->label);
     json_object_set_string_member(root, "address", address);
 
@@ -95,8 +154,6 @@ registry_register(Registry *self) {
     g_return_val_if_fail(self->info, FALSE);
     g_return_val_if_fail(self->info->user_id, FALSE);
 
-    // TODO: move back to HTTPs, when we've built libsoup with SSL support on Heroku
-    const gchar *endpoint = "http://api.flowhub.io";
     RuntimeInfo *rt = self->info;
 
     if (!rt->id) {
@@ -106,7 +163,7 @@ registry_register(Registry *self) {
     }
 
     gchar url[200];
-    g_snprintf(url, sizeof(url), "%s/runtimes/%s", endpoint, rt->id);
+    g_snprintf(url, sizeof(url), "%s/runtimes/%s", api_endpoint, rt->id);
     SoupMessage *msg = soup_message_new("PUT", url);
 
     gsize body_length = -1;

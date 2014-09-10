@@ -395,7 +395,11 @@ server_callback (SoupServer *server, SoupMessage *msg,
 gboolean
 ui_connection_try_register(UiConnection *self) {
     if (self->registry->info->user_id) {
-        return registry_register(self->registry);
+        gboolean success = registry_register(self->registry);
+        if (success) {
+            registry_start_pinging(self->registry);
+        }
+        return success;
     }
     return FALSE;
 }
