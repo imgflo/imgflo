@@ -42,10 +42,15 @@ describe 'NoFlo runtime API,', () ->
         it 'protocol version should be "0.4"', ->
             chai.expect(info.version).to.be.a "string"
             chai.expect(info.version).to.equal "0.4"
-        it 'capabilities should include "protocol:component"', ->
-            chai.expect(info.capabilities).to.be.an "array"
-            chai.expect(info.capabilities.length).to.equal 1
-            chai.expect((info.capabilities.filter -> 'protocol:component')[0]).to.be.a "string"
+        describe 'capabilities"', ->
+            it 'should be an array', ->
+                chai.expect(info.capabilities).to.be.an "array"
+            it 'should include "protocol:component"', ->
+                chai.expect(info.capabilities).to.include "protocol:component"
+            it 'should include "protocol:graph"', ->
+                chai.expect(info.capabilities).to.include "protocol:graph"
+            it 'should include "protocol:network"', ->
+                chai.expect(info.capabilities).to.include "protocol:network"
 
     describe 'sending component list', ->
         it 'should return more than 100 components', (done) ->

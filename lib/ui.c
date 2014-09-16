@@ -214,6 +214,8 @@ ui_connection_handle_message(UiConnection *self,
 
         JsonArray *capabilities = json_array_new();
         json_array_add_string_element(capabilities, "protocol:component");
+        json_array_add_string_element(capabilities, "protocol:graph");
+        json_array_add_string_element(capabilities, "protocol:network");
         json_object_set_array_member(runtime, "capabilities", capabilities);
 
         send_response(ws, "runtime", "runtime", runtime);
