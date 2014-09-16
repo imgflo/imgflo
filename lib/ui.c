@@ -99,6 +99,8 @@ handle_graph_message(UiConnection *self, const gchar *command, JsonObject *paylo
         graph_remove_node(graph,
             json_object_get_string_member(payload, "id")
         );
+    } else if (g_strcmp0(command, "changenode") == 0) {
+        // Just metadata, ignored
     } else if (g_strcmp0(command, "addinitial") == 0) {
         JsonObject *tgt = json_object_get_object_member(payload, "tgt");
         JsonObject *src = json_object_get_object_member(payload, "src");
@@ -169,6 +171,8 @@ handle_network_message(UiConnection *self, const gchar *command, JsonObject *pay
 
         g_print("\tNetwork STOP\n");
         network_set_running(network, FALSE);
+    } else if (g_strcmp0(command, "debug") == 0) {
+        // Ignored, not implemented
     } else {
         g_printerr("Unhandled message on protocol 'network', command='%s'", command);
     }
