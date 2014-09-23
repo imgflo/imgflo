@@ -124,6 +124,21 @@ describe 'FBP runtime protocol,', () ->
                 chai.expect(output.length).to.equal 1
                 chai.expect(output[0].type).to.equal "buffer"
 
+        # TODO: move these checks to
+        describe 'gegl:jpg-load component', ->
+            c = 'gegl/jpg-load'
+            it 'should have a "output" port', ->
+                output = ui.components[c].outPorts.filter (p) -> p.id == 'output'
+                chai.expect(output.length).to.equal 1
+                chai.expect(output[0].type).to.equal "buffer"
+
+        describe 'gegl:jpg-save component', ->
+            c = 'gegl/jpg-save'
+            it 'should have a "input" buffer port', ->
+                input = ui.components[c].inPorts.filter (p) -> p.id == 'input'
+                chai.expect(input.length).to.equal 1
+                chai.expect(input[0].type).to.equal "buffer"
+
         describe 'gegl/add component', ->
             c = 'gegl/add'
             it 'should have "input" and "aux" buffer ports', ->
