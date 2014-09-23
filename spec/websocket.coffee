@@ -4,6 +4,7 @@
 
 utils = require './utils'
 fs = require 'fs'
+path = require 'path'
 
 chai = require 'chai'
 
@@ -12,7 +13,10 @@ debug = process.env.IMGFLO_TESTS_DEBUG?
 # when we don't get the stdout of the runtime for instance.
 itSkipDebug = if debug then it.skip else it
 
-describe 'NoFlo runtime API,', () ->
+projectDir = path.resolve __dirname, '..'
+testDataDir = path.join projectDir, 'spec/data'
+
+describe 'FBP runtime protocol,', () ->
     runtime = new utils.RuntimeProcess debug
     ui = new utils.MockUi
 
@@ -164,7 +168,7 @@ describe 'NoFlo runtime API,', () ->
             ui.graph1.send "addedge", {src: {node: 'in', port: 'output'}, tgt: {node: 'filter', port: 'input'}}
             ui.graph1.send "addedge", {src: {node: 'filter', port: 'output'}, tgt: {node: 'out', port: 'input'}}
             ui.graph1.send "addedge", {src: {node: 'out', port: 'ANY'}, tgt: {node: 'proc', port: 'node'}}
-            ui.graph1.send "addinitial", {src: {data: 'spec/data/grid-toastybob.jpg'}, tgt: {node: 'in', port: 'path'}}
+            ui.graph1.send "addinitial", {src: {data: testDataDir+'/grid-toastybob.jpg'}, tgt: {node: 'in', port: 'path'}}
             ui.graph1.send "addinitial", {src: {data: outfile}, tgt: {node: 'out', port: 'path'}}
 
             ui.send "runtime", "getruntime"
