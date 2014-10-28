@@ -4,7 +4,7 @@ Released: October 28th, 2014
 
 server
 -------
-Moved to separate git repository [jonnor/imgflo](https://github.com/jonnor/imgflo-server)
+Moved to separate git repository [jonnor/imgflo-server](https://github.com/jonnor/imgflo-server)
 
 runtime
 --------
