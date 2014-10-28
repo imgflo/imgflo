@@ -1,19 +1,34 @@
 imgflo 0.2.0
 =============
-Released: N/A
-
-runtime
---------
-Registration as Flowhub.io runtime now done in main executable, use environment variables to specify.
-Support for running on Heroku as a runtime, not just as a server.
-
-Added annotations for many more port types; including number, enums, colors.
-This lets Flowhub bring up more suitable UIs than the general string input.
-Added support for default values for IIPs.
+Released: October 28th, 2014
 
 server
 -------
-Improvements to API stability, many tests added
+Moved to separate git repository [jonnor/imgflo](https://github.com/jonnor/imgflo-server)
+
+runtime
+--------
+Registration as Flowhub.io runtime now done in main `imgflo` executable,
+use environment variables `FLOWHUB_USER_ID` and `IMGFLO_RUNTIME_ID` to specify.
+
+Support for running on Heroku out-of-the-box, just set above envvars
+and push git repo to an heroku app and connect from [Flowhub](http://flowhub.io).
+
+Added annotations for many more port types; including number, booleans, enums, colors.
+This lets Flowhub bring up more suitable UIs than the general string input.
+Added support for default values for IIPs.
+
+Multiple graphs are now supported, allowing to switch
+between graphs in a Flowhub project without wierd issues.
+
+Fix an issue with Flowhub 0.2.0+ due to not setting runtime capabilities correctly.
+
+The `Processor` component now checks that bounds have a sane value,
+and disables processing if 0x0 or clips if above `max_size`.
+NB: Currently *max_size limit not configurable*.
+
+Default GEGL build has been updated to recent git master version,
+and now includes the 'workshop' operations.
 
 
 imgflo 0.1.0
