@@ -37,7 +37,7 @@ processor_new(void) {
     self->currently_processed_rect = NULL;
     self->on_invalidated = NULL;
     self->on_invalidated_data = NULL;
-    self->max_size = 1000; // Mainly to avoid DoS, or bugs causing out-of-memory
+    self->max_size = 2000; // Mainly to avoid DoS, or bugs causing out-of-memory
     return self;
 }
 
