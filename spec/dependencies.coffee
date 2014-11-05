@@ -27,9 +27,13 @@ ftpFileExists = (fileUrl, callback) ->
     ftp.get fileUrl, (err, res) ->
         return callback err, not err
 
+slowEnabled = (!process.env.IMGFLO_TESTS_SLOW?) or
+    process.env.IMGFLO_TESTS_SLOW.toLowerCase() in ['true', '1']
+describeIfSlow = if slowEnabled then describe else describe.skip
+
 describe 'Dependencies', ->
 
-    describe "for Travis", ->
+    describeIfSlow "for Travis", ->
         it 'should be released', (done) ->
             @timeout 5000
             listVendorUrls 'travis', (err, urls) ->
@@ -38,7 +42,7 @@ describe 'Dependencies', ->
                         chai.expect(res).to.equal true
                         done()
 
-    describe "for Heroku", ->
+    describeIfSlow "for Heroku", ->
         it 'should be released', (done) ->
             @timeout 5000
             listVendorUrls 'heroku', (err, urls) ->
