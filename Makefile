@@ -52,6 +52,17 @@ travis-deps:
 	wget -O imgflo-dependencies.tgz $(TRAVIS_DEPENDENCIES)
 	tar -xf imgflo-dependencies.tgz
 
+COMPONENTINSTALLDIR=$(PREFIX)/lib/imgflo/operations
+COMPONENT_SOURCES = $(wildcard $(COMPONENTDIR)/*.c)
+COMPONENT_PLUGINS = $(patsubst $(COMPONENTDIR)/%.c,$(COMPONENTINSTALLDIR)/%.so,$(COMPONENT_SOURCES))
+
+component-install-dir: env
+	mkdir -p $(COMPONENTINSTALLDIR) || true
+components: component-install-dir $(COMPONENT_PLUGINS)
+
+$(COMPONENTINSTALLDIR)/%.so: $(COMPONENTDIR)/%.c
+	$(PREFIX)/env.sh gcc -shared -rdynamic -fPIC -o $@ $< -I$(COMPONENTDIR) $(FLAGS) $(DEPS)
+
 dependencies:
 	cd dependencies && make PREFIX=$(PREFIX) dependencies
 

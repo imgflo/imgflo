@@ -26,3 +26,4 @@ spec/graphs.coffee
 spec/graphtests.yml
 spec/utils.coffee
 lib/library.c
+env.sh.in
