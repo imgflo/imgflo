@@ -62,7 +62,7 @@ component-install-dir: env
 components: component-install-dir $(COMPONENT_PLUGINS)
 
 $(COMPONENTINSTALLDIR)/%.so: $(COMPONENTDIR)/%.c
-	$(PREFIX)/env.sh gcc -shared -rdynamic -fPIC -o $@ $< -I$(COMPONENTDIR) $(FLAGS) $(DEPS)
+	$(PREFIX)/env.sh gcc -shared -rdynamic -fPIC -o $@ $< -DGEGL_OP_C_FILE=\"`basename $<`\" -I$(COMPONENTDIR) $(FLAGS) $(DEPS)
 
 dependencies:
 	cd dependencies && make PREFIX=$(PREFIX) dependencies

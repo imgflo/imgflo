@@ -8,7 +8,6 @@
 #else
 
 #define GEGL_OP_POINT_FILTER
-#define GEGL_OP_C_FILE "dynamiccomponent1.c" // must match filename on disk
 #include "gegl-op.h"
 
 static void prepare(GeglOperation *operation)
