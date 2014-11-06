@@ -210,6 +210,24 @@ ui_connection_handle_message(UiConnection *self,
             send_response(ws, "component", "component", component);
         }
 
+    } else if (g_strcmp0(protocol, "component") == 0 && g_strcmp0(command, "source") == 0) {
+        library_set_source(
+            json_object_get_string_member(payload, "name"),
+            json_object_get_string_member(payload, "code")
+        );
+        // XXX: no response?
+    } else if (g_strcmp0(protocol, "component") == 0 && g_strcmp0(command, "getsource") == 0) {
+        const gchar *name = json_object_get_string_member(payload, "name");
+        gchar *code = library_get_source(name);
+
+        JsonObject *source_info = json_object_new();
+        json_object_set_string_member(source_info, "name", name);
+        json_object_set_string_member(source_info, "library", "imgflo");
+        json_object_set_string_member(source_info, "language", "c");
+        json_object_set_string_member(source_info, "code", code);
+
+        send_response(ws, "component", "source", source_info);
+
     } else if (g_strcmp0(protocol, "runtime") == 0 && g_strcmp0(command, "getruntime") == 0) {
 
         JsonObject *runtime = json_object_new();
@@ -220,6 +238,8 @@ ui_connection_handle_message(UiConnection *self,
         json_array_add_string_element(capabilities, "protocol:component");
         json_array_add_string_element(capabilities, "protocol:graph");
         json_array_add_string_element(capabilities, "protocol:network");
+        json_array_add_string_element(capabilities, "component:getsource");
+        json_array_add_string_element(capabilities, "component:setsource");
         json_object_set_array_member(runtime, "capabilities", capabilities);
 
         send_response(ws, "runtime", "runtime", runtime);

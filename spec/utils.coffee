@@ -4,6 +4,8 @@
 
 child_process = require 'child_process'
 EventEmitter = (require 'events').EventEmitter
+path = require 'path'
+fs = require 'fs'
 
 websocket = require 'websocket'
 needle = require 'needle'
@@ -39,6 +41,11 @@ class MockUi extends EventEmitter
             id = d.payload.name
             @components[id] = d.payload
             @emit 'component-added', id, @components[id]
+        else if d.protocol == "component" and d.command == "source"
+            id = d.payload.name
+            @components[id] = {} if not @components[id]?
+            @components[id].source = d.payload.code
+            @emit 'component-source', id, @components[id]
         else if d.protocol == "runtime" and d.command == "runtime"
             @runtimeinfo = d.payload
             @emit 'runtime-info-changed', @runtimeinfo
@@ -133,3 +140,7 @@ exports.MockUi = MockUi
 exports.RuntimeProcess = RuntimeProcess
 exports.processNode = processNode
 
+exports.testData = (file) ->
+    p = path.join (path.resolve __dirname), '..', 'spec/data', file
+    console.log p
+    return fs.readFileSync p, { encoding: 'utf-8' }

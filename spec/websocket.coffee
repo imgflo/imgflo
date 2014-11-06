@@ -55,6 +55,10 @@ describe 'FBP runtime protocol,', () ->
                 chai.expect(info.capabilities).to.include "protocol:graph"
             it 'should include "protocol:network"', ->
                 chai.expect(info.capabilities).to.include "protocol:network"
+            it 'should include "component:getsource"', ->
+                chai.expect(info.capabilities).to.include "component:getsource"
+            it 'should include "component:setsource"', ->
+                chai.expect(info.capabilities).to.include "component:setsource"
 
     describe 'sending component list', ->
         it 'should return more than 100 components', (done) ->
@@ -283,3 +287,35 @@ describe 'FBP runtime protocol,', () ->
         itSkipDebug 'should have produced 2 errors', ->
             errors = runtime.popErrors()
             chai.expect(errors).to.have.length 2, errors.toString()
+
+    describe 'adding a component using component:source', ->
+        @timeout 2000
+        code = utils.testData 'dynamiccomponent1.c'
+        opname = 'dynamic1'
+        it 'should give component:component', (done) ->
+            ui.send "component", "source",
+                name: opname,
+                language: 'c',
+                library: 'imgflo'
+                code: code
+            ui.once 'component-added', ->
+                chai.expect(ui.components).to.include.keys opname
+                done()
+
+        itSkipDebug 'should not have produced any errors', ->
+            chai.expect(runtime.popErrors()).to.eql []
+
+    describe 'getting a component using component:getsource', ->
+        code = utils.testData 'dynamiccomponent1.c'
+        opname = 'dynamic1'
+        it 'should give component:source', (done) ->
+            ui.send "component", "getsource",
+                name: opname
+            ui.once 'component-source', (id) ->
+                chai.expect(ui.components).to.include.keys opname
+                chai.expect(ui.components[opname]).to.include.keys 'source'
+                chai.expect(ui.components[opname].source).to.equal code
+                done()
+
+        itSkipDebug 'should not have produced any errors', ->
+            chai.expect(runtime.popErrors()).to.eql []

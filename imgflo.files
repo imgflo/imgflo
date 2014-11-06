@@ -28,3 +28,4 @@ spec/utils.coffee
 lib/library.c
 env.sh.in
 spec/dependencies.coffee
+spec/data/dynamiccomponent1.c

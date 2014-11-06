@@ -206,7 +206,6 @@ inports_for_operation(const gchar *name)
     return inports;
 }
 
-
 JsonObject *
 library_processor_component(void)
 {
@@ -250,4 +249,74 @@ library_component(const gchar *op)
     json_object_set_array_member(component, "outPorts", outports);
 
     return component;
+}
+
+void
+try_print_error(GError *err) {
+    if (!err) {
+        return;
+    }
+    g_printerr("GERROR: %s\n", err->message);
+}
+
+static GFile *
+get_source_file(const gchar *op) {
+    // TEMP: use g_dir_make_tmp, store in Library instance
+    const gchar *components_path = "components/dynamic";
+    gboolean exists = g_mkdir_with_parents(components_path, 0755) == 0;
+    g_assert(exists);
+    gchar *opfile = g_strdup_printf("%s.c", op);
+    gchar *operation_path = g_strjoin("/", components_path, opfile, NULL);
+    g_free(opfile);
+    GFile *file = g_file_new_for_path(operation_path);
+    g_free(operation_path);
+    return file;
+}
+
+gboolean
+library_set_source(const gchar *op, const gchar *source) {
+
+    GFile *file = get_source_file(op);
+    GError *err = NULL;
+    GOutputStream *stream = (GOutputStream *)g_file_replace(file, NULL, FALSE, G_FILE_CREATE_PRIVATE, NULL, &err);
+    try_print_error(err);
+    g_assert(stream);
+
+    gsize bytes = strlen(source);
+    gsize bytes_written = 0;
+    const gboolean success = g_output_stream_write_all(stream, source, bytes, &bytes_written, NULL, &err);
+
+    try_print_error(err);
+    const gboolean closed = g_output_stream_close(stream, NULL, &err);
+    try_print_error(err);
+
+    // TODO: actually compile & load OP
+
+    g_clear_error(&err);
+    g_object_unref(file);
+    return success && closed;
+}
+
+gchar *
+library_get_source(const gchar *op) {
+    GFile *file = get_source_file(op);
+    GError *err = NULL;
+    GInputStream *stream = (GInputStream *)g_file_read(file, NULL, &err);
+    try_print_error(err);
+    g_assert(stream);
+
+    gsize bytes = 1024*1000;
+    gchar* buffer = g_new(gchar, bytes);
+    gsize bytes_read = 0;
+    gboolean success = g_input_stream_read_all(stream, buffer, bytes, &bytes_read, NULL, &err);
+    try_print_error(err);
+
+    g_object_unref(stream);
+    g_object_unref(file);
+    g_clear_error(&err);
+    if (!success) {
+        g_free(buffer);
+        return NULL;
+    }
+    return buffer;
 }
