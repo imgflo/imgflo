@@ -57,6 +57,7 @@ COMPONENT_SOURCES = $(wildcard $(COMPONENTDIR)/*.c)
 COMPONENT_PLUGINS = $(patsubst $(COMPONENTDIR)/%.c,$(COMPONENTINSTALLDIR)/%.so,$(COMPONENT_SOURCES))
 
 component-install-dir: env
+	rm -rf $(COMPONENTINSTALLDIR)
 	mkdir -p $(COMPONENTINSTALLDIR) || true
 components: component-install-dir $(COMPONENT_PLUGINS)
 

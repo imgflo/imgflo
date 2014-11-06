@@ -15,11 +15,14 @@ itSkipDebug = if debug then it.skip else it
 
 projectDir = path.resolve __dirname, '..'
 testDataDir = path.join projectDir, 'spec/data'
+tempDir = path.join projectDir, 'spec/out'
 
 describe 'FBP runtime protocol,', () ->
     runtime = new utils.RuntimeProcess debug
     ui = new utils.MockUi
 
+    utils.rmrf tempDir
+    fs.mkdirSync tempDir
     outfile = null
 
     before (done) ->
@@ -300,6 +303,8 @@ describe 'FBP runtime protocol,', () ->
                 code: code
             ui.once 'component-added', ->
                 chai.expect(ui.components).to.include.keys opname
+                x = ui.components[opname].inPorts.filter (p) -> p.id == 'x'
+                chai.expect(x).to.have.length 0
                 done()
 
         itSkipDebug 'should not have produced any errors', ->

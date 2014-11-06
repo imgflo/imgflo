@@ -136,6 +136,19 @@ processNode = (graphId, nodeId, callback) ->
         node: nodeId
     needle.request 'get', base+'/process', data, callback
 
+rmrf = (dir) ->
+    if fs.existsSync dir
+        for f in fs.readdirSync dir
+            f = path.join dir, f
+            try
+                fs.unlinkSync f
+            catch e
+                if e.code == 'EISDIR'
+                    rmrf f
+                else
+                    throw e
+        fs.rmdirSync dir
+
 exports.MockUi = MockUi
 exports.RuntimeProcess = RuntimeProcess
 exports.processNode = processNode
@@ -144,3 +157,6 @@ exports.testData = (file) ->
     p = path.join (path.resolve __dirname), '..', 'spec/data', file
     console.log p
     return fs.readFileSync p, { encoding: 'utf-8' }
+
+
+exports.rmrf = rmrf

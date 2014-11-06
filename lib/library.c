@@ -268,7 +268,7 @@ try_print_error(GError *err) {
 static GFile *
 get_source_file(const gchar *op) {
     // TEMP: use g_dir_make_tmp, store in Library instance
-    const gchar *components_path = "components/dynamic";
+    const gchar *components_path = "spec/out/components";
     gboolean exists = g_mkdir_with_parents(components_path, 0755) == 0;
     g_assert(exists);
     gchar *opfile = g_strdup_printf("%s.c", op);
@@ -282,12 +282,12 @@ get_source_file(const gchar *op) {
 static void
 compile_plugins() {
     // FIXME: nasty hacky system()
-    system("make components COMPONENTDIR=components/dynamic");
+    system("make components COMPONENTDIR=spec/out/components COMPONENTINSTALLDIR=spec/out/build");
 }
 
 static void
 reload_plugins() {
-    const gchar *p = "/home/jon/contrib/code/imgflo-server/runtime/install/lib/imgflo/operations";
+    const gchar *p = "/home/jon/contrib/code/imgflo-server/runtime/spec/out/build";
     gegl_load_module_directory(p);
 }
 
