@@ -319,3 +319,23 @@ describe 'FBP runtime protocol,', () ->
 
         itSkipDebug 'should not have produced any errors', ->
             chai.expect(runtime.popErrors()).to.eql []
+
+    describe 'changing a component using component:source', ->
+        @timeout 2000
+        code = utils.testData 'dynamiccomponent1-withprop.c'
+        opname = 'dynamiccomponent1'
+        it 'should now have a X property', (done) ->
+            ui.send "component", "source",
+                name: opname,
+                language: 'c',
+                library: 'imgflo'
+                code: code
+            ui.once 'component-added', ->
+                chai.expect(ui.components).to.include.keys opname
+                x = ui.components[opname].inPorts.filter (p) -> p.id == 'x'
+                chai.expect(x).to.have.length 1
+                chai.expect(x[0].type).to.equal 'number'
+                done()
+
+        itSkipDebug 'should not have produced any errors', ->
+            chai.expect(runtime.popErrors()).to.eql []
