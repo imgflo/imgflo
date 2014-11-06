@@ -301,7 +301,8 @@ describe 'FBP runtime protocol,', () ->
                 language: 'c',
                 library: 'imgflo'
                 code: code
-            ui.once 'component-added', ->
+            ui.once 'component-added', () ->
+                opname = opname+'0'
                 chai.expect(ui.components).to.include.keys opname
                 x = ui.components[opname].inPorts.filter (p) -> p.id == 'x'
                 chai.expect(x).to.have.length 0
@@ -314,6 +315,7 @@ describe 'FBP runtime protocol,', () ->
         code = utils.testData 'dynamiccomponent1.c'
         opname = 'dynamiccomponent1'
         it 'should give component:source', (done) ->
+            opname = opname+'0'
             ui.send "component", "getsource",
                 name: opname
             ui.once 'component-source', (id) ->
@@ -336,6 +338,7 @@ describe 'FBP runtime protocol,', () ->
                 library: 'imgflo'
                 code: code
             ui.once 'component-added', ->
+                opname = opname+'1'
                 chai.expect(ui.components).to.include.keys opname
                 x = ui.components[opname].inPorts.filter (p) -> p.id == 'x'
                 chai.expect(x).to.have.length 1

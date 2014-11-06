@@ -279,10 +279,22 @@ get_source_file(const gchar *op) {
     return file;
 }
 
+// XXX: frees @path
 static void
-compile_plugins() {
+compile_plugin(GFile *file, gint rev) {
+    gchar *component = g_file_get_basename(file);
+    GFile* dir = g_file_get_parent(file);
+    gchar* dir_name = g_file_get_path(dir);
+    gchar * cmd = g_strdup_printf("make component COMPONENT=%s COMPONENTDIR=%s COMPONENTINSTALLDIR=%s COMPONENT_REV=%d",
+                                  component, dir_name, "spec/out/build", rev);
+    //g_printerr(cmd);
     // FIXME: nasty hacky system()
-    system("make components COMPONENTDIR=spec/out/components COMPONENTINSTALLDIR=spec/out/build");
+    system(cmd);
+
+    g_free(component);
+    g_object_unref(dir);
+    g_free(dir_name);
+    g_free(cmd);
 }
 
 static void
@@ -291,10 +303,40 @@ reload_plugins() {
     gegl_load_module_directory(p);
 }
 
-gboolean
+gchar *
+find_new_opname(const gchar *base, gint *rev_out) {
+    gchar *attempt = g_strdup_printf("%s%s", base, "");
+
+    for (int i=0; i<10000; i++) {
+        //g_printerr("attempt: %d, %s, %s\n", i, attempt, gegl_has_operation(attempt) ? "TRUE": "FALSE");
+        g_free(attempt);
+        attempt = g_strdup_printf("%s%d", base, i);
+        if (!gegl_has_operation(attempt)) {
+            if (rev_out) {
+                *rev_out = i;
+            }
+            return attempt;
+        } else {
+
+        }
+    }
+    g_free(attempt);
+    return NULL;
+}
+
+// Returns operation name
+gchar *
 library_set_source(const gchar *op, const gchar *source) {
 
-    GFile *file = get_source_file(op);
+    // TODO: check if GType exists for op
+    // If yes, then add +1 integer at end until not exists
+    // then compile OP with IMGFLO_OP_EPOCH set to that value
+    gint rev = -1;
+    gchar *opname = find_new_opname(op, &rev);
+
+    //g_printerr("%s: %s", __PRETTY_FUNCTION__, opname);
+
+    GFile *file = get_source_file(opname);
     GError *err = NULL;
     GOutputStream *stream = (GOutputStream *)g_file_replace(file, NULL, FALSE, G_FILE_CREATE_PRIVATE, NULL, &err);
     try_print_error(err);
@@ -308,12 +350,12 @@ library_set_source(const gchar *op, const gchar *source) {
     const gboolean closed = g_output_stream_close(stream, NULL, &err);
     try_print_error(err);
 
-    compile_plugins();
+    compile_plugin(file, rev);
     reload_plugins();
 
     g_clear_error(&err);
     g_object_unref(file);
-    return success && closed;
+    return (success && closed) ? opname : NULL;
 }
 
 gchar *

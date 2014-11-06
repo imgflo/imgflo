@@ -200,16 +200,17 @@ ui_connection_handle_message(UiConnection *self,
         g_strfreev(operation_names);
     } else if (g_strcmp0(protocol, "component") == 0 && g_strcmp0(command, "source") == 0) {
         const gchar *name = json_object_get_string_member(payload, "name");
-        gboolean added = library_set_source(
+        gchar *actual_name = library_set_source(
             name,
             json_object_get_string_member(payload, "code")
         );
-        if (added) {
-            JsonObject *component = library_component(name);
+        if (actual_name) {
+            JsonObject *component = library_component(actual_name);
             send_response(ws, "component", "component", component);
         } else {
             // TODO: error response
         }
+        g_free(actual_name);
     } else if (g_strcmp0(protocol, "component") == 0 && g_strcmp0(command, "getsource") == 0) {
         const gchar *name = json_object_get_string_member(payload, "name");
         gchar *code = library_get_source(name);
