@@ -199,11 +199,17 @@ ui_connection_handle_message(UiConnection *self,
         }
         g_strfreev(operation_names);
     } else if (g_strcmp0(protocol, "component") == 0 && g_strcmp0(command, "source") == 0) {
-        library_set_source(
-            json_object_get_string_member(payload, "name"),
+        const gchar *name = json_object_get_string_member(payload, "name");
+        gboolean added = library_set_source(
+            name,
             json_object_get_string_member(payload, "code")
         );
-        // XXX: no response?
+        if (added) {
+            JsonObject *component = library_component(name);
+            send_response(ws, "component", "component", component);
+        } else {
+            // TODO: error response
+        }
     } else if (g_strcmp0(protocol, "component") == 0 && g_strcmp0(command, "getsource") == 0) {
         const gchar *name = json_object_get_string_member(payload, "name");
         gchar *code = library_get_source(name);

@@ -1,5 +1,4 @@
-/* This file is an image processing operation for GEGL
- */
+/* This file is an image processing operation for GEGL */
 
 #ifdef GEGL_PROPERTIES
    /* no properties */
@@ -37,7 +36,7 @@ gegl_op_class_init (GeglOpClass *klass)
   point_filter_class->process = process;
   operation_class->prepare = prepare;
   gegl_operation_class_set_keys (operation_class,
-      "name",        "imgflo:dynamic1",
+      "name",        "dynamiccomponent1",
       "title",       "imgflo: Dynamic 1",
       "categories" , "dev",
       "description", "Dynamically loaded component 1",

@@ -291,7 +291,7 @@ describe 'FBP runtime protocol,', () ->
     describe 'adding a component using component:source', ->
         @timeout 2000
         code = utils.testData 'dynamiccomponent1.c'
-        opname = 'dynamic1'
+        opname = 'dynamiccomponent1'
         it 'should give component:component', (done) ->
             ui.send "component", "source",
                 name: opname,
@@ -307,7 +307,7 @@ describe 'FBP runtime protocol,', () ->
 
     describe 'getting a component using component:getsource', ->
         code = utils.testData 'dynamiccomponent1.c'
-        opname = 'dynamic1'
+        opname = 'dynamiccomponent1'
         it 'should give component:source', (done) ->
             ui.send "component", "getsource",
                 name: opname

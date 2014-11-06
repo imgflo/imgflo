@@ -279,6 +279,18 @@ get_source_file(const gchar *op) {
     return file;
 }
 
+static void
+compile_plugins() {
+    // FIXME: nasty hacky system()
+    system("make components COMPONENTDIR=components/dynamic");
+}
+
+static void
+reload_plugins() {
+    const gchar *p = "/home/jon/contrib/code/imgflo-server/runtime/install/lib/imgflo/operations";
+    gegl_load_module_directory(p);
+}
+
 gboolean
 library_set_source(const gchar *op, const gchar *source) {
 
@@ -296,7 +308,8 @@ library_set_source(const gchar *op, const gchar *source) {
     const gboolean closed = g_output_stream_close(stream, NULL, &err);
     try_print_error(err);
 
-    // TODO: actually compile & load OP
+    compile_plugins();
+    reload_plugins();
 
     g_clear_error(&err);
     g_object_unref(file);
