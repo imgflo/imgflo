@@ -206,8 +206,8 @@ inports_for_operation(const gchar *name)
     return inports;
 }
 
-JsonObject *
-library_processor_component(void)
+static JsonObject *
+processor_component(void)
 {
     JsonObject *component = json_object_new();
     json_object_set_string_member(component, "name", "Processor");
@@ -233,6 +233,12 @@ library_processor_component(void)
 JsonObject *
 library_component(const gchar *op)
 {
+    g_return_if_fail(op);
+
+    if (g_strcmp0(op, "Processor") == 0) {
+        return processor_component();
+    }
+
     gchar *name = geglop2component(op);
     const gchar *description = gegl_operation_get_key(op, "description");
     const gchar *categories = gegl_operation_get_key(op, "categories");
@@ -319,4 +325,39 @@ library_get_source(const gchar *op) {
         return NULL;
     }
     return buffer;
+}
+
+gchar **
+library_list_components(gint *len) {
+    // Our special "operations"
+    const gchar *special_ops[] = {
+        "Processor"
+    };
+    const gint no_special_ops = G_N_ELEMENTS(special_ops);
+
+    // GEGL operations
+    guint no_ops = 0;
+    gchar **operation_names = gegl_list_operations(&no_ops);
+    if (no_ops == 0) {
+        g_warning("No GEGL operations found");
+    }
+
+    // Concatenate both
+    gchar **ret = (gchar **)g_new0(gchar*, no_special_ops+no_ops+1); // leave NULL at end
+    for (int i=0; i<no_special_ops; i++) {
+        ret[i] = g_strdup(special_ops[i]);
+    }
+    for (int i=0; i<no_ops; i++) {
+        const gchar *op = operation_names[i];
+        if (g_strcmp0(op, "gegl:seamless-clone-compose") == 0) {
+            // FIXME: reported by GEGL but cannot be instantiated...
+            op = NULL;
+        }
+        ret[no_special_ops+i] = g_strdup(op);
+    }
+
+    if (len) {
+        *len = no_special_ops+no_ops;
+    }
+    return ret;
 }

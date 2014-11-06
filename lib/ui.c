@@ -188,28 +188,16 @@ ui_connection_handle_message(UiConnection *self,
     } else if (g_strcmp0(protocol, "network") == 0) {
         handle_network_message(self, command, payload, ws);
     } else if (g_strcmp0(protocol, "component") == 0 && g_strcmp0(command, "list") == 0) {
-
-        // Our special Processor component
-        JsonObject *processor = library_processor_component();
-        send_response(ws, "component", "component", processor);
-
-        // Components for all available GEGL operations
-        guint no_ops = 0;
-        gchar **operation_names = gegl_list_operations(&no_ops);
-        if (no_ops == 0) {
-            g_warning("No GEGL operations found");
-        }
-        for (int i=0; i<no_ops; i++) {
+        gint no_components = 0;
+        gchar **operation_names = library_list_components(&no_components);
+        for (int i=0; i<no_components; i++) {
             const gchar *op = operation_names[i];
-            if (g_strcmp0(op, "gegl:seamless-clone-compose") == 0) {
-                // FIXME: reported by GEGL but cannot be instantiated...
-                continue;
+            if (op) {
+                JsonObject *component = library_component(op);
+                send_response(ws, "component", "component", component);
             }
-            JsonObject *component = library_component(op);
-
-            send_response(ws, "component", "component", component);
         }
-
+        g_strfreev(operation_names);
     } else if (g_strcmp0(protocol, "component") == 0 && g_strcmp0(command, "source") == 0) {
         library_set_source(
             json_object_get_string_member(payload, "name"),
