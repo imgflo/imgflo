@@ -285,16 +285,34 @@ compile_plugin(GFile *file, gint rev) {
     gchar *component = g_file_get_basename(file);
     GFile* dir = g_file_get_parent(file);
     gchar* dir_name = g_file_get_path(dir);
-    gchar * cmd = g_strdup_printf("make component COMPONENT=%s COMPONENTDIR=%s COMPONENTINSTALLDIR=%s COMPONENT_REV=%d",
-                                  component, dir_name, "spec/out/build", rev);
-    //g_printerr(cmd);
-    // FIXME: nasty hacky system()
-    system(cmd);
+
+    gchar *stdout = NULL;
+    gchar *stderr = NULL;
+    gint exitcode = 1;
+    GError *err = NULL;
+    gchar **argv = g_new0(gchar *, 10);
+    argv[0] = g_strdup("/usr/bin/env");
+    argv[1] = g_strdup("make");
+    argv[2] = g_strdup("component");
+    argv[3] = g_strdup_printf("COMPONENT=%s", component);
+    argv[4] = g_strdup_printf("COMPONENTDIR=%s", dir_name);
+    argv[5] = g_strdup_printf("COMPONENTINSTALLDIR=%s", "spec/out/build");
+    argv[6] = g_strdup_printf("COMPONENT_REV=%d", rev);
+
+    gboolean success = g_spawn_sync(NULL, argv, NULL,
+                              G_SPAWN_DEFAULT, NULL, NULL,
+                              &stdout, &stderr, &exitcode, &err);
+    try_print_error(err);
+    if (!success) {
+        g_printerr(stderr);
+    }
+    g_free(stdout);
+    g_free(stderr);
+    g_strfreev(argv);
 
     g_free(component);
     g_object_unref(dir);
     g_free(dir_name);
-    g_free(cmd);
 }
 
 static void
