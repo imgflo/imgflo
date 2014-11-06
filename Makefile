@@ -55,14 +55,21 @@ travis-deps:
 COMPONENTINSTALLDIR=$(PREFIX)/lib/imgflo/operations
 COMPONENT_SOURCES = $(wildcard $(COMPONENTDIR)/*.c)
 COMPONENT_PLUGINS = $(patsubst $(COMPONENTDIR)/%.c,$(COMPONENTINSTALLDIR)/%.so,$(COMPONENT_SOURCES))
+COMPONENT_OUT = $(patsubst %.c,$(COMPONENTINSTALLDIR)/%.so,$(COMPONENT))
+
+COMPONENT_FLAGS = -I$(COMPONENTDIR) $(FLAGS)
+ifdef COMPONENT_REV
+COMPONENT_FLAGS += -DIMGFLO_OP_EPOCH=\"$(COMPONENT_REV)\"
+endif
 
 component-install-dir: env
 	rm -rf $(COMPONENTINSTALLDIR)
 	mkdir -p $(COMPONENTINSTALLDIR) || true
 components: component-install-dir $(COMPONENT_PLUGINS)
+component: component-install-dir $(COMPONENT_OUT)
 
 $(COMPONENTINSTALLDIR)/%.so: $(COMPONENTDIR)/%.c
-	$(PREFIX)/env.sh gcc -shared -rdynamic -fPIC -o $@ $< -DGEGL_OP_C_FILE=\"`basename $<`\" -I$(COMPONENTDIR) $(FLAGS) $(DEPS)
+	$(PREFIX)/env.sh gcc -shared -rdynamic -fPIC -o $@ $< -DGEGL_OP_C_FILE=\"`basename $<`\" $(COMPONENT_FLAGS) $(DEPS)
 
 dependencies:
 	cd dependencies && make PREFIX=$(PREFIX) dependencies
