@@ -440,9 +440,16 @@ library_get_source(Library *self, const gchar *op) {
 
     gchar *opname = NULL;
     const gint op_rev = find_op_revision(self, op, &opname);
+    if (op_rev < 0) {
+        // Normal op
+        gchar *name = component2geglop(op);
+        const gchar *source = gegl_operation_get_key(name, "source");
+        g_free(name);
+        return source ? g_strdup(source) : NULL;
+    }
+
     // g_printerr("%s: %s, %s\n", __PRETTY_FUNCTION__, op, opname);
     // print_setsource_comps(self->setsource_components);
-    g_assert(op_rev >= 0);
 
     GFile *file = get_source_file(self->source_path, opname);
     GError *err = NULL;
