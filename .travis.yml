@@ -13,7 +13,8 @@ addons:
       name: "jonnor/imgflo"
       description: "Build submitted via Travis CI"
     notification_email: jononor@gmail.com
-    build_command: "make"
+    build_command_prepend: "make travis-deps"
+    build_command: "make RELOCATE_DEPS=true"
     branch_pattern: coverity_scan
 env:
   global:
