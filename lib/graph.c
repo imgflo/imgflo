@@ -13,29 +13,6 @@
 
 // GOAL: get JSON serialization support upstream, support building meta-operations with it
 
-// Convert between the lib/Foo used by NoFlo and lib:foo used by GEGL
-gchar *
-component2geglop(const gchar *name) {
-    gchar *dup = g_strdup(name);
-    gchar *sep = g_strstr_len(dup, -1, "/");
-    if (sep) {
-        *sep = ':';
-    }
-    g_ascii_strdown(dup, -1);
-    return dup;
-}
-
-gchar *
-geglop2component(const gchar *name) {
-    gchar *dup = g_strdup(name);
-    gchar *sep = g_strstr_len(dup, -1, ":");
-    if (sep) {
-        *sep = '/';
-    }
-    g_ascii_strdown(dup, -1);
-    return dup;
-}
-
 gboolean
 set_property(GeglNode *t, const gchar *port, GParamSpec *paramspec, GValue *value)  {
     GType value_type = G_VALUE_TYPE(value);
@@ -88,14 +65,17 @@ typedef struct {
     GeglNode *top;
     GHashTable *node_map;
     GHashTable *processor_map;
+    Library *component_lib; // unowned
 } Graph;
 
 
 Graph *
-graph_new(const gchar *id) {
+graph_new(const gchar *id, Library *lib) {
     g_return_val_if_fail(id, NULL);
+    g_return_val_if_fail(lib, NULL);
 
     Graph *self = g_new(Graph, 1);
+    self->component_lib = lib;
     self->id = g_strdup(id);
     self->top = gegl_node_new();
     self->node_map = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
@@ -181,7 +161,7 @@ graph_add_node(Graph *self, const gchar *name, const gchar *component)
         return;
     }
 
-    gchar *op = component2geglop(component);
+    gchar *op = library_get_operation_name(self->component_lib, component);
     // FIXME: check that operation is correct
     GeglNode *n = gegl_node_new_child(self->top, "operation", op, NULL);
 

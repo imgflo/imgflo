@@ -86,7 +86,7 @@ handle_graph_message(UiConnection *self, const gchar *command, JsonObject *paylo
 
     if (g_strcmp0(command, "clear") == 0) {
         const gchar *graph_id = json_object_get_string_member(payload, "id");
-        Graph *graph = graph_new(graph_id);
+        Graph *graph = graph_new(graph_id, self->component_lib);
         Network *network = network_new(graph);
         network->on_processor_invalidated_data = (gpointer)self;
         network->on_processor_invalidated = send_preview_invalidated;
@@ -206,7 +206,7 @@ ui_connection_handle_message(UiConnection *self,
             json_object_get_string_member(payload, "code")
         );
         if (actual_name) {
-            JsonObject *component = library_get_component(self->component_lib, actual_name);
+            JsonObject *component = library_get_component(self->component_lib, name);
             send_response(ws, "component", "component", component);
         } else {
             // TODO: error response

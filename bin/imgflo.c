@@ -6,17 +6,9 @@
 #include <gegl.h>
 
 #include "lib/processor.c"
+#include "lib/library.c"
 #include "lib/graph.c"
 #include "lib/network.c"
-
-void print_available_ops() {
-    guint no_ops = 0;
-    gchar **operation_names = gegl_list_operations(&no_ops);
-
-    for (int i=0; i<no_ops; i++) {
-        g_print("%d: %s\n", i, operation_names[i]);
-    }
-}
 
 int main(int argc, char *argv[]) {
 
@@ -29,9 +21,8 @@ int main(int argc, char *argv[]) {
 
     gegl_init(0, NULL);
 
-    //print_available_ops();
-
-    Graph *graph = graph_new("stdin");
+    Library *lib = library_new();
+    Graph *graph = graph_new("stdin", lib);
     Network *net = network_new(graph);
 
     if (g_strcmp0(path, "-") == 0) {
@@ -50,6 +41,7 @@ int main(int argc, char *argv[]) {
     network_process(net);
 
     network_free(net);
+    library_free(lib);
 
     gegl_exit();
 	return 0;

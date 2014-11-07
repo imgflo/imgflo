@@ -4,11 +4,11 @@
 
 #include "lib/png.c"
 #include "lib/processor.c"
+#include "lib/library.c"
 #include "lib/graph.c"
 #include "lib/network.c"
 #include "lib/uuid.c"
 #include "lib/registry.c"
-#include "lib/library.c"
 #include "lib/ui.c"
 
 static void

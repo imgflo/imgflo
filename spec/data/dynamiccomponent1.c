@@ -7,8 +7,8 @@
 #define GEGL_OP_POINT_FILTER
 #include "gegl-op.h"
 
-#ifndef IMGFLO_OP_EPOCH
-#define IMGFLO_OP_EPOCH ""
+#ifndef IMGFLO_OP_NAME
+#define IMGFLO_OP_NAME(orig) orig
 #endif
 
 static void prepare(GeglOperation *operation)
@@ -39,7 +39,7 @@ gegl_op_class_init (GeglOpClass *klass)
   point_filter_class->process = process;
   operation_class->prepare = prepare;
   gegl_operation_class_set_keys (operation_class,
-      "name",        "dynamiccomponent1"IMGFLO_OP_EPOCH,
+      "name",        IMGFLO_OP_NAME("dynamiccomponent1"),
       "title",       "imgflo: Dynamic 1",
       "categories" , "dev",
       "description", "Dynamically loaded component 1",

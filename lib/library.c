@@ -8,7 +8,32 @@
 #include <string.h>
 #include <sys/stat.h>
 
+#include <json-glib/json-glib.h>
 #include <gegl-plugin.h>
+
+// Convert between the lib/Foo used by NoFlo and lib:foo used by GEGL
+gchar *
+component2geglop(const gchar *name) {
+    gchar *dup = g_strdup(name);
+    gchar *sep = g_strstr_len(dup, -1, "/");
+    if (sep) {
+        *sep = ':';
+    }
+    g_ascii_strdown(dup, -1);
+    return dup;
+}
+
+gchar *
+geglop2component(const gchar *name) {
+    gchar *dup = g_strdup(name);
+    gchar *sep = g_strstr_len(dup, -1, ":");
+    if (sep) {
+        *sep = '/';
+    }
+    g_ascii_strdown(dup, -1);
+    return dup;
+}
+
 
 static const gchar *
 icon_for_op(const gchar *op, const gchar *categories) {
@@ -231,6 +256,9 @@ processor_component(void)
 
 struct _Library;
 
+static const gchar * const SETSOURCE_COMP_PREFIX = "imgflo-setsource-";
+static const gchar * const SETSOURCE_COMP_FORMAT = "imgflo-setsource-%s-%d"; // basename, rev
+
 typedef void (* LibraryComponentChangedCallback) (struct _Library *library, gchar *op, gpointer user_data);
 LibraryComponentChangedCallback on_component_changed;
 gpointer on_component_changed_data;
@@ -238,6 +266,7 @@ gpointer on_component_changed_data;
 typedef struct _Library {
     gchar *source_path;
     gchar *build_path;
+    GHashTable *setsource_components;
 } Library;
 
 Library *
@@ -248,6 +277,8 @@ library_new() {
     self->build_path = g_strdup("spec/out/build2");
     g_assert(g_mkdir_with_parents(self->build_path, 0755) == 0);
     g_assert(g_mkdir_with_parents(self->source_path, 0755) == 0);
+    self->setsource_components = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                                        g_free, NULL);
 
     return self;
 }
@@ -255,37 +286,11 @@ library_new() {
 void
 library_free(Library *self) {
 
+    g_hash_table_destroy(self->setsource_components);
     g_free(self->build_path);
     g_free(self->source_path);
 
     g_free(self);
-}
-
-JsonObject *
-library_get_component(Library *self, const gchar *op)
-{
-    g_return_val_if_fail(op, NULL);
-
-    if (g_strcmp0(op, "Processor") == 0) {
-        return processor_component();
-    }
-
-    gchar *name = geglop2component(op);
-    const gchar *description = gegl_operation_get_key(op, "description");
-    const gchar *categories = gegl_operation_get_key(op, "categories");
-
-    JsonObject *component = json_object_new();
-    json_object_set_string_member(component, "name", name);
-    json_object_set_string_member(component, "description", description);
-    json_object_set_string_member(component, "icon", icon_for_op(op, categories));
-
-    JsonArray *inports = inports_for_operation(op);
-    json_object_set_array_member(component, "inPorts", inports);
-
-    JsonArray *outports = outports_for_operation(op);
-    json_object_set_array_member(component, "outPorts", outports);
-
-    return component;
 }
 
 void
@@ -323,13 +328,14 @@ compile_plugin(GFile *file, const gchar *build_dir, gint rev) {
     argv[3] = g_strdup_printf("COMPONENT=%s", component);
     argv[4] = g_strdup_printf("COMPONENTDIR=%s", dir_name);
     argv[5] = g_strdup_printf("COMPONENTINSTALLDIR=%s", build_dir);
-    argv[6] = g_strdup_printf("COMPONENT_REV=%d", rev);
+    argv[6] = g_strdup_printf("COMPONENT_NAME_PREFIX=\"%s\"", SETSOURCE_COMP_PREFIX);
+    argv[7] = g_strdup_printf("COMPONENT_NAME_SUFFIX=\"-%d\"", rev);
 
     gboolean success = g_spawn_sync(NULL, argv, NULL,
                               G_SPAWN_DEFAULT, NULL, NULL,
                               &stdout, &stderr, &exitcode, &err);
     try_print_error(err);
-    if (!success) {
+    if (!success || stderr) {
         g_printerr("%s", stderr);
     }
     g_free(stdout);
@@ -346,35 +352,62 @@ reload_plugins(const gchar *path) {
     gegl_load_module_directory(path);
 }
 
-gchar *
-find_new_opname(const gchar *base, gint *rev_out) {
-    gchar *attempt = g_strdup_printf("%s%s", base, "");
+gboolean
+is_setsource_comp(const gchar *name) {
+    return g_str_has_prefix(name, SETSOURCE_COMP_PREFIX);
+}
 
-    for (int i=0; i<10000; i++) {
-        //g_printerr("attempt: %d, %s, %s\n", i, attempt, gegl_has_operation(attempt) ? "TRUE": "FALSE");
-        g_free(attempt);
-        attempt = g_strdup_printf("%s%d", base, i);
-        if (!gegl_has_operation(attempt)) {
-            if (rev_out) {
-                *rev_out = i;
-            }
-            return attempt;
-        } else {
+gint
+find_op_revision(Library *self, const gchar *base, gchar **name_out) {
+    g_return_val_if_fail(base, -1);
 
+    // g_printerr("%s: %s\n", __PRETTY_FUNCTION__, base);
+
+    gint current_rev = -1;
+    gpointer val = NULL;
+    const gboolean found = g_hash_table_lookup_extended(self->setsource_components, base, NULL, &val);
+    if (found) {
+        current_rev = GPOINTER_TO_INT(val);
+        if (name_out) {
+            *name_out = g_strdup_printf(SETSOURCE_COMP_FORMAT, base, current_rev);
         }
     }
-    g_free(attempt);
-    return NULL;
+    return current_rev;
+}
+
+// Return the GEGL operation name for a given component
+gchar *
+library_get_operation_name(Library *self, const gchar *comp) {
+    g_return_val_if_fail(self, NULL);
+    g_return_val_if_fail(self, comp);
+
+    gchar *opname = NULL;
+    if (is_setsource_comp(comp)) {
+        const gint max_tokens = 3;
+        gchar **tokens = g_strsplit(comp, "-", max_tokens);
+        // WHY doesnt this return number of tokens found...
+        for (int i=0; i<max_tokens; i++) {
+            if (i == 1) {
+                opname = g_strdup(tokens[i]);
+                break;
+            }
+        }
+        g_strfreev(tokens);
+    } else {
+        opname = g_strdup(comp);
+    }
+
+    g_assert(opname);
+    gchar *geglname = component2geglop(opname);
+    g_free(opname);
+    return geglname;
 }
 
 // Returns operation name
 gchar *
 library_set_source(Library *self, const gchar *op, const gchar *source) {
-
-    gint rev = -1;
-    gchar *opname = find_new_opname(op, &rev);
-
-    //g_printerr("%s: %s", __PRETTY_FUNCTION__, opname);
+    const gint next_rev = find_op_revision(self, op, NULL)+1;
+    gchar *opname =  g_strdup_printf(SETSOURCE_COMP_FORMAT, op, next_rev);
 
     GFile *file = get_source_file(self->source_path, opname);
     GError *err = NULL;
@@ -390,17 +423,37 @@ library_set_source(Library *self, const gchar *op, const gchar *source) {
     const gboolean closed = g_output_stream_close(stream, NULL, &err);
     try_print_error(err);
 
-    compile_plugin(file, self->build_path, rev);
+    compile_plugin(file, self->build_path, next_rev);
     reload_plugins(self->build_path);
+
+    // g_printerr("%s: %s, %s, %d\n", __PRETTY_FUNCTION__, op, opname, next_rev);
+    g_hash_table_replace(self->setsource_components, (gpointer)g_strdup(op), GINT_TO_POINTER(next_rev));
 
     g_clear_error(&err);
     g_object_unref(file);
     return (success && closed) ? opname : NULL;
 }
 
+void
+print_kv(gpointer key, gpointer value, gpointer user_data) {
+    g_printerr("%s: %d\n", (const gchar *)key, GPOINTER_TO_INT(value));
+}
+
+void
+print_setsource_comps(GHashTable *table) {
+    g_hash_table_foreach(table, print_kv, NULL);
+}
+
 gchar *
 library_get_source(Library *self, const gchar *op) {
-    GFile *file = get_source_file(self->source_path, op);
+
+    gchar *opname = NULL;
+    const gint op_rev = find_op_revision(self, op, &opname);
+    // g_printerr("%s: %s, %s\n", __PRETTY_FUNCTION__, op, opname);
+    // print_setsource_comps(self->setsource_components);
+    g_assert(op_rev >= 0);
+
+    GFile *file = get_source_file(self->source_path, opname);
     GError *err = NULL;
     GInputStream *stream = (GInputStream *)g_file_read(file, NULL, &err);
     try_print_error(err);
@@ -414,12 +467,51 @@ library_get_source(Library *self, const gchar *op) {
 
     g_object_unref(stream);
     g_object_unref(file);
+    g_free(opname);
     g_clear_error(&err);
     if (!success) {
         g_free(buffer);
         return NULL;
     }
     return buffer;
+}
+
+JsonObject *
+library_get_component(Library *self, const gchar *comp)
+{
+    g_return_val_if_fail(comp, NULL);
+
+    // Special ops
+    if (g_strcmp0(comp, "Processor") == 0) {
+        return processor_component();
+    }
+
+    // setsource dynamic ops
+    gchar *op = NULL;
+    gint setsource_rev = find_op_revision(self, comp, &op);
+    if (setsource_rev == -1) {
+        // normal component
+        g_assert(!op);
+        op = g_strdup(comp);
+    }
+
+    gchar *name = geglop2component(comp);
+    const gchar *description = gegl_operation_get_key(op, "description");
+    const gchar *categories = gegl_operation_get_key(op, "categories");
+
+    JsonObject *component = json_object_new();
+    json_object_set_string_member(component, "name", name);
+    json_object_set_string_member(component, "description", description);
+    json_object_set_string_member(component, "icon", icon_for_op(op, categories));
+
+    JsonArray *inports = inports_for_operation(op);
+    json_object_set_array_member(component, "inPorts", inports);
+
+    JsonArray *outports = outports_for_operation(op);
+    json_object_set_array_member(component, "outPorts", outports);
+
+    g_free(op);
+    return component;
 }
 
 gchar **
@@ -437,8 +529,14 @@ library_list_components(Library *self, gint *len) {
         g_warning("No GEGL operations found");
     }
 
-    // Concatenate both
-    gchar **ret = (gchar **)g_new0(gchar*, no_special_ops+no_ops+1); // leave NULL at end
+    // FIXME: list setsource ops
+    const gint no_setsource_ops = g_hash_table_size(self->setsource_components);
+
+
+    const gint total_ops = no_special_ops+no_ops+no_setsource_ops;
+
+    // Concatenate all
+    gchar **ret = (gchar **)g_new0(gchar*, total_ops+1); // leave NULL at end
     for (int i=0; i<no_special_ops; i++) {
         ret[i] = g_strdup(special_ops[i]);
     }
@@ -447,12 +545,15 @@ library_list_components(Library *self, gint *len) {
         if (g_strcmp0(op, "gegl:seamless-clone-compose") == 0) {
             // FIXME: reported by GEGL but cannot be instantiated...
             op = NULL;
+        } else if (is_setsource_comp(op)) {
+            op = NULL;
         }
+
         ret[no_special_ops+i] = g_strdup(op);
     }
 
     if (len) {
-        *len = no_special_ops+no_ops;
+        *len = total_ops;
     }
     return ret;
 }
