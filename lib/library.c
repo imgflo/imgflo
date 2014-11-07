@@ -231,19 +231,33 @@ processor_component(void)
 
 struct _Library;
 
-typedef struct _Library {
+typedef void (* LibraryComponentChangedCallback) (struct _Library *library, gchar *op, gpointer user_data);
+LibraryComponentChangedCallback on_component_changed;
+gpointer on_component_changed_data;
 
+typedef struct _Library {
+    gchar *source_path;
+    gchar *build_path;
 } Library;
 
 Library *
 library_new() {
     Library *self = g_new(Library, 1);
 
+    self->source_path = g_strdup("spec/out/components2");
+    self->build_path = g_strdup("spec/out/build2");
+    g_assert(g_mkdir_with_parents(self->build_path, 0755) == 0);
+    g_assert(g_mkdir_with_parents(self->source_path, 0755) == 0);
+
     return self;
 }
 
 void
 library_free(Library *self) {
+
+    g_free(self->build_path);
+    g_free(self->source_path);
+
     g_free(self);
 }
 
@@ -283,11 +297,7 @@ try_print_error(GError *err) {
 }
 
 static GFile *
-get_source_file(const gchar *op) {
-    // TEMP: use g_dir_make_tmp, store in Library instance
-    const gchar *components_path = "spec/out/components";
-    gboolean exists = g_mkdir_with_parents(components_path, 0755) == 0;
-    g_assert(exists);
+get_source_file(const gchar *components_path, const gchar *op) {
     gchar *opfile = g_strdup_printf("%s.c", op);
     gchar *operation_path = g_strjoin("/", components_path, opfile, NULL);
     g_free(opfile);
@@ -297,7 +307,7 @@ get_source_file(const gchar *op) {
 }
 
 static void
-compile_plugin(GFile *file, gint rev) {
+compile_plugin(GFile *file, const gchar *build_dir, gint rev) {
     gchar *component = g_file_get_basename(file);
     GFile* dir = g_file_get_parent(file);
     gchar* dir_name = g_file_get_path(dir);
@@ -312,7 +322,7 @@ compile_plugin(GFile *file, gint rev) {
     argv[2] = g_strdup("component");
     argv[3] = g_strdup_printf("COMPONENT=%s", component);
     argv[4] = g_strdup_printf("COMPONENTDIR=%s", dir_name);
-    argv[5] = g_strdup_printf("COMPONENTINSTALLDIR=%s", "spec/out/build");
+    argv[5] = g_strdup_printf("COMPONENTINSTALLDIR=%s", build_dir);
     argv[6] = g_strdup_printf("COMPONENT_REV=%d", rev);
 
     gboolean success = g_spawn_sync(NULL, argv, NULL,
@@ -332,9 +342,8 @@ compile_plugin(GFile *file, gint rev) {
 }
 
 static void
-reload_plugins() {
-    const gchar *p = "/home/jon/contrib/code/imgflo-server/runtime/spec/out/build";
-    gegl_load_module_directory(p);
+reload_plugins(const gchar *path) {
+    gegl_load_module_directory(path);
 }
 
 gchar *
@@ -367,7 +376,7 @@ library_set_source(Library *self, const gchar *op, const gchar *source) {
 
     //g_printerr("%s: %s", __PRETTY_FUNCTION__, opname);
 
-    GFile *file = get_source_file(opname);
+    GFile *file = get_source_file(self->source_path, opname);
     GError *err = NULL;
     GOutputStream *stream = (GOutputStream *)g_file_replace(file, NULL, FALSE, G_FILE_CREATE_PRIVATE, NULL, &err);
     try_print_error(err);
@@ -381,8 +390,8 @@ library_set_source(Library *self, const gchar *op, const gchar *source) {
     const gboolean closed = g_output_stream_close(stream, NULL, &err);
     try_print_error(err);
 
-    compile_plugin(file, rev);
-    reload_plugins();
+    compile_plugin(file, self->build_path, rev);
+    reload_plugins(self->build_path);
 
     g_clear_error(&err);
     g_object_unref(file);
@@ -391,7 +400,7 @@ library_set_source(Library *self, const gchar *op, const gchar *source) {
 
 gchar *
 library_get_source(Library *self, const gchar *op) {
-    GFile *file = get_source_file(op);
+    GFile *file = get_source_file(self->source_path, op);
     GError *err = NULL;
     GInputStream *stream = (GInputStream *)g_file_read(file, NULL, &err);
     try_print_error(err);
