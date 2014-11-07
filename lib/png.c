@@ -60,7 +60,7 @@ png_encoder_encode_rgba(PngEncoder *self, int width, int height, gchar *buffer) 
     png_byte color_type = PNG_COLOR_TYPE_RGBA;
     png_byte bit_depth = 8;
 
-    png_bytep *row_pointers = row_pointers = (png_bytep *)g_malloc(sizeof(png_bytep) * height);
+    png_bytep *row_pointers = (png_bytep *)g_malloc(sizeof(png_bytep) * height);
     const size_t bytes_per_row = 1*4*width;
 
     if (buffer) {
