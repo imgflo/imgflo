@@ -229,9 +229,26 @@ processor_component(void)
     return component;
 }
 
+struct _Library;
+
+typedef struct _Library {
+
+} Library;
+
+Library *
+library_new() {
+    Library *self = g_new(Library, 1);
+
+    return self;
+}
+
+void
+library_free(Library *self) {
+    g_free(self);
+}
 
 JsonObject *
-library_component(const gchar *op)
+library_get_component(Library *self, const gchar *op)
 {
     g_return_if_fail(op);
 
@@ -279,7 +296,6 @@ get_source_file(const gchar *op) {
     return file;
 }
 
-// XXX: frees @path
 static void
 compile_plugin(GFile *file, gint rev) {
     gchar *component = g_file_get_basename(file);
@@ -344,11 +360,8 @@ find_new_opname(const gchar *base, gint *rev_out) {
 
 // Returns operation name
 gchar *
-library_set_source(const gchar *op, const gchar *source) {
+library_set_source(Library *self, const gchar *op, const gchar *source) {
 
-    // TODO: check if GType exists for op
-    // If yes, then add +1 integer at end until not exists
-    // then compile OP with IMGFLO_OP_EPOCH set to that value
     gint rev = -1;
     gchar *opname = find_new_opname(op, &rev);
 
@@ -377,7 +390,7 @@ library_set_source(const gchar *op, const gchar *source) {
 }
 
 gchar *
-library_get_source(const gchar *op) {
+library_get_source(Library *self, const gchar *op) {
     GFile *file = get_source_file(op);
     GError *err = NULL;
     GInputStream *stream = (GInputStream *)g_file_read(file, NULL, &err);
@@ -401,7 +414,7 @@ library_get_source(const gchar *op) {
 }
 
 gchar **
-library_list_components(gint *len) {
+library_list_components(Library *self, gint *len) {
     // Our special "operations"
     const gchar *special_ops[] = {
         "Processor"

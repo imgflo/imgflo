@@ -15,6 +15,7 @@ typedef struct {
 	SoupServer *server;
     Registry *registry;
     GHashTable *network_map; // graph_id(string) -> Network. Network contains Graph instance
+    Library *component_lib;
     gchar *hostname;
     SoupWebsocketConnection *connection; // TODO: allow multiple clients
 } UiConnection;
@@ -189,23 +190,23 @@ ui_connection_handle_message(UiConnection *self,
         handle_network_message(self, command, payload, ws);
     } else if (g_strcmp0(protocol, "component") == 0 && g_strcmp0(command, "list") == 0) {
         gint no_components = 0;
-        gchar **operation_names = library_list_components(&no_components);
+        gchar **operation_names = library_list_components(self->component_lib, &no_components);
         for (int i=0; i<no_components; i++) {
             const gchar *op = operation_names[i];
             if (op) {
-                JsonObject *component = library_component(op);
+                JsonObject *component = library_get_component(self->component_lib, op);
                 send_response(ws, "component", "component", component);
             }
         }
         g_strfreev(operation_names);
     } else if (g_strcmp0(protocol, "component") == 0 && g_strcmp0(command, "source") == 0) {
         const gchar *name = json_object_get_string_member(payload, "name");
-        gchar *actual_name = library_set_source(
+        gchar *actual_name = library_set_source(self->component_lib,
             name,
             json_object_get_string_member(payload, "code")
         );
         if (actual_name) {
-            JsonObject *component = library_component(actual_name);
+            JsonObject *component = library_get_component(self->component_lib, actual_name);
             send_response(ws, "component", "component", component);
         } else {
             // TODO: error response
@@ -213,7 +214,7 @@ ui_connection_handle_message(UiConnection *self,
         g_free(actual_name);
     } else if (g_strcmp0(protocol, "component") == 0 && g_strcmp0(command, "getsource") == 0) {
         const gchar *name = json_object_get_string_member(payload, "name");
-        gchar *code = library_get_source(name);
+        gchar *code = library_get_source(self->component_lib, name);
 
         JsonObject *source_info = json_object_new();
         json_object_set_string_member(source_info, "name", name);
@@ -433,6 +434,7 @@ ui_connection_new(const gchar *hostname, int internal_port, int external_port) {
                                               g_free, (GDestroyNotify)network_free);
     self->hostname = g_strdup(hostname);
     self->registry = registry_new(runtime_info_new_from_env(hostname, external_port));
+    self->component_lib = library_new();
 
 	self->server = soup_server_new(SOUP_SERVER_SERVER_HEADER, "imgflo-runtime", NULL);
     if (!self->server) {
@@ -456,6 +458,7 @@ ui_connection_free(UiConnection *self) {
     g_hash_table_destroy(self->network_map);
     g_free(self->hostname);
     g_object_unref(self->server);
+    library_free(self->component_lib);
 
     g_free(self);
 }
