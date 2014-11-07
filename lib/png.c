@@ -23,10 +23,7 @@ write_data(png_structp png_ptr, png_bytep data, png_size_t length)
     } else {
         p->buffer = g_malloc(new_size);
     }
-    if(!p->buffer) {
-        g_critical("%s: F", __PRETTY_FUNCTION__);
-        png_error(png_ptr, "Write Error");
-    }
+    g_assert(p->buffer);
 
     memcpy(p->buffer + p->size, data, length);
     p->size += length;
