@@ -68,18 +68,6 @@ png_encoder_encode_rgba(PngEncoder *self, int width, int height, gchar *buffer) 
             const size_t offset = y*bytes_per_row;
             row_pointers[y] = (png_byte*)(buffer + offset);
         }
-    } else {
-        // test image
-        for(int y = 0; y < height; y++) {
-            row_pointers[y] = (png_byte*)g_malloc0(bytes_per_row);
-            for (int x=0; x < width; x++) {
-                const int off = x*4;
-                row_pointers[y][off+0] = 0xFF;
-                row_pointers[y][off+1] = 0x00;
-                row_pointers[y][off+2] = 0xFF;
-                row_pointers[y][off+3] = 0xAA;
-            }
-        }
     }
 
     png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
