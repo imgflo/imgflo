@@ -264,7 +264,7 @@ library_free(Library *self) {
 JsonObject *
 library_get_component(Library *self, const gchar *op)
 {
-    g_return_if_fail(op);
+    g_return_val_if_fail(op, NULL);
 
     if (g_strcmp0(op, "Processor") == 0) {
         return processor_component();
@@ -330,7 +330,7 @@ compile_plugin(GFile *file, const gchar *build_dir, gint rev) {
                               &stdout, &stderr, &exitcode, &err);
     try_print_error(err);
     if (!success) {
-        g_printerr(stderr);
+        g_printerr("%s", stderr);
     }
     g_free(stdout);
     g_free(stderr);
