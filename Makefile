@@ -38,10 +38,10 @@ install: env imgflo imgflo-runtime
 	cp ./bin/imgflo-runtime $(PREFIX)/bin/
 
 imgflo:
-	$(PREFIX)/env.sh gcc -o ./bin/imgflo bin/imgflo.c -I. $(FLAGS) $(DEPS)
+	$(PREFIX)/env.sh $(CC) -o ./bin/imgflo bin/imgflo.c -I. $(FLAGS) $(DEPS)
 
 imgflo-runtime:
-	$(PREFIX)/env.sh gcc -o ./bin/imgflo-runtime bin/imgflo-runtime.c -I. $(FLAGS) $(DEPS)
+	$(PREFIX)/env.sh $(CC) -o ./bin/imgflo-runtime bin/imgflo-runtime.c -I. $(FLAGS) $(DEPS)
 
 env:
 	mkdir -p $(PREFIX) || true
@@ -69,7 +69,7 @@ components: component-install-dir $(COMPONENT_PLUGINS)
 component: component-install-dir $(COMPONENT_OUT)
 
 $(COMPONENTINSTALLDIR)/%.so: $(COMPONENTDIR)/%.c
-	$(PREFIX)/env.sh gcc -o $@ $< -DGEGL_OP_C_FILE=\"`basename $<`\" $(COMPONENT_FLAGS) $(DEPS)
+	$(PREFIX)/env.sh $(CC) -o $@ $< -DGEGL_OP_C_FILE=\"`basename $<`\" $(COMPONENT_FLAGS) $(DEPS)
 
 dependencies:
 	cd dependencies && make PREFIX=$(PREFIX) dependencies
