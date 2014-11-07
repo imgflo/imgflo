@@ -382,18 +382,9 @@ library_get_operation_name(Library *self, const gchar *comp) {
     g_return_val_if_fail(self, comp);
 
     gchar *opname = NULL;
-    if (is_setsource_comp(comp)) {
-        const gint max_tokens = 3;
-        gchar **tokens = g_strsplit(comp, "-", max_tokens);
-        // WHY doesnt this return number of tokens found...
-        for (int i=0; i<max_tokens; i++) {
-            if (i == 1) {
-                opname = g_strdup(tokens[i]);
-                break;
-            }
-        }
-        g_strfreev(tokens);
-    } else {
+    const gint rev = find_op_revision(self, comp, &opname);
+    if (rev < 0) {
+        // normal op
         opname = g_strdup(comp);
     }
 
