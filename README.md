@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/jonnor/imgflo.svg?branch=master)](https://travis-ci.org/jonnor/imgflo)
+[![Coverity Scan Status](https://scan.coverity.com/projects/3446/badge.svg)](https://scan.coverity.com/projects/3446)
 
 imgflo
 ==========
