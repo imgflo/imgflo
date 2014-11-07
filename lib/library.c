@@ -379,7 +379,7 @@ find_op_revision(Library *self, const gchar *base, gchar **name_out) {
 gchar *
 library_get_operation_name(Library *self, const gchar *comp) {
     g_return_val_if_fail(self, NULL);
-    g_return_val_if_fail(self, comp);
+    g_return_val_if_fail(comp, NULL);
 
     gchar *opname = NULL;
     const gint rev = find_op_revision(self, comp, &opname);
