@@ -417,24 +417,33 @@ process_image_callback (SoupServer *server, SoupMessage *msg,
     }
 
     // Lookup node
+    GeglNode * node = NULL;
     Processor *processor = NULL;
     {
         const gchar *node_id = g_hash_table_lookup(query, "node");
         processor = (node_id) ? network_processor(network, node_id) : NULL;
+        if (processor) {
+            node = processor->node;
+        } else {
+            node = graph_get_gegl_node(network->graph, node_id);
+        }
+
     }
-    if (!processor) {
+    if (!processor && !node) {
         soup_message_set_status_full(msg, SOUP_STATUS_BAD_REQUEST, "'node' not specified or wrong");
         return;
     }
 
     // Render output
     // FIXME: allow region-of-interest and scale as query params
-    gchar *rgba = NULL;
-    GeglRectangle roi;
-    const gboolean success = processor_blit(processor, babl_format("R'G'B'A u8"), &roi, &rgba);
-    if (!success) {
+
+    const Babl *format = babl_format("R'G'B'A u8");
+    GeglRectangle roi = { 0, 0, 300, 300 };
+    gchar *rgba = (processor) ?
+                processor_blit(processor, format, &roi) :
+                blit_node_preview(node, format, &roi);
+    if (!rgba) {
         soup_message_set_status(msg, SOUP_STATUS_BAD_REQUEST);
-        g_free(rgba);
         return;
     }
     if (!(roi.width > 0 && roi.height > 0)) {

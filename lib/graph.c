@@ -249,6 +249,13 @@ graph_remove_node(Graph *self, const gchar *name)
     gegl_node_remove_child(self->top, n);
 }
 
+GeglNode *
+graph_get_gegl_node(Graph *self, const gchar *name) {
+    g_return_val_if_fail(self, NULL);
+    g_return_val_if_fail(name, NULL);
+    return g_hash_table_lookup(self->node_map, name);
+}
+
 gchar *
 graph_get_node_component(Graph *self, const gchar *name) {
     g_return_val_if_fail(self, NULL);

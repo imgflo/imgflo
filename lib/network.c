@@ -97,7 +97,7 @@ net_emit_state_changed(Network *self) {
         self->on_state_changed(self, self->running, is_processing, self->on_state_changed_data);
     }
 
-    if (!is_processing) {
+    if (self->running && !is_processing) {
         // We assume that every edge changed
         graph_visit_edges(self->graph, net_emit_edge_changed_func, self);
     }

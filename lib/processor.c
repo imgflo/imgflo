@@ -209,12 +209,34 @@ processor_set_target(Processor *self, GeglNode *node)
     }
 }
 
-gboolean
-processor_blit(Processor *self, const Babl *format, GeglRectangle *roi_out, gchar **buffer_out) {
-    g_return_val_if_fail(self, FALSE);
-    g_return_val_if_fail(buffer_out, FALSE);
-    g_return_val_if_fail(roi_out, FALSE);
-    g_return_val_if_fail(self->node, FALSE);
+gchar *
+blit_node_preview(GeglNode *node, const Babl *format, GeglRectangle *out) {
+    GeglRectangle bbox = gegl_node_get_bounding_box(node);
+    const gint hard_max_size = 10000;
+    if (bbox.width < 0 || bbox.width > hard_max_size ||
+        bbox.height < 0 || bbox.height > hard_max_size) {
+        return NULL;
+    }
+    const gint max_size = 2000; // just scale down
+    bbox.width = (bbox.width < 0 || bbox.width >= max_size) ? max_size : bbox.width;
+    bbox.height = (bbox.height < 0 || bbox.height >= max_size) ? max_size : bbox.height;
+
+    const gdouble scalex = (gdouble)out->width/bbox.width;
+    const gdouble scaley = (gdouble)out->height/bbox.height;
+    const gdouble scale = (scalex < scaley) ? scalex : scaley;
+    // FIXME: set height/width to fit actual content area of buffer
+    gchar *buffer = g_malloc(out->width*out->height*babl_format_get_bytes_per_pixel(format));
+    // XXX: maybe use GEGL_BLIT_DIRTY?
+    gegl_node_blit(node, scale, out, format, buffer,
+                   GEGL_AUTO_ROWSTRIDE, GEGL_BLIT_DEFAULT);
+    return buffer;
+}
+
+gchar *
+processor_blit(Processor *self, const Babl *format, GeglRectangle *roi_out) {
+    g_return_val_if_fail(self, NULL);
+    g_return_val_if_fail(roi_out, NULL);
+    g_return_val_if_fail(self->node, NULL);
 
     GeglRectangle roi = gegl_node_get_bounding_box(self->node);
     roi = sanitized_roi(self, roi);
@@ -225,7 +247,6 @@ processor_blit(Processor *self, const Babl *format, GeglRectangle *roi_out, gcha
     // XXX: maybe use GEGL_BLIT_DIRTY?
     gegl_node_blit(self->node, scale, &roi, format, buffer,
                    GEGL_AUTO_ROWSTRIDE, GEGL_BLIT_DEFAULT);
-    *buffer_out = buffer;
     *roi_out = roi;
-    return TRUE;
+    return buffer;
 }
