@@ -7,6 +7,7 @@ DEBUGPROG=
 PORT=3569
 HOST=localhost
 EXTPORT=$(PORT)
+#GRAPH=graphs/checker.json
 
 ifneq ("$(wildcard /app)","")
 # Heroku build. TODO: find better way to detect
@@ -23,13 +24,19 @@ LIBS=gegl-0.3 gio-unix-2.0 json-glib-1.0 libsoup-2.4 libpng uuid
 DEPS=$(shell $(PREFIX)/env.sh pkg-config $(PKGCONFIG_ARGS) --libs --cflags $(LIBS))
 TRAVIS_DEPENDENCIES=$(shell echo `cat .vendor_urls | sed -e "s/heroku/travis/" | tr -d '\n'`)
 
+RUN_ARGUMENTS:=--port $(PORT) --host $(HOST) --external-port=$(EXTPORT)
+ifdef GRAPH
+RUN_ARGUMENTS+=--graph $(GRAPH)
+endif
+
+
 all: install
 
 server: install
 	npm start
 
 run-noinstall:
-	$(PREFIX)/env.sh $(DEBUGPROG) ./bin/imgflo-runtime --port $(PORT) --host $(HOST) --external-port=$(EXTPORT)
+	$(PREFIX)/env.sh $(DEBUGPROG) ./bin/imgflo-runtime $(RUN_ARGUMENTS)
 
 run: install run-noinstall
 

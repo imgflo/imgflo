@@ -21,11 +21,13 @@ quit(int sig)
 static int port = 3569;
 static int extport = 3569;
 static gchar *host = "localhost";
+static gchar *defaultgraph = "";
 
 static GOptionEntry entries[] = {
 	{ "port", 'p', 0, G_OPTION_ARG_INT, &port, "Port to listen on", NULL },
     { "external-port", 'e', 0, G_OPTION_ARG_INT, &extport, "Port we are available on for clients", NULL },
     { "host", 'h', 0, G_OPTION_ARG_STRING, &host, "Hostname", NULL },
+    { "graph", 'g', 0, G_OPTION_ARG_STRING, &defaultgraph, "Default graph", NULL },
 	{ NULL }
 };
 
@@ -58,6 +60,19 @@ main (int argc, char **argv)
 
         gegl_init(0, NULL);
 	    UiConnection *ui = ui_connection_new(host, port, extport);
+
+        if (strlen(defaultgraph) > 0) {
+            GError *err = NULL;
+            Graph *g = graph_new("default", ui->component_lib);
+            gboolean loaded = graph_load_json_file(g, defaultgraph, &err);
+            if (!loaded) {
+                g_printerr("Failed to load graph: %s", err->message);
+                return 1;
+            }
+            Network *n = network_new(g);
+            ui_connection_set_default_network(ui, n);
+        }
+
         GMainLoop *loop = g_main_loop_new(NULL, TRUE);
 
 	    if (!ui) {

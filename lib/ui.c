@@ -18,6 +18,7 @@ typedef struct {
     Library *component_lib;
     gchar *hostname;
     SoupWebsocketConnection *connection; // TODO: allow multiple clients
+    gchar *main_network;
 } UiConnection;
 
 
@@ -238,6 +239,7 @@ ui_connection_handle_message(UiConnection *self,
         JsonObject *runtime = json_object_new();
         json_object_set_string_member(runtime, "version", "0.4"); // protocol version
         json_object_set_string_member(runtime, "type", "imgflo");
+        json_object_set_string_member(runtime, "graph", self->main_network);
 
         JsonArray *capabilities = json_array_new();
         json_array_add_string_element(capabilities, "protocol:component");
@@ -481,6 +483,7 @@ UiConnection *
 ui_connection_new(const gchar *hostname, int internal_port, int external_port) {
     UiConnection *self = g_new(UiConnection, 1);
 
+    self->main_network = NULL;
     self->network_map = g_hash_table_new_full(g_str_hash, g_str_equal,
                                               g_free, (GDestroyNotify)network_free);
     self->hostname = g_strdup(hostname);
@@ -510,6 +513,22 @@ ui_connection_free(UiConnection *self) {
     g_free(self->hostname);
     g_object_unref(self->server);
     library_free(self->component_lib);
+    g_free(self->main_network);
 
     g_free(self);
+}
+
+// Takes ownership of Network
+void
+ui_connection_set_default_network(UiConnection *self, Network *net) {
+    g_return_if_fail(self);
+    g_return_if_fail(net);
+    gchar * id = net->graph->id;
+    g_assert(id);
+
+    g_hash_table_insert(self->network_map, (gpointer)g_strdup(id), (gpointer)net);
+    self->main_network = g_strdup(id);
+    g_assert(self->main_network);
+
+    network_set_running(net, TRUE);
 }
