@@ -74,7 +74,9 @@ send_preview_invalidated(Network *network, Processor *processor, GeglRectangle r
     JsonObject *payload = json_object_new();
     json_object_set_string_member(payload, "type", "previewurl");
     json_object_set_string_member(payload, "url", url);
-    send_response(ui->connection, "network", "output", payload);
+    if (ui->connection) {
+        send_response(ui->connection, "network", "output", payload);
+    }
 }
 
 static void
@@ -508,6 +510,7 @@ UiConnection *
 ui_connection_new(const gchar *hostname, int internal_port, int external_port) {
     UiConnection *self = g_new(UiConnection, 1);
 
+    self->connection = NULL;
     self->main_network = NULL;
     self->network_map = g_hash_table_new_full(g_str_hash, g_str_equal,
                                               g_free, (GDestroyNotify)network_free);
@@ -555,5 +558,7 @@ ui_connection_set_default_network(UiConnection *self, Network *net) {
     self->main_network = g_strdup(id);
     g_assert(self->main_network);
 
+    net->on_processor_invalidated_data = (gpointer)self;
+    net->on_processor_invalidated = send_preview_invalidated;
     network_set_running(net, TRUE);
 }
