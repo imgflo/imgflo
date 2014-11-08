@@ -60,6 +60,15 @@ set_property(GeglNode *t, const gchar *port, GParamSpec *paramspec, GValue *valu
     }
 }
 
+gboolean
+gh_value_equals_outkey(gpointer key, gpointer value, gpointer user_data) {
+    const gboolean found = value == *(gpointer *)(user_data);
+    if (found) {
+        *(gpointer *)(user_data) = key;
+    }
+    return found;
+}
+
 typedef struct {
     gchar *id;
     GeglNode *top;
@@ -376,25 +385,81 @@ graph_save_json(Graph *self) {
         json_object_set_string_member(proc, "component", component);
         json_object_set_object_member(processes, name, proc);
     }
-    g_strfreev(nodes);
+
 
     // Connections
+    // In GEGL the connection order is unimportant,
+    // so we just loop through all nodes and their input connections
     JsonArray *connections = json_array_new();
     json_object_set_array_member(root, "connections", connections);
 
+    for (int i=0; i<no_nodes; i++) {
+        const gchar *tgt_name = nodes[i];
+        GeglNode *tgt_node = g_hash_table_lookup(self->node_map, tgt_name);
+
+        if (tgt_node) {
+            gchar **pads = gegl_node_list_input_pads(tgt_node);
+            gchar *tgt_pad = pads ? pads[0] : NULL;
+            gint i = 0;
+            while (tgt_pad) {
+                gchar *src_pad = NULL;
+                GeglNode *src_node = gegl_node_get_producer(tgt_node, tgt_pad, &src_pad);
+                if (src_node) {
+                    // has connection
+                    g_assert(src_pad);
+
+                    JsonObject *conn = json_object_new();
+                    json_array_add_object_element(connections, conn);
+
+                    JsonObject *tgt = json_object_new();
+                    json_object_set_string_member(tgt, "process", tgt_name);
+                    json_object_set_string_member(tgt, "port", tgt_pad);
+                    json_object_set_object_member(conn, "tgt", tgt);
+
+                    gpointer src_name = src_node;
+                    g_hash_table_find(self->node_map, gh_value_equals_outkey, &src_name);
+
+                    JsonObject *src = json_object_new();
+                    json_object_set_string_member(src, "process", (gchar *)src_name);
+                    json_object_set_string_member(src, "port", src_pad);
+                    json_object_set_object_member(conn, "src", src);
+
+                    g_free(src_pad);
+                }
+                tgt_pad = pads[++i];
+            }
+        } else {
+            Processor *processor = g_hash_table_lookup(self->processor_map, tgt_name);
+            g_assert(processor);
+            GeglNode *src_node = processor->node;
+            if (src_node) {
+                // has connection
+                JsonObject *conn = json_object_new();
+                json_array_add_object_element(connections, conn);
+
+                JsonObject *tgt = json_object_new();
+                json_object_set_string_member(tgt, "process", tgt_name);
+                json_object_set_string_member(tgt, "port", "input");
+                json_object_set_object_member(conn, "tgt", tgt);
+
+                gpointer src_name = src_node;
+                g_hash_table_find(self->node_map, gh_value_equals_outkey, &src_name);
+
+                JsonObject *src = json_object_new();
+                json_object_set_string_member(src, "process", src_name);
+                json_object_set_string_member(src, "port", "output");
+                json_object_set_object_member(conn, "src", src);
+            }
+        }
+
+    }
+
+
+
+    g_strfreev(nodes);
+
+
     /*
-        JsonObject *conn = json_object_new();
-        json_array_add_object_element(connections, conn);
-
-        JsonObject *tgt = json_object_new();
-        json_object_set_string_member(tgt, "process", );
-        json_object_set_string_member(tgt, "port", );
-        json_object_set_object_member(conn, "tgt", tgt);
-
-        JsonObject *src = json_object_new();
-        json_object_set_string_member(src, "process", );
-        json_object_set_string_member(src, "port", );
-        json_object_set_object_member(conn, "src", src);
 
     // IIPs
         JsonObject *conn = json_object_new();

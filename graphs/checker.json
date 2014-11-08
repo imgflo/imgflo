@@ -3,6 +3,9 @@
     "board": {
       "component": "gegl/checkerboard"
     },
+    "crop": {
+      "component": "gegl/crop"
+    },
     "p": {
       "component": "Processor"
     }
@@ -14,8 +17,32 @@
         "port": "output"
       },
       "tgt": {
+        "process": "crop",
+        "port": "input"
+      }
+    },
+    {
+      "src": {
+        "process": "crop",
+        "port": "output"
+      },
+      "tgt": {
         "process": "p",
         "port": "input"
+      }
+    },
+    {
+      "data": "300",
+      "tgt": {
+        "process": "crop",
+        "port": "width"
+      }
+    },
+    {
+      "data": "300",
+      "tgt": {
+        "process": "crop",
+        "port": "height"
       }
     }
   ]

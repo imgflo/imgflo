@@ -1,1 +1,2 @@
-board(gegl/checkerboard) OUTPUT -> INPUT p(Processor)
+board(gegl/checkerboard) OUTPUT -> INPUT crop(gegl/crop) OUTPUT -> INPUT p(Processor)
+'300' -> WIDTH crop, '300' -> HEIGHT crop
