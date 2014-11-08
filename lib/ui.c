@@ -387,6 +387,45 @@ process_image_callback (SoupServer *server, SoupMessage *msg,
     }
 }
 
+/*
+var addr = window.location.origin.replace("http://", "ws://");
+var ide = "http://app.flowhub.io";
+console.log(ide+"/#runtime/endpoint?protocol=websocket&address=encodeURIComponent(addr))
+Uncaught SyntaxError: Unexpected token ILLEGAL VM207:732
+console.log(ide+"/#runtime/endpoint?protocol=websocket&address="+encodeURIComponent(addr))
+*/
+
+static void
+serve_frontpage(SoupServer *server, SoupMessage *msg,
+		 const char *path, GHashTable *query,
+		 SoupClientContext *context, gpointer user_data) {
+
+    gchar *params = soup_form_encode(
+        "protocol", "websocket",
+        "address", "ws://localhost:3569",
+        NULL
+    );
+    gchar *flowhub_url = g_strdup_printf("http://app.flowhub.io#runtime/endpoint?%s", params);
+    g_free(params);
+    static const gchar *html = \
+        "\n<a id=\"flowhub_url\">Open in Flowhub</a>"
+        "\n<script>"
+        "\n   var addr = window.location.origin.replace(\"http://\", \"ws://\");"
+        "\n   var ide = \"http://app.flowhub.io\";"
+        "\n   var url = ide+\"/#runtime/endpoint?protocol=websocket&address=\"+encodeURIComponent(addr);"
+        "\n   var a = document.getElementById(\"flowhub_url\");"
+        "\n   a.href = url;"
+        "\n</script>"
+        ;
+    //gchar *html = g_strdup_printf(html_template, flowhub_url, "Open in Flowhub");
+    g_free(flowhub_url);
+
+    const gsize len = strlen(html);
+    soup_message_set_status(msg, SOUP_STATUS_OK);
+    soup_message_set_response(msg, "text/html", SOUP_MEMORY_COPY, html, len);
+    //g_free(html);
+}
+
 static void
 server_callback (SoupServer *server, SoupMessage *msg,
 		 const char *path, GHashTable *query,
@@ -401,6 +440,8 @@ server_callback (SoupServer *server, SoupMessage *msg,
 
     if (g_strcmp0(path, "/process") == 0 && msg->method == SOUP_METHOD_GET) {
         process_image_callback(server, msg, path, query, context, data);
+    } else if (g_strcmp0(path, "/") == 0 && msg->method == SOUP_METHOD_GET) {
+        serve_frontpage(server, msg, path, query, context, data);
     } else {
         soup_message_headers_iter_init(&iter, msg->request_headers);
         while (soup_message_headers_iter_next(&iter, &name, &value))

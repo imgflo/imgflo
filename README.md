@@ -29,7 +29,7 @@ About
 The imgflo runtime implements the [FBP runtime protocol]
 (http://noflojs.org/documentation/protocol) over WebSockets.
 It also provides an executable that can load and run a FBP graph defined as
-[JSON]((http://noflojs.org/documentation/json).
+[JSON](http://noflojs.org/documentation/json).
 
 The runtime uses GEGLs native graph structure, wrapped to be compatible with
 FBP conventions and protocols:
