@@ -61,6 +61,14 @@ ui_net_state_changed(Network *network, gboolean running,
     }
 }
 
+gchar *
+ui_get_process_url(UiConnection *ui, Network *network, const gchar *node) {
+    gchar *url = g_strdup_printf("http://%s:%d/process?graph=%s&node=%s",
+                                ui->hostname, ui->registry->info->port,
+                                network->graph->id, node);
+    return url;
+}
+
 void
 send_preview_invalidated(Network *network, Processor *processor, GeglRectangle rect, gpointer user_data) {
     UiConnection *ui = (UiConnection *)user_data;
@@ -69,16 +77,38 @@ send_preview_invalidated(Network *network, Processor *processor, GeglRectangle r
     g_return_if_fail(network->graph);
 
     const gchar *node = graph_find_processor_name(network->graph, processor);
-
-    gchar url[1024];
-    g_snprintf(url, 1024, "http://%s:%d/process?graph=%s&node=%s",
-               ui->hostname, ui->registry->info->port, network->graph->id, node);
-
+    gchar *url = ui_get_process_url(ui, network, node);
     JsonObject *payload = json_object_new();
     json_object_set_string_member(payload, "type", "previewurl");
     json_object_set_string_member(payload, "url", url);
+    g_free(url);
     if (ui->connection) {
         send_response(ui->connection, "network", "output", payload);
+    }
+}
+
+void
+send_edge_data_changed(Network *network, const GraphEdge *edge, gpointer user_data) {
+    UiConnection *ui = (UiConnection *)user_data;
+
+     // FIXME: remove once noflo-ui no longer needs it
+    gchar *src_port = g_utf8_strup(edge->src_port, -1);
+    gchar *tgt_port = g_utf8_strup(edge->tgt_port, -1);
+    gchar *edge_id = g_strdup_printf("%s() %s -> %s %s()",
+                                     edge->src_name, src_port,
+                                     tgt_port, edge->tgt_name);
+    g_free(src_port);
+    g_free(tgt_port);
+
+    gchar *url = ui_get_process_url(ui, network, edge->src_name);
+    JsonObject *payload = graph_edge_to_json(edge);
+    json_object_set_string_member(payload, "graph", network->graph->id);
+    json_object_set_string_member(payload, "id", edge_id);
+    json_object_set_string_member(payload, "data", url);
+    g_free(url);
+
+    if (ui->connection) {
+        send_response(ui->connection, "network", "data", payload);
     }
 }
 
@@ -91,6 +121,9 @@ ui_connection_add_network(UiConnection *self, const gchar *name, Network *networ
 
     network->on_state_changed = ui_net_state_changed;
     network->on_state_changed_data = self;
+
+    network->on_edge_changed = send_edge_data_changed;
+    network->on_edge_changed_data = self;
 }
 
 static void

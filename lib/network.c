@@ -8,9 +8,10 @@ void net_node_added(Graph *graph, const gchar *name, GeglNode *node, Processor *
 
 typedef void (* NetworkProcessorInvalidatedCallback)
     (struct _Network *network, struct _Processor *processor, GeglRectangle rect, gpointer user_data);
-
 typedef void (* NetworkStateChanged)
     (struct _Network *network, gboolean running, gboolean processing, gpointer user_data);
+typedef void (* NetworkEdgeChanged)
+    (struct _Network *network, const GraphEdge *edge, gpointer user_data);
 
 typedef struct _Network {
     Graph *graph; // owned
@@ -19,6 +20,8 @@ typedef struct _Network {
     gpointer on_processor_invalidated_data;
     NetworkStateChanged on_state_changed;
     gpointer on_state_changed_data;
+    NetworkEdgeChanged on_edge_changed; // data along the edge changed
+    gpointer on_edge_changed_data;
 } Network;
 
 Network *
@@ -33,6 +36,8 @@ network_new(Graph *graph)
     self->on_processor_invalidated_data = NULL;
     self->on_state_changed = NULL;
     self->on_state_changed_data = NULL;
+    self->on_edge_changed = NULL;
+    self->on_edge_changed_data = NULL;
 
     self->graph->on_node_added = net_node_added;
     self->graph->on_node_added_data = self;
@@ -76,11 +81,25 @@ network_is_processing(Network *self) {
 }
 
 void
+net_emit_edge_changed_func(Graph *graph, const GraphEdge *edge, gpointer user_data) {
+    g_assert(user_data);
+    Network *self = (Network *)user_data;
+    if (self->on_edge_changed) {
+        self->on_edge_changed(self, edge, self->on_edge_changed_data);
+    }
+}
+
+void
 net_emit_state_changed(Network *self) {
     const gboolean is_processing = network_is_processing(self);
     //g_printerr("NET processing=%d running=%d\n", is_processing, self->running);
     if (self->on_state_changed) {
         self->on_state_changed(self, self->running, is_processing, self->on_state_changed_data);
+    }
+
+    if (!is_processing) {
+        // We assume that every edge changed
+        graph_visit_edges(self->graph, net_emit_edge_changed_func, self);
     }
 }
 
