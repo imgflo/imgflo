@@ -24,6 +24,12 @@ gvalue_from_string(GValue *value, GType target_type, GValue *dest_value) {
     if (g_type_is_a(target_type, G_TYPE_DOUBLE)) {
         gdouble d = g_ascii_strtod(iip, NULL);
         g_value_set_double(dest_value, d);
+    } else if (g_type_is_a(target_type, G_TYPE_INT)) {
+        gint i = g_ascii_strtoll(iip, NULL, 10);
+        g_value_set_int(dest_value, i);
+    } else if (g_type_is_a(target_type, G_TYPE_INT64)) {
+        gint64 i = g_ascii_strtoll(iip, NULL, 10);
+        g_value_set_int64(dest_value, i);
     } else if (g_type_is_a(target_type, GEGL_TYPE_COLOR)) {
         GeglColor *color = gegl_color_new(iip);
         if (!color || !GEGL_IS_COLOR(color)) {
