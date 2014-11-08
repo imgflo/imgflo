@@ -79,8 +79,16 @@ json_from_gvalue(const GValue *val) {
     } else if (G_VALUE_HOLDS_UINT64(val)) {
         json_node_set_int(ret, g_value_get_uint64(val));
     } else if (g_type_is_a(type, GEGL_TYPE_COLOR)) {
-        // TODO: support GeglColor
-        json_node_init_null(ret);
+        guint8 *hex = g_new0(guint8, 4);
+        GeglColor *color = g_value_get_object(val);
+        g_assert(color);
+        gegl_color_get_pixel(color, babl_format("R'G'B'A u8"), hex);
+        gchar *rgba_string = g_strdup_printf("#%02x%02x%02x%02x",
+                                             hex[0], hex[1], hex[2], hex[3]);
+        g_print("GeglColor: %s\n", rgba_string);
+        json_node_set_string(ret, rgba_string);
+        g_free(rgba_string);
+        g_free(hex);
     } else if (g_type_is_a(type, GEGL_TYPE_PATH) || g_type_is_a(type, GEGL_TYPE_CURVE)) {
         // TODO: support GeglPath / GeglCurve
         json_node_init_null(ret);
