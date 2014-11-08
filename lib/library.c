@@ -57,27 +57,36 @@ icon_for_op(const gchar *op, const gchar *categories) {
 
 
 static JsonNode *
-json_from_gvalue(const GValue *val) {
+json_from_gvalue(const GValue *val, gboolean *supported_out) {
     GType type = G_VALUE_TYPE(val);
     JsonNode *ret = json_node_alloc();
     json_node_init(ret, JSON_NODE_VALUE);
 
+    gboolean supported = FALSE;
     if (G_VALUE_HOLDS_STRING(val)) {
         json_node_set_string(ret, g_value_get_string(val));
+        supported = TRUE;
     } else if (G_VALUE_HOLDS(val, G_TYPE_BOOLEAN)) {
         json_node_set_boolean(ret, g_value_get_boolean(val));
+        supported = TRUE;
     } else if (G_VALUE_HOLDS_DOUBLE(val)) {
         json_node_set_double(ret, g_value_get_double(val));
+        supported = TRUE;
     } else if (G_VALUE_HOLDS_FLOAT(val)) {
         json_node_set_double(ret, g_value_get_float(val));
+        supported = TRUE;
     } else if (G_VALUE_HOLDS_INT(val)) {
         json_node_set_int(ret, g_value_get_int(val));
+        supported = TRUE;
     } else if (G_VALUE_HOLDS_UINT(val)) {
         json_node_set_int(ret, g_value_get_uint(val));
+        supported = TRUE;
     } else if (G_VALUE_HOLDS_INT64(val)) {
         json_node_set_int(ret, g_value_get_int64(val));
+        supported = TRUE;
     } else if (G_VALUE_HOLDS_UINT64(val)) {
         json_node_set_int(ret, g_value_get_uint64(val));
+        supported = TRUE;
     } else if (g_type_is_a(type, GEGL_TYPE_COLOR)) {
         guint8 *hex = g_new0(guint8, 4);
         GeglColor *color = g_value_get_object(val);
@@ -89,6 +98,7 @@ json_from_gvalue(const GValue *val) {
         json_node_set_string(ret, rgba_string);
         g_free(rgba_string);
         g_free(hex);
+        supported = TRUE;
     } else if (g_type_is_a(type, GEGL_TYPE_PATH) || g_type_is_a(type, GEGL_TYPE_CURVE)) {
         // TODO: support GeglPath / GeglCurve
         json_node_init_null(ret);
@@ -103,6 +113,9 @@ json_from_gvalue(const GValue *val) {
         g_warning("Cannot map GValue '%s' to JSON", g_type_name(type));
     }
 
+    if (supported_out) {
+        *supported_out = supported;
+    }
     return ret;
 }
 
@@ -216,7 +229,7 @@ inports_for_operation(const gchar *name)
         GType type = G_PARAM_SPEC_VALUE_TYPE(prop);
         const gchar *type_name = noflo_type_for_gtype(type);
         const GValue *def = g_param_spec_get_default_value(prop);
-        JsonNode *def_json = json_from_gvalue(def);
+        JsonNode *def_json = json_from_gvalue(def, NULL);
         const gchar *blurb = g_param_spec_get_blurb(prop);
         const gchar *nick = g_param_spec_get_nick(prop);
         const gchar *description = (blurb) ? blurb : nick;

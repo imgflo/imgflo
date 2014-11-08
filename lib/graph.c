@@ -360,6 +360,17 @@ graph_load_json(Graph *self, JsonParser *parser) {
     }
 }
 
+gboolean
+iip_equivalent(const GValue *a, const GValue *b) {
+    // TEMP: consider equivalent if their serialization is
+    gboolean aconv, bconv;
+    JsonNode *an = json_from_gvalue(a, &aconv);
+    JsonNode *bn = json_from_gvalue(b, &bconv);
+    gchar *as = json_stringify_node(an, NULL);
+    gchar *bs = json_stringify_node(bn, NULL);
+    return aconv && bconv && (g_strcmp0(as, bs) == 0);
+}
+
 JsonObject *
 graph_save_json(Graph *self) {
 
@@ -473,20 +484,24 @@ graph_save_json(Graph *self) {
         for (int i=0; i<n_properties; i++) {
             GParamSpec *prop = properties[i];
             const gchar *id = g_param_spec_get_name(prop);
+            const GValue *def = g_param_spec_get_default_value(prop);
             GValue value = G_VALUE_INIT;
-            // Q: Could maybe drop the default values?
             gegl_node_get_property(node, id, &value);
-            JsonNode *value_json = json_from_gvalue(&value);
 
-            JsonObject *conn = json_object_new();
-            json_array_add_object_element(connections, conn);
+            // Don't send defaults
+            if (!iip_equivalent(&value, def)) {
+                JsonNode *value_json = json_from_gvalue(&value, NULL);
+                JsonObject *conn = json_object_new();
+                json_array_add_object_element(connections, conn);
 
-            JsonObject *tgt = json_object_new();
-            json_object_set_string_member(tgt, "process", node_name);
-            json_object_set_string_member(tgt, "port", id);
-            json_object_set_object_member(conn, "tgt", tgt);
+                JsonObject *tgt = json_object_new();
+                json_object_set_string_member(tgt, "process", node_name);
+                json_object_set_string_member(tgt, "port", id);
+                json_object_set_object_member(conn, "tgt", tgt);
 
-            json_object_set_member(conn, "data", value_json);
+                json_object_set_member(conn, "data", value_json);
+            }
+
             g_value_unset(&value);
         }
 
