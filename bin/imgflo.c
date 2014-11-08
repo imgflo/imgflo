@@ -5,6 +5,7 @@
 #include <glib.h>
 #include <gegl.h>
 
+#include "lib/utils.c"
 #include "lib/processor.c"
 #include "lib/library.c"
 #include "lib/graph.c"

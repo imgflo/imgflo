@@ -2,6 +2,7 @@
 //     (c) 2014 The Grid
 //     imgflo may be freely distributed under the MIT license
 
+#include "lib/utils.c"
 #include "lib/png.c"
 #include "lib/processor.c"
 #include "lib/library.c"

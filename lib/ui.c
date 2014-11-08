@@ -21,23 +21,6 @@ typedef struct {
     gchar *main_network;
 } UiConnection;
 
-gchar *
-json_stringify(JsonObject *root, gsize *length_out) {
-    JsonGenerator *generator = json_generator_new();
-    JsonNode *node = json_node_new(JSON_NODE_OBJECT);
-    json_node_take_object(node, root);
-    json_generator_set_root(generator, node);
-
-    gsize len = 0;
-    gchar *data = json_generator_to_data(generator, &len);
-    g_object_unref(generator);
-
-    if (length_out) {
-        *length_out = len;
-    }
-    return data;
-}
-
 static void
 send_response(SoupWebsocketConnection *ws,
             const gchar *protocol, const gchar *command, JsonObject *payload)

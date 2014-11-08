@@ -30,3 +30,4 @@ env.sh.in
 spec/dependencies.coffee
 spec/data/dynamiccomponent1.c
 spec/data/dynamiccomponent1-withprop.c
+lib/utils.c
