@@ -233,10 +233,10 @@ graph_list_nodes(Graph *self, gint *no_nodes_out) {
 
     gchar **names = g_new0(gchar *, total_length+1);
     for(int i=0; i<g_list_length(processors); i++) {
-        names[i] = (gchar *)g_list_nth_data(processors, i);
+        names[i] = g_strdup((gchar *)g_list_nth_data(processors, i));
     }
     for(int i=0; i<g_list_length(nodes); i++) {
-        names[i+g_list_length(processors)] = (gchar *)g_list_nth_data(nodes, i);
+        names[i+g_list_length(processors)] = g_strdup((gchar *)g_list_nth_data(nodes, i));
     }
 
     g_list_free(processors);
@@ -537,6 +537,7 @@ const gchar *
 graph_find_processor_name(Graph *self, Processor *processor) {
     g_return_val_if_fail(self, NULL);
     g_return_val_if_fail(processor, NULL);
+    g_return_val_if_fail(self->processor_map, NULL);
 
     GHashTableIter iter;
     gpointer key, value;
