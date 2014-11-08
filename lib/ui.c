@@ -104,7 +104,12 @@ send_edge_data_changed(Network *network, const GraphEdge *edge, gpointer user_da
     JsonObject *payload = graph_edge_to_json(edge);
     json_object_set_string_member(payload, "graph", network->graph->id);
     json_object_set_string_member(payload, "id", edge_id);
-    json_object_set_string_member(payload, "data", url);
+
+    JsonObject *data = json_object_new();
+    json_object_set_object_member(payload, "data", data);
+    json_object_set_string_member(data, "url", url);
+    json_object_set_string_member(data, "type", "previewurl");
+
     g_free(url);
 
     if (ui->connection) {
