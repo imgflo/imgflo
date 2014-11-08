@@ -116,14 +116,16 @@ graph_add_iip(Graph *self, const gchar *node, const gchar *port, GValue *value)
     g_return_if_fail(value);
 
     const gchar *iip = G_VALUE_HOLDS_STRING(value) ? g_value_get_string(value) : "IIP";
-    g_print("\t'%s' -> %s %s\n", iip, port, node);
 
     GeglNode *t = g_hash_table_lookup(self->node_map, node);
+    g_return_if_fail(t);
 
     GParamSpec *paramspec = gegl_node_find_property(t, port);
     if (paramspec) {
         const gboolean success = set_property(t, port, paramspec, value);
-        if (!success) {
+        if (success) {
+            g_print("\t'%s' -> %s %s\n", iip, port, node);
+        } else {
             GType value_type = G_VALUE_TYPE(value);
             GType target_type = G_PARAM_SPEC_VALUE_TYPE(paramspec);
             g_printerr("target_type=%s value_type=%s\n",
