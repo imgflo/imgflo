@@ -82,6 +82,10 @@ gh_value_equals_outkey(gpointer key, gpointer value, gpointer user_data) {
 }
 
 struct _Graph;
+struct _GraphEdge;
+
+typedef void (* GraphEdgeVisitFunc)
+    (struct _Graph *graph, const struct _GraphEdge *edge, gpointer user_data);
 
 typedef void (* GraphNodeAdded) // Note: only one of @node and @proc are set
     (struct _Graph *graph, const gchar *name, GeglNode *node, Processor *proc, gpointer user_data);
@@ -99,6 +103,12 @@ typedef struct _Graph {
     gpointer on_node_added_data;
 } Graph;
 
+typedef struct _GraphEdge {
+    const gchar *src_name;
+    const gchar *src_port;
+    const gchar *tgt_name;
+    const gchar *tgt_port;
+} GraphEdge;
 
 Graph *
 graph_new(const gchar *id, Library *lib) {
@@ -404,6 +414,91 @@ iip_equivalent(const GValue *a, const GValue *b) {
     return aconv && bconv && (g_strcmp0(as, bs) == 0);
 }
 
+void
+graph_visit_edges_for_nodes(Graph *self, GraphEdgeVisitFunc visit_func, gpointer user_data,
+                            gchar **nodes, gint no_nodes) {
+
+    // Connections
+    // In GEGL the connection order is unimportant,
+    // so we just loop through all nodes and their input connections
+    // implicitly we'll then also get the outputs, from the edge
+    for (int i=0; i<no_nodes; i++) {
+        const gchar *tgt_name = nodes[i];
+        GeglNode *tgt_node = g_hash_table_lookup(self->node_map, tgt_name);
+
+        if (tgt_node) {
+            gchar **pads = gegl_node_list_input_pads(tgt_node);
+            gchar *tgt_pad = pads ? pads[0] : NULL;
+            gint i = 0;
+            while (tgt_pad) {
+                gchar *src_pad = NULL;
+                GeglNode *src_node = gegl_node_get_producer(tgt_node, tgt_pad, &src_pad);
+                if (src_node) {
+                    // has connection
+                    g_assert(src_pad);
+                    gpointer src_name = src_node;
+                    g_hash_table_find(self->node_map, gh_value_equals_outkey, &src_name);
+
+                    GraphEdge edge = { src_name, src_pad, tgt_name, tgt_pad };
+                    visit_func(self, &edge, user_data);
+
+                    g_free(src_pad);
+                }
+                tgt_pad = pads[++i];
+            }
+        } else {
+            Processor *processor = g_hash_table_lookup(self->processor_map, tgt_name);
+            g_assert(processor);
+            GeglNode *src_node = processor->node;
+            if (src_node) {
+                // has connection
+                gpointer src_name = src_node;
+                g_hash_table_find(self->node_map, gh_value_equals_outkey, &src_name);
+
+                // XXX: will break if GEGL gets more output pads
+                GraphEdge edge = { src_name, "output", tgt_name, "input" };
+                visit_func(self, &edge, user_data);
+            }
+        }
+    }
+
+}
+
+void
+graph_visit_edges(Graph *self, GraphEdgeVisitFunc visit_func, gpointer user_data) {
+    gint no_nodes = 0;
+    gchar **nodes = graph_list_nodes(self, &no_nodes);
+    graph_visit_edges_for_nodes(self, visit_func, user_data, nodes, no_nodes);
+    g_strfreev(nodes);
+}
+
+JsonObject *
+graph_edge_to_json(const GraphEdge *edge) {
+    g_return_val_if_fail(edge, NULL);
+
+    JsonObject *conn = json_object_new();
+
+    JsonObject *tgt = json_object_new();
+    json_object_set_object_member(conn, "tgt", tgt);
+    json_object_set_string_member(tgt, "process", edge->tgt_name);
+    json_object_set_string_member(tgt, "port", edge->tgt_port);
+
+    JsonObject *src = json_object_new();
+    json_object_set_object_member(conn, "src", src);
+    json_object_set_string_member(src, "process", edge->src_name);
+    json_object_set_string_member(src, "port", edge->src_port);
+
+    return conn;
+}
+
+void add_edge_json_func(Graph *graph, const GraphEdge *edge, gpointer user_data) {
+    g_assert(user_data);
+    JsonArray *connections = (JsonArray *)user_data;
+
+    JsonObject *conn = graph_edge_to_json(edge);
+    json_array_add_object_element(connections, conn);
+}
+
 JsonObject *
 graph_save_json(Graph *self) {
 
@@ -438,67 +533,7 @@ graph_save_json(Graph *self) {
     // so we just loop through all nodes and their input connections
     JsonArray *connections = json_array_new();
     json_object_set_array_member(root, "connections", connections);
-
-    for (int i=0; i<no_nodes; i++) {
-        const gchar *tgt_name = nodes[i];
-        GeglNode *tgt_node = g_hash_table_lookup(self->node_map, tgt_name);
-
-        if (tgt_node) {
-            gchar **pads = gegl_node_list_input_pads(tgt_node);
-            gchar *tgt_pad = pads ? pads[0] : NULL;
-            gint i = 0;
-            while (tgt_pad) {
-                gchar *src_pad = NULL;
-                GeglNode *src_node = gegl_node_get_producer(tgt_node, tgt_pad, &src_pad);
-                if (src_node) {
-                    // has connection
-                    g_assert(src_pad);
-
-                    JsonObject *conn = json_object_new();
-                    json_array_add_object_element(connections, conn);
-
-                    JsonObject *tgt = json_object_new();
-                    json_object_set_string_member(tgt, "process", tgt_name);
-                    json_object_set_string_member(tgt, "port", tgt_pad);
-                    json_object_set_object_member(conn, "tgt", tgt);
-
-                    gpointer src_name = src_node;
-                    g_hash_table_find(self->node_map, gh_value_equals_outkey, &src_name);
-
-                    JsonObject *src = json_object_new();
-                    json_object_set_string_member(src, "process", (gchar *)src_name);
-                    json_object_set_string_member(src, "port", src_pad);
-                    json_object_set_object_member(conn, "src", src);
-
-                    g_free(src_pad);
-                }
-                tgt_pad = pads[++i];
-            }
-        } else {
-            Processor *processor = g_hash_table_lookup(self->processor_map, tgt_name);
-            g_assert(processor);
-            GeglNode *src_node = processor->node;
-            if (src_node) {
-                // has connection
-                JsonObject *conn = json_object_new();
-                json_array_add_object_element(connections, conn);
-
-                JsonObject *tgt = json_object_new();
-                json_object_set_string_member(tgt, "process", tgt_name);
-                json_object_set_string_member(tgt, "port", "input");
-                json_object_set_object_member(conn, "tgt", tgt);
-
-                gpointer src_name = src_node;
-                g_hash_table_find(self->node_map, gh_value_equals_outkey, &src_name);
-
-                JsonObject *src = json_object_new();
-                json_object_set_string_member(src, "process", src_name);
-                json_object_set_string_member(src, "port", "output");
-                json_object_set_object_member(conn, "src", src);
-            }
-        }
-
-    }
+    graph_visit_edges(self, add_edge_json_func, connections);
 
     // IIPs
     for (int i=0; i<no_nodes; i++) {
