@@ -4,9 +4,6 @@
   "repository": "https://github.com/jonnor/imgflo",
   "keywords": ["node", "image processing", "gegl", "flowhub", "graphics"],
   "env": {
-    "BUILDPACK_URL": "https://github.com/mojodna/heroku-buildpack-multi.git#build-env",
-    "HOSTNAME": "(optional)YOURAPP.herokuapp.com",
-    "FLOWHUB_USER_ID": "(optional)MYUSERID-COPY-FROM-FLOWHUB",
-    "IMGFLO_RUNTIME_ID": "(optional)MYRUNTIMEID-FROM-INITIAL-RUN"
+    "BUILDPACK_URL": "https://github.com/mojodna/heroku-buildpack-multi.git#build-env"
   }
 }
