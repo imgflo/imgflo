@@ -42,6 +42,26 @@ send_response(SoupWebsocketConnection *ws,
 }
 
 void
+ui_net_state_changed(Network *network, gboolean running,
+                     gboolean processing, gpointer user_data) {
+    g_return_if_fail(network);
+
+    g_assert(user_data);
+    UiConnection *self = (UiConnection *)user_data;
+
+    // TODO: send timestamp/uptime
+    JsonObject *info = json_object_new();
+    json_object_set_string_member(info, "graph", network->graph->id);
+    json_object_set_boolean_member(info, "started", running);
+    json_object_set_boolean_member(info, "running", processing);
+
+    const gchar * cmd = (running) ? "started" : "stopped";
+    if (self->connection) {
+        send_response(self->connection, "network", cmd, info);
+    }
+}
+
+void
 send_preview_invalidated(Network *network, Processor *processor, GeglRectangle rect, gpointer user_data) {
     UiConnection *ui = (UiConnection *)user_data;
     g_return_if_fail(ui->registry);
@@ -60,6 +80,17 @@ send_preview_invalidated(Network *network, Processor *processor, GeglRectangle r
     if (ui->connection) {
         send_response(ui->connection, "network", "output", payload);
     }
+}
+
+void
+ui_connection_add_network(UiConnection *self, const gchar *name, Network *network) {
+
+    network->on_processor_invalidated_data = (gpointer)self;
+    network->on_processor_invalidated = send_preview_invalidated;
+    g_hash_table_insert(self->network_map, (gpointer)g_strdup(name), (gpointer)network);
+
+    network->on_state_changed = ui_net_state_changed;
+    network->on_state_changed_data = self;
 }
 
 static void
@@ -81,10 +112,9 @@ handle_graph_message(UiConnection *self, const gchar *command, JsonObject *paylo
     if (g_strcmp0(command, "clear") == 0) {
         const gchar *graph_id = json_object_get_string_member(payload, "id");
         Graph *graph = graph_new(graph_id, self->component_lib);
+
         Network *network = network_new(graph);
-        network->on_processor_invalidated_data = (gpointer)self;
-        network->on_processor_invalidated = send_preview_invalidated;
-        g_hash_table_insert(self->network_map, (gpointer)g_strdup(graph_id), (gpointer)network);
+        ui_connection_add_network(self, graph_id, network);
     } else if (g_strcmp0(command, "addnode") == 0) {
         graph_add_node(graph,
             json_object_get_string_member(payload, "id"),
@@ -147,27 +177,11 @@ handle_network_message(UiConnection *self, const gchar *command, JsonObject *pay
     g_return_if_fail(network);
 
     if (g_strcmp0(command, "start") == 0) {
-        // FIXME: response should be done in callback monitoring network state changes
-        // TODO: send timestamp, differentiate running/started
         g_print("\tNetwork START\n");
         network_set_running(network, TRUE);
-
-        JsonObject *info = json_object_new();
-        json_object_set_string_member(info, "graph", graph_id);
-        json_object_set_boolean_member(info, "running", network->running);
-        json_object_set_boolean_member(info, "started", network->running);
-        send_response(ws, "network", "started", info);
     } else if (g_strcmp0(command, "stop") == 0) {
-        // FIXME: response should be done in callback monitoring network state changes
-        // TODO: send timestamp
         g_print("\tNetwork STOP\n");
         network_set_running(network, FALSE);
-
-        JsonObject *info = json_object_new();
-        json_object_set_string_member(info, "graph", graph_id);
-        json_object_set_boolean_member(info, "running", network->running);
-        json_object_set_boolean_member(info, "started", network->running);
-        send_response(ws, "network", "stopped", info);
     } else if (g_strcmp0(command, "getstatus") == 0) {
         JsonObject *info = json_object_new();
         json_object_set_string_member(info, "graph", graph_id);
@@ -537,11 +551,9 @@ ui_connection_set_default_network(UiConnection *self, Network *net) {
     gchar * id = net->graph->id;
     g_assert(id);
 
-    g_hash_table_insert(self->network_map, (gpointer)g_strdup(id), (gpointer)net);
+    ui_connection_add_network(self, id, net);
+
     self->main_network = g_strdup(id);
     g_assert(self->main_network);
-
-    net->on_processor_invalidated_data = (gpointer)self;
-    net->on_processor_invalidated = send_preview_invalidated;
     network_set_running(net, TRUE);
 }
