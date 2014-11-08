@@ -81,12 +81,22 @@ gh_value_equals_outkey(gpointer key, gpointer value, gpointer user_data) {
     return found;
 }
 
-typedef struct {
+struct _Graph;
+
+typedef void (* GraphNodeAdded) // Note: only one of @node and @proc are set
+    (struct _Graph *graph, const gchar *name, GeglNode *node, Processor *proc, gpointer user_data);
+
+
+typedef struct _Graph {
     gchar *id;
     GeglNode *top;
     GHashTable *node_map;
     GHashTable *processor_map;
     Library *component_lib; // unowned
+
+    // signals
+    GraphNodeAdded on_node_added;
+    gpointer on_node_added_data;
 } Graph;
 
 
@@ -101,6 +111,10 @@ graph_new(const gchar *id, Library *lib) {
     self->top = gegl_node_new();
     self->node_map = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
     self->processor_map = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+
+    self->on_node_added = NULL;
+    self->on_node_added_data = NULL;
+
     return self;
 }
 
@@ -181,8 +195,12 @@ graph_add_node(Graph *self, const gchar *name, const gchar *component)
         Processor *proc = processor_new();
         g_hash_table_insert(self->processor_map, (gpointer)g_strdup(name), (gpointer)proc);
         g_print("\tAdding Processor: %s\n", name);
+        if (self->on_node_added) {
+            self->on_node_added(self, name, NULL, proc, self->on_node_added_data);
+        }
         return;
     }
+
 
     gchar *op = library_get_operation_name(self->component_lib, component);
     // FIXME: check that operation is correct
@@ -192,6 +210,9 @@ graph_add_node(Graph *self, const gchar *name, const gchar *component)
 
     g_print("\t%s(%s)\n", name, op);
     g_hash_table_insert(self->node_map, (gpointer)g_strdup(name), (gpointer)n);
+    if (self->on_node_added) {
+        self->on_node_added(self, name, n, NULL, self->on_node_added_data);
+    }
 
     g_free(op);
 }

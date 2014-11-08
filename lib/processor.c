@@ -9,6 +9,8 @@ struct _Processor;
 
 typedef void (* ProcessorInvalidatedCallback)
     (struct _Processor *processor, GeglRectangle rect, gpointer user_data);
+typedef void (* ProcessorStateChanged)
+    (struct _Processor *processor, gboolean running, gboolean processing, gpointer user_data);
 
 typedef struct _Processor {
     gboolean running;
@@ -19,6 +21,8 @@ typedef struct _Processor {
     GeglProcessor *processor;
     ProcessorInvalidatedCallback on_invalidated;
     gpointer on_invalidated_data;
+    ProcessorStateChanged on_state_changed;
+    gpointer on_state_changed_data;
     gint max_size;
 } Processor;
 
@@ -46,6 +50,13 @@ processor_free(Processor *self) {
     g_free(self);
 }
 
+gboolean
+processor_is_processing(Processor *self) {
+    const gboolean processing = (self->monitor_id != 0);
+    //g_assert(processing != g_queue_is_empty(self->processing_queue)); // XXX: shouldnt this hold?
+    return processing;
+}
+
 static GeglRectangle
 sanitized_roi(Processor *self, GeglRectangle in) {
     GeglRectangle out = in;
@@ -58,6 +69,14 @@ sanitized_roi(Processor *self, GeglRectangle in) {
         out.height = self->max_size;
     }
     return out;
+}
+
+void
+proc_emit_state_changed(Processor *self) {
+    gboolean is_processing = processor_is_processing(self);
+    if (self->on_state_changed) {
+        self->on_state_changed(self, self->running, is_processing, self->on_state_changed_data);
+    }
 }
 
 static void
@@ -77,6 +96,7 @@ trigger_processing(Processor *self, GeglRectangle roi)
     if (self->monitor_id == 0) {
         self->monitor_id = g_idle_add_full(G_PRIORITY_LOW,
                            (GSourceFunc)task_monitor, self, NULL);
+        proc_emit_state_changed(self);
     }
 
     // Add the invalidated region to the dirty
@@ -115,6 +135,7 @@ task_monitor(Processor *self)
         if (g_queue_is_empty(self->processing_queue)) {
             // Unregister worker
             self->monitor_id = 0;
+            proc_emit_state_changed(self);
             return FALSE;
         }
         else {
@@ -150,6 +171,7 @@ processor_set_running(Processor *self, gboolean running)
         GeglRectangle bbox = gegl_node_get_bounding_box(self->node);
         trigger_processing(self, bbox);
     }
+    proc_emit_state_changed(self);
 }
 
 void

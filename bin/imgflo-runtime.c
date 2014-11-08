@@ -65,12 +65,12 @@ main (int argc, char **argv)
         if (strlen(defaultgraph) > 0) {
             GError *err = NULL;
             Graph *g = graph_new("default/main", ui->component_lib);
+            Network *n = network_new(g);
             gboolean loaded = graph_load_json_file(g, defaultgraph, &err);
             if (!loaded) {
                 g_printerr("Failed to load graph: %s", err->message);
                 return 1;
             }
-            Network *n = network_new(g);
             ui_connection_set_default_network(ui, n);
         }
 

@@ -3,25 +3,40 @@
 //     imgflo may be freely distributed under the MIT license
 
 struct _Network;
+void net_node_added(Graph *graph, const gchar *name, GeglNode *node, Processor *proc, gpointer user_data);
+
 
 typedef void (* NetworkProcessorInvalidatedCallback)
     (struct _Network *network, struct _Processor *processor, GeglRectangle rect, gpointer user_data);
+
+typedef void (* NetworkStateChanged)
+    (struct _Network *network, gboolean running, gboolean processing, gpointer user_data);
 
 typedef struct _Network {
     Graph *graph; // owned
     gboolean running;
     NetworkProcessorInvalidatedCallback on_processor_invalidated;
     gpointer on_processor_invalidated_data;
+    NetworkStateChanged on_state_changed;
+    gpointer on_state_changed_data;
 } Network;
 
 Network *
 network_new(Graph *graph)
 {
+    g_return_val_if_fail(graph, NULL);
+
     Network *self = g_new(Network, 1);
     self->graph = graph;
     self->running = FALSE;
     self->on_processor_invalidated = NULL;
     self->on_processor_invalidated_data = NULL;
+    self->on_state_changed = NULL;
+    self->on_state_changed_data = NULL;
+
+    self->graph->on_node_added = net_node_added;
+    self->graph->on_node_added_data = self;
+
     return self;
 }
 
@@ -34,12 +49,60 @@ network_free(Network *self)
     g_free(self);
 }
 
+
 void
 emit_invalidated(Processor *processor, GeglRectangle rect, gpointer user_data) {
     Network *network = (Network *)user_data;
     if (network->on_processor_invalidated) {
         network->on_processor_invalidated(network, processor, rect,
                                           network->on_processor_invalidated_data);
+    }
+}
+
+gboolean
+network_is_processing(Network *self) {
+    gboolean is_processing = FALSE;
+    GHashTableIter iter;
+    gpointer key, value;
+    g_hash_table_iter_init(&iter, self->graph->processor_map);
+    while (g_hash_table_iter_next(&iter, &key, &value))
+    {
+        if (processor_is_processing((Processor *)value)) {
+            is_processing = TRUE;
+            break;
+        }
+    }
+    return is_processing;
+}
+
+void
+net_emit_state_changed(Network *self) {
+    const gboolean is_processing = network_is_processing(self);
+    //g_printerr("NET processing=%d running=%d\n", is_processing, self->running);
+    if (self->on_state_changed) {
+        self->on_state_changed(self, self->running, is_processing, self->on_state_changed_data);
+    }
+}
+
+void
+net_proc_state_changed(Processor *processor, gboolean running,
+                       gboolean processing, gpointer user_data) {
+    Network *self = (Network *)user_data;
+    g_assert(self);
+
+    //g_printerr("proc: running=%d processing=%d\n", running, processing);
+    net_emit_state_changed(self);
+}
+
+void
+net_node_added(Graph *graph, const gchar *name,
+               GeglNode *node, Processor *proc, gpointer user_data) {
+    g_assert(graph);
+    g_assert(user_data);
+    Network *self = (Network *)user_data;
+    if (proc) {
+        proc->on_state_changed = net_proc_state_changed;
+        proc->on_state_changed_data = self;
     }
 }
 
@@ -59,6 +122,7 @@ network_set_running(Network *self, gboolean running)
     }
     self->running = running;
     g_hash_table_foreach(self->graph->processor_map, (GHFunc)set_running_state_func, self);
+    net_emit_state_changed(self);
 }
 
 void 

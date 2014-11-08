@@ -291,6 +291,8 @@ describe 'FBP runtime protocol,', () ->
             errors = runtime.popErrors()
             chai.expect(errors).to.have.length 2, errors.toString()
 
+    # FIXME: test start/stop and running/complete behavior
+
     describe 'adding a component using component:source', ->
         @timeout 2000
         code = utils.testData 'dynamiccomponent1.c'
