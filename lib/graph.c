@@ -456,35 +456,43 @@ graph_save_json(Graph *self) {
 
     }
 
+    // IIPs
+    for (int i=0; i<no_nodes; i++) {
+        const gchar *node_name = nodes[i];
+        GeglNode *node = g_hash_table_lookup(self->node_map, node_name);
+        if (!node) {
+            // Processor
+            continue;
+        }
 
+        gchar *operation = NULL;
+        gegl_node_get(node, "operation", &operation, NULL);
+        g_assert(operation);
+        guint n_properties = 0;
+        GParamSpec** properties = gegl_operation_list_properties(operation, &n_properties);
+        for (int i=0; i<n_properties; i++) {
+            GParamSpec *prop = properties[i];
+            const gchar *id = g_param_spec_get_name(prop);
+            GValue value = G_VALUE_INIT;
+            // Q: Could maybe drop the default values?
+            gegl_node_get_property(node, id, &value);
+            JsonNode *value_json = json_from_gvalue(&value);
 
+            JsonObject *conn = json_object_new();
+            json_array_add_object_element(connections, conn);
+
+            JsonObject *tgt = json_object_new();
+            json_object_set_string_member(tgt, "process", node_name);
+            json_object_set_string_member(tgt, "port", id);
+            json_object_set_object_member(conn, "tgt", tgt);
+
+            json_object_set_member(conn, "data", value_json);
+            g_value_unset(&value);
+        }
+
+    }
     g_strfreev(nodes);
 
-
-    /*
-
-    // IIPs
-        JsonObject *conn = json_object_new();
-        json_array_add_object_element(connections, conn);
-
-        JsonObject *tgt = json_object_new();
-        json_object_set_string_member(tgt, "process", );
-        json_object_set_string_member(tgt, "port", );
-        json_object_set_object_member(conn, "tgt", tgt);
-
-        JsonNode *datanode = json_node_new();
-        GValue value = G_VALUE_INIT;
-
-        json_node_set_value(datanode, value);
-        json_object_set_member(conn, "data");
-
-            g_assert(JSON_NODE_HOLDS_VALUE(datanode));
-            json_node_get_value(datanode, &value);
-
-            graph_add_iip(self, tgt_proc, tgt_port, &value);
-            g_value_unset(&value);
-
-    */
     return root;
 }
 
