@@ -94,7 +94,6 @@ json_from_gvalue(const GValue *val, gboolean *supported_out) {
         gegl_color_get_pixel(color, babl_format("R'G'B'A u8"), hex);
         gchar *rgba_string = g_strdup_printf("#%02x%02x%02x%02x",
                                              hex[0], hex[1], hex[2], hex[3]);
-        g_print("GeglColor: %s\n", rgba_string);
         json_node_set_string(ret, rgba_string);
         g_free(rgba_string);
         g_free(hex);
