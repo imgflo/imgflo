@@ -375,6 +375,15 @@ find_op_revision(Library *self, const gchar *base, gchar **name_out) {
     return current_rev;
 }
 
+// Return the component name for a GEGL operation
+gchar *
+library_get_component_name(Library *self, const gchar *op) {
+    g_return_val_if_fail(self, NULL);
+    g_return_val_if_fail(op, NULL);
+    // FIXME: take into account dynamic setsource ops
+    return geglop2component(op);
+}
+
 // Return the GEGL operation name for a given component
 gchar *
 library_get_operation_name(Library *self, const gchar *comp) {

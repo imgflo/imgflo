@@ -21,7 +21,22 @@ typedef struct {
     gchar *main_network;
 } UiConnection;
 
+gchar *
+json_stringify(JsonObject *root, gsize *length_out) {
+    JsonGenerator *generator = json_generator_new();
+    JsonNode *node = json_node_new(JSON_NODE_OBJECT);
+    json_node_take_object(node, root);
+    json_generator_set_root(generator, node);
 
+    gsize len = 0;
+    gchar *data = json_generator_to_data(generator, &len);
+    g_object_unref(generator);
+
+    if (length_out) {
+        *length_out = len;
+    }
+    return data;
+}
 
 static void
 send_response(SoupWebsocketConnection *ws,
@@ -36,18 +51,11 @@ send_response(SoupWebsocketConnection *ws,
     json_object_set_string_member(response, "command", command);
     json_object_set_object_member(response, "payload", payload);
 
-    JsonGenerator *generator = json_generator_new();
-    JsonNode *node = json_node_new(JSON_NODE_OBJECT);
-    json_node_take_object(node, response);
-    json_generator_set_root(generator, node);
-
     gsize len = 0;
-    gchar *data = json_generator_to_data(generator, &len);
+    gchar *data = json_stringify(response, &len);
     GBytes *resp = g_bytes_new_take(data, len);
     g_print ("SEND: %.*s\n", (int)len, data);
     soup_websocket_connection_send(ws, SOUP_WEBSOCKET_DATA_TEXT, resp);
-
-    g_object_unref(generator);
 }
 
 void
@@ -224,13 +232,30 @@ ui_connection_handle_message(UiConnection *self,
         g_free(actual_name);
     } else if (g_strcmp0(protocol, "component") == 0 && g_strcmp0(command, "getsource") == 0) {
         const gchar *name = json_object_get_string_member(payload, "name");
-        gchar *code = library_get_source(self->component_lib, name);
+
 
         JsonObject *source_info = json_object_new();
-        json_object_set_string_member(source_info, "name", name);
-        json_object_set_string_member(source_info, "library", "imgflo");
-        json_object_set_string_member(source_info, "language", "c");
-        json_object_set_string_member(source_info, "code", code);
+        // TODO: generalize for subgraphs-as-components
+        if (g_strcmp0(name, self->main_network) == 0) {
+
+            json_object_set_string_member(source_info, "name", "main"); // FIXME: dont hardcode
+            json_object_set_string_member(source_info, "library", "default"); // FIXME: dont hardcode
+
+            Network *n = g_hash_table_lookup(self->network_map, self->main_network);
+            g_assert(n);
+            JsonObject *g = graph_save_json(n->graph);
+            gsize len = 0;
+            gchar *code = json_stringify(g, &len);
+            g_assert(len);
+            json_object_set_string_member(source_info, "language", "json");
+            json_object_set_string_member(source_info, "code", code);
+        } else {
+            json_object_set_string_member(source_info, "name", name);
+            gchar *code = library_get_source(self->component_lib, name);
+            json_object_set_string_member(source_info, "library", "imgflo");
+            json_object_set_string_member(source_info, "language", "c");
+            json_object_set_string_member(source_info, "code", code);
+        }
 
         send_response(ws, "component", "source", source_info);
 

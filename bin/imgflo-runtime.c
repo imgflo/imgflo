@@ -63,7 +63,7 @@ main (int argc, char **argv)
 
         if (strlen(defaultgraph) > 0) {
             GError *err = NULL;
-            Graph *g = graph_new("default", ui->component_lib);
+            Graph *g = graph_new("default/main", ui->component_lib);
             gboolean loaded = graph_load_json_file(g, defaultgraph, &err);
             if (!loaded) {
                 g_printerr("Failed to load graph: %s", err->message);

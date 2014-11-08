@@ -195,6 +195,46 @@ graph_remove_node(Graph *self, const gchar *name)
     gegl_node_remove_child(self->top, n);
 }
 
+gchar *
+graph_get_node_component(Graph *self, const gchar *name) {
+    g_return_val_if_fail(self, NULL);
+    g_return_val_if_fail(name, NULL);
+
+    Processor *p = g_hash_table_lookup(self->processor_map, name);
+    if (p) {
+        return g_strdup("Processor");
+    }
+
+    GeglNode *n = g_hash_table_lookup(self->node_map, name);
+    g_return_val_if_fail(n, NULL);
+    gchar *operation = NULL;
+    gegl_node_get(n, "operation", &operation, NULL);
+    g_assert(operation);
+    gchar *comp = library_get_component_name(self->component_lib, operation);
+    return comp;
+}
+
+gchar **
+graph_list_nodes(Graph *self, gint *no_nodes_out) {
+    GList *processors = g_hash_table_get_keys(self->processor_map);
+    GList *nodes = g_hash_table_get_keys(self->node_map);
+    const gint total_length = g_list_length(processors)+g_list_length(nodes);
+
+    gchar **names = g_new0(gchar *, total_length+1);
+    for(int i=0; i<g_list_length(processors); i++) {
+        names[i] = (gchar *)g_list_nth_data(processors, i);
+    }
+    for(int i=0; i<g_list_length(nodes); i++) {
+        names[i+g_list_length(processors)] = (gchar *)g_list_nth_data(nodes, i);
+    }
+
+    g_list_free(processors);
+    g_list_free(nodes);
+    if (no_nodes_out) {
+        *no_nodes_out = total_length;
+    }
+    return names;
+}
 
 void
 graph_add_edge(Graph *self,
@@ -307,6 +347,78 @@ graph_load_json(Graph *self, JsonParser *parser) {
             g_value_unset(&value);
         }
     }
+}
+
+JsonObject *
+graph_save_json(Graph *self) {
+
+    JsonObject *root = json_object_new();
+
+    // Properties
+    JsonObject *properties = json_object_new();
+    json_object_set_object_member(root, "properties", properties);
+
+    // Exported ports
+    JsonObject *inports = json_object_new();
+    json_object_set_object_member(root, "inports", inports);
+    JsonObject *outports = json_object_new();
+    json_object_set_object_member(root, "outports", outports);
+
+    // Processes
+    JsonObject *processes = json_object_new();
+    json_object_set_object_member(root, "processes", processes);
+    gint no_nodes = 0;
+    gchar **nodes = graph_list_nodes(self, &no_nodes);
+    for (int i=0; i<no_nodes; i++) {
+        const gchar *name = nodes[i];
+        JsonObject *proc = json_object_new();
+        const gchar *component = graph_get_node_component(self, name);
+        json_object_set_string_member(proc, "component", component);
+        json_object_set_object_member(processes, name, proc);
+    }
+    g_strfreev(nodes);
+
+    // Connections
+    JsonArray *connections = json_array_new();
+    json_object_set_array_member(root, "connections", connections);
+
+    /*
+        JsonObject *conn = json_object_new();
+        json_array_add_object_element(connections, conn);
+
+        JsonObject *tgt = json_object_new();
+        json_object_set_string_member(tgt, "process", );
+        json_object_set_string_member(tgt, "port", );
+        json_object_set_object_member(conn, "tgt", tgt);
+
+        JsonObject *src = json_object_new();
+        json_object_set_string_member(src, "process", );
+        json_object_set_string_member(src, "port", );
+        json_object_set_object_member(conn, "src", src);
+
+    // IIPs
+        JsonObject *conn = json_object_new();
+        json_array_add_object_element(connections, conn);
+
+        JsonObject *tgt = json_object_new();
+        json_object_set_string_member(tgt, "process", );
+        json_object_set_string_member(tgt, "port", );
+        json_object_set_object_member(conn, "tgt", tgt);
+
+        JsonNode *datanode = json_node_new();
+        GValue value = G_VALUE_INIT;
+
+        json_node_set_value(datanode, value);
+        json_object_set_member(conn, "data");
+
+            g_assert(JSON_NODE_HOLDS_VALUE(datanode));
+            json_node_get_value(datanode, &value);
+
+            graph_add_iip(self, tgt_proc, tgt_port, &value);
+            g_value_unset(&value);
+
+    */
+    return root;
 }
 
 gboolean
