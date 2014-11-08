@@ -1,0 +1,22 @@
+{
+  "processes": {
+    "board": {
+      "component": "gegl/checkerboard"
+    },
+    "p": {
+      "component": "Processor"
+    }
+  },
+  "connections": [
+    {
+      "src": {
+        "process": "board",
+        "port": "output"
+      },
+      "tgt": {
+        "process": "p",
+        "port": "input"
+      }
+    }
+  ]
+}
