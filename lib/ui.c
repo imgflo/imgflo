@@ -148,30 +148,39 @@ handle_network_message(UiConnection *self, const gchar *command, JsonObject *pay
 {
     g_return_if_fail(payload);
 
-    Network *network = NULL;
-    {
-        const gchar *graph_id = json_object_get_string_member(payload, "graph");
-        network = (graph_id) ? g_hash_table_lookup(self->network_map, graph_id) : NULL;
-    }
+    const gchar *graph_id = json_object_get_string_member(payload, "graph");
+    Network *network = (graph_id) ? g_hash_table_lookup(self->network_map, graph_id) : NULL;
     g_return_if_fail(network);
 
     if (g_strcmp0(command, "start") == 0) {
         // FIXME: response should be done in callback monitoring network state changes
-        // TODO: send timestamp, graph id
-        JsonObject *info = json_object_new();
-        send_response(ws, "network", "started", info);
-
+        // TODO: send timestamp, differentiate running/started
         g_print("\tNetwork START\n");
         network_set_running(network, TRUE);
 
+        JsonObject *info = json_object_new();
+        json_object_set_string_member(info, "graph", graph_id);
+        json_object_set_boolean_member(info, "running", network->running);
+        json_object_set_boolean_member(info, "started", network->running);
+        send_response(ws, "network", "started", info);
     } else if (g_strcmp0(command, "stop") == 0) {
         // FIXME: response should be done in callback monitoring network state changes
-        // TODO: send timestamp, graph id
-        JsonObject *info = json_object_new();
-        send_response(ws, "network", "stopped", info);
-
+        // TODO: send timestamp
         g_print("\tNetwork STOP\n");
         network_set_running(network, FALSE);
+
+        JsonObject *info = json_object_new();
+        json_object_set_string_member(info, "graph", graph_id);
+        json_object_set_boolean_member(info, "running", network->running);
+        json_object_set_boolean_member(info, "started", network->running);
+        send_response(ws, "network", "stopped", info);
+    } else if (g_strcmp0(command, "getstatus") == 0) {
+        JsonObject *info = json_object_new();
+        json_object_set_string_member(info, "graph", graph_id);
+        json_object_set_boolean_member(info, "running", network->running);
+        json_object_set_boolean_member(info, "started", network->running);
+        send_response(ws, "network", "status", info);
+
     } else if (g_strcmp0(command, "debug") == 0) {
         // Ignored, not implemented
     } else {
