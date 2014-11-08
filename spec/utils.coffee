@@ -58,6 +58,8 @@ class MockUi extends EventEmitter
         else if d.protocol == "network" and d.command == "output"
             @networkoutput = d.payload
             @emit 'network-output', @networkoutput
+        else if d.protocol == "network" and d.command == "data"
+            @emit 'network-data', d.payload
         else
             console.log 'UI received unknown message', d
 
