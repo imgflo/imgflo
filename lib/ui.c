@@ -223,7 +223,7 @@ handle_network_message(UiConnection *self, const gchar *command, JsonObject *pay
     } else if (g_strcmp0(command, "getstatus") == 0) {
         JsonObject *info = json_object_new();
         json_object_set_string_member(info, "graph", graph_id);
-        json_object_set_boolean_member(info, "running", network->running);
+        json_object_set_boolean_member(info, "running", network_is_processing(network));
         json_object_set_boolean_member(info, "started", network->running);
         send_response(ws, "network", "status", info);
 
