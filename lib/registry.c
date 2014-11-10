@@ -158,7 +158,6 @@ registry_register(Registry *self) {
 
     if (!rt->id) {
         // Create new
-        g_print("No runtime id found, generating new\n");
         rt->id = imgflo_uuid_new_string();
     }
 
@@ -174,7 +173,7 @@ registry_register(Registry *self) {
     const guint status = soup_session_send_message(self->session, msg);
     gboolean success = FALSE;
     if (status == 201 || status == 200) {
-        g_print("Registered runtime.\n"
+        g_info("Registered runtime.\n"
                  "IMGFLO_RUNTIME_ID=%s\n", rt->id);
         success = TRUE;
     } else {

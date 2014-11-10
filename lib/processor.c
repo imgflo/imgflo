@@ -110,7 +110,7 @@ trigger_processing(Processor *self, GeglRectangle roi)
 static void
 computed_event(GeglNode *node, GeglRectangle *rect, Processor *self)
 {
-    g_print("%s\n", __PRETTY_FUNCTION__);
+    g_debug("%s\n", __PRETTY_FUNCTION__);
 }
 
 static void

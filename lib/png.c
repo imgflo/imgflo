@@ -82,7 +82,6 @@ png_encoder_encode_rgba(PngEncoder *self, int width, int height, gchar *buffer) 
         g_critical("[write_png_file] Error during writing bytes");
     png_set_rows(png_ptr, info_ptr, row_pointers);
 
-    //FILE *fp = fopen("pngtest2.png", "wb");
     FILE *fp = NULL;
     if (fp) {
         png_init_io(png_ptr, fp);
@@ -108,14 +107,4 @@ png_encoder_encode_rgba(PngEncoder *self, int width, int height, gchar *buffer) 
     if (setjmp(png_jmpbuf(png_ptr)))
         g_critical("[write_png_file] Error during end of write");
     png_write_end(png_ptr, NULL);
-
-    /*
-    fp = fopen("pngtest2dir.png", "wb");
-    size_t written = fwrite(self->buffer, 1, self->size, fp);
-    if (written != self->size) {
-        g_printerr("%s, written=%d, size=%d\n",
-                   strerror(ferror(fp)), (int)written, (int)self->size);
-    }
-    if (fp) fclose(fp);
-    */
 }

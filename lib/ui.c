@@ -37,7 +37,7 @@ send_response(SoupWebsocketConnection *ws,
     gsize len = 0;
     gchar *data = json_stringify(response, &len);
     GBytes *resp = g_bytes_new_take(data, len);
-    g_print ("SEND: %.*s\n", (int)len, data);
+    g_debug ("SEND: %.*s\n", (int)len, data);
     soup_websocket_connection_send(ws, SOUP_WEBSOCKET_DATA_TEXT, resp);
 }
 
@@ -200,7 +200,7 @@ handle_graph_message(UiConnection *self, const gchar *command, JsonObject *paylo
             json_object_get_string_member(tgt, "port")
         );
     } else {
-        g_printerr("Unhandled message on protocol 'graph', command='%s'", command);
+        g_warning("Unhandled message on protocol 'graph', command='%s'", command);
     }
 }
 
@@ -215,10 +215,10 @@ handle_network_message(UiConnection *self, const gchar *command, JsonObject *pay
     g_return_if_fail(network);
 
     if (g_strcmp0(command, "start") == 0) {
-        g_print("\tNetwork START\n");
+        g_info("\tNetwork START\n");
         network_set_running(network, TRUE);
     } else if (g_strcmp0(command, "stop") == 0) {
-        g_print("\tNetwork STOP\n");
+        g_info("\tNetwork STOP\n");
         network_set_running(network, FALSE);
     } else if (g_strcmp0(command, "getstatus") == 0) {
         JsonObject *info = json_object_new();
@@ -230,7 +230,7 @@ handle_network_message(UiConnection *self, const gchar *command, JsonObject *pay
     } else if (g_strcmp0(command, "debug") == 0) {
         // Ignored, not implemented
     } else {
-        g_printerr("Unhandled message on protocol 'network', command='%s'", command);
+        g_warning("Unhandled message on protocol 'network', command='%s'", command);
     }
 }
 
@@ -314,7 +314,7 @@ ui_connection_handle_message(UiConnection *self,
         send_response(ws, "runtime", "runtime", runtime);
 
     } else {
-        g_printerr("Unhandled message: protocol='%s', command='%s'", protocol, command);
+        g_warning("Unhandled message: protocol='%s', command='%s'", protocol, command);
     }
 }
 
@@ -322,7 +322,7 @@ static void
 on_web_socket_open(SoupWebsocketConnection *ws, gpointer user_data)
 {
 	gchar *url = soup_uri_to_string(soup_websocket_connection_get_uri (ws), FALSE);
-	g_print("WebSocket: client opened %s with %s\n", soup_websocket_connection_get_protocol(ws), url);
+	g_info("WebSocket: client opened %s with %s\n", soup_websocket_connection_get_protocol(ws), url);
 
     UiConnection *self = (UiConnection *)user_data;
     g_assert(self);
@@ -340,10 +340,8 @@ on_web_socket_message(SoupWebsocketConnection *ws,
 	const gchar *data;
 	gsize len;
 
-    //g_print ("%s: %p", __PRETTY_FUNCTION__, user_data);
-
 	data = g_bytes_get_data (message, &len);
-	g_print ("RECV: %.*s\n", (int)len, data);
+	g_debug("RECV: %.*s\n", (int)len, data);
 
     JsonParser *parser = json_parser_new();
     gboolean success = json_parser_load_from_data(parser, data, len, NULL);
@@ -373,7 +371,7 @@ on_web_socket_error(SoupWebsocketConnection *ws, GError *error, gpointer user_da
 {
     UiConnection *ui = (UiConnection *)user_data;
     ui->connection = NULL;
-    g_printerr("WebSocket: error: %s\n", error->message);
+    g_critical("WebSocket: error: %s\n", error->message);
 }
 
 static void
@@ -384,10 +382,10 @@ on_web_socket_close(SoupWebsocketConnection *ws, gpointer user_data)
 
 	gushort code = soup_websocket_connection_get_close_code(ws);
 	if (code != 0) {
-		g_printerr("WebSocket: close: %d %s\n", code,
+		g_warning("WebSocket: close: %d %s\n", code,
 			    soup_websocket_connection_get_close_data(ws));
 	} else {
-		g_printerr("WebSocket: close\n");
+		g_info("WebSocket: close\n");
     }
 }
 
@@ -518,7 +516,7 @@ server_callback (SoupServer *server, SoupMessage *msg,
     SoupMessageHeadersIter iter;
     const char *name, *value;
 
-    g_print("%s %s HTTP/1.%d\n", msg->method, path,
+    g_info("%s %s HTTP/1.%d\n", msg->method, path,
          soup_message_get_http_version(msg));
 
     if (g_strcmp0(path, "/process") == 0 && msg->method == SOUP_METHOD_GET) {
@@ -526,14 +524,12 @@ server_callback (SoupServer *server, SoupMessage *msg,
     } else if (g_strcmp0(path, "/") == 0 && msg->method == SOUP_METHOD_GET) {
         serve_frontpage(server, msg, path, query, context, data);
     } else {
+        g_warning("Unknown HTTP request: %s, %s", msg->method, path);
         soup_message_headers_iter_init(&iter, msg->request_headers);
         while (soup_message_headers_iter_next(&iter, &name, &value))
-            g_print("%s: %s\n", name, value);
+            g_debug("%s: %s\n", name, value);
         if (msg->request_body->length)
-            g_print("%s\n", msg->request_body->data);
-
-        g_print("  -> %d %s\n\n", msg->status_code, msg->reason_phrase);
-
+            g_debug("%s\n", msg->request_body->data);
         soup_message_set_status(msg, SOUP_STATUS_NOT_IMPLEMENTED);
     }
 }

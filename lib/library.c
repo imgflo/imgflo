@@ -318,7 +318,7 @@ try_print_error(GError *err) {
     if (!err) {
         return;
     }
-    g_printerr("GERROR: %s\n", err->message);
+    g_warning("GERROR: %s\n", err->message);
 }
 
 static GFile *
@@ -356,7 +356,7 @@ compile_plugin(GFile *file, const gchar *build_dir, gint rev) {
                               &stdout, &stderr, &exitcode, &err);
     try_print_error(err);
     if (!success || stderr) {
-        g_printerr("%s", stderr);
+        g_info("%s", stderr);
     }
     g_free(stdout);
     g_free(stderr);
@@ -381,7 +381,7 @@ gint
 find_op_revision(Library *self, const gchar *base, gchar **name_out) {
     g_return_val_if_fail(base, -1);
 
-    // g_printerr("%s: %s\n", __PRETTY_FUNCTION__, base);
+    // g_debug("%s: %s\n", __PRETTY_FUNCTION__, base);
 
     gint current_rev = -1;
     gpointer val = NULL;
@@ -446,7 +446,7 @@ library_set_source(Library *self, const gchar *op, const gchar *source) {
     compile_plugin(file, self->build_path, next_rev);
     reload_plugins(self->build_path);
 
-    // g_printerr("%s: %s, %s, %d\n", __PRETTY_FUNCTION__, op, opname, next_rev);
+    // g_debug("%s: %s, %s, %d\n", __PRETTY_FUNCTION__, op, opname, next_rev);
     g_hash_table_replace(self->setsource_components, (gpointer)g_strdup(op), GINT_TO_POINTER(next_rev));
 
     g_clear_error(&err);
@@ -456,7 +456,7 @@ library_set_source(Library *self, const gchar *op, const gchar *source) {
 
 void
 print_kv(gpointer key, gpointer value, gpointer user_data) {
-    g_printerr("%s: %d\n", (const gchar *)key, GPOINTER_TO_INT(value));
+    g_debug("%s: %d\n", (const gchar *)key, GPOINTER_TO_INT(value));
 }
 
 void
@@ -477,7 +477,7 @@ library_get_source(Library *self, const gchar *op) {
         return source ? g_strdup(source) : NULL;
     }
 
-    // g_printerr("%s: %s, %s\n", __PRETTY_FUNCTION__, op, opname);
+    // g_debug("%s: %s, %s\n", __PRETTY_FUNCTION__, op, opname);
     // print_setsource_comps(self->setsource_components);
 
     GFile *file = get_source_file(self->source_path, opname);

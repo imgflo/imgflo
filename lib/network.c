@@ -92,7 +92,6 @@ net_emit_edge_changed_func(Graph *graph, const GraphEdge *edge, gpointer user_da
 void
 net_emit_state_changed(Network *self) {
     const gboolean is_processing = network_is_processing(self);
-    //g_printerr("NET processing=%d running=%d\n", is_processing, self->running);
     if (self->on_state_changed) {
         self->on_state_changed(self, self->running, is_processing, self->on_state_changed_data);
     }
@@ -108,8 +107,6 @@ net_proc_state_changed(Processor *processor, gboolean running,
                        gboolean processing, gpointer user_data) {
     Network *self = (Network *)user_data;
     g_assert(self);
-
-    //g_printerr("proc: running=%d processing=%d\n", running, processing);
     net_emit_state_changed(self);
 }
 
