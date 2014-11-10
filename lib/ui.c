@@ -534,6 +534,28 @@ server_callback (SoupServer *server, SoupMessage *msg,
     }
 }
 
+void
+ui_log_handler(const gchar *log_domain, GLogLevelFlags log_level,
+                const gchar *message, gpointer user_data) {
+    UiConnection *ui = (UiConnection *)user_data;
+    g_assert(ui);
+
+    if (ui->connection) {
+        JsonObject *msg = json_object_new();
+        const gchar *cmd = (TRUE) ? "output" : "error"; // FIXME: check level
+        json_object_set_string_member(msg, "message", message);
+        send_response(ui->connection, "network", cmd, msg);
+    }
+    g_print("%s:\n", message); // FIXME: differentiate between levels
+}
+
+void
+setup_glib_log_handler(UiConnection *ui) {
+
+    g_log_set_handler (NULL, G_LOG_LEVEL_WARNING | G_LOG_FLAG_FATAL
+                       | G_LOG_FLAG_RECURSION, ui_log_handler, ui);
+}
+
 gboolean
 ui_connection_try_register(UiConnection *self) {
     if (self->registry->info->user_id) {
@@ -558,7 +580,9 @@ ui_connection_new(const gchar *hostname, int internal_port, int external_port) {
     self->registry = registry_new(runtime_info_new_from_env(hostname, external_port));
     self->component_lib = library_new();
 
-	self->server = soup_server_new(SOUP_SERVER_SERVER_HEADER, "imgflo-runtime", NULL);
+    setup_glib_log_handler(self);
+
+    self->server = soup_server_new(SOUP_SERVER_SERVER_HEADER, "imgflo-runtime", NULL);
     if (!self->server) {
         g_free(self);
         return NULL;
