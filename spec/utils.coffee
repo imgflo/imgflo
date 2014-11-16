@@ -62,6 +62,8 @@ class MockUi extends EventEmitter
             @emit 'network-data', d.payload
         else if d.protocol == "runtime" and d.command == "ports"
             @emit 'runtime-ports-changed', d.payload
+        else if d.protocol == "runtime" and d.command == "packet"
+            @emit 'runtime-packet', d.payload
         else
             console.log 'UI received unknown message', d
 

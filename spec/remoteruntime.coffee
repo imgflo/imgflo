@@ -57,7 +57,20 @@ describe 'FBP protocol, remote runtime,', () ->
             chai.expect(runtime.popErrors()).to.eql []
 
     describe 'sending packet in', ->
-        it.skip 'gives packet out', ->
+        graphName = 'default/main'
+        it 'gives packet out', (done) ->
+            ui.on 'runtime-packet', (data) ->
+                chai.expect(data.event).to.equal 'data'
+                chai.expect(data.graph).to.equal graphName
+                chai.expect(data.port).to.equal 'output'
+                chai.expect(data.payload).to.contain 'http://localhost'
+                chai.expect(data.payload).to.contain '/process'
+                done()
+            ui.send 'runtime', 'packet',
+                event: 'data'
+                graph: graphName
+                port: 'x'
+                payload: 32
 
         itSkipDebug 'should not have produced any errors', ->
             chai.expect(runtime.popErrors()).to.eql []
