@@ -169,3 +169,20 @@ network_processor(Network *self, const gchar *node_name) {
 
     return g_hash_table_lookup(self->graph->processor_map, node_name);
 }
+
+gboolean
+network_send_packet(Network *self, const gchar *port, GValue *data) {
+    g_return_val_if_fail(self, FALSE);
+    g_return_val_if_fail(self, FALSE);
+    g_return_val_if_fail(data, FALSE);
+
+    // NOTE: duplication with graph_add_iip
+    GraphNodePort *internal = g_hash_table_lookup(self->graph->inports, port);
+    g_return_val_if_fail(internal, FALSE);
+    GeglNode *target = g_hash_table_lookup(self->graph->node_map, internal->node);
+    g_return_val_if_fail(target, FALSE);
+    GParamSpec *paramspec = gegl_node_find_property(target, internal->port);
+    g_return_val_if_fail(paramspec, FALSE);
+
+    return set_property(target, internal->port, paramspec, data);
+}

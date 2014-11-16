@@ -60,6 +60,8 @@ class MockUi extends EventEmitter
             @emit 'network-output', @networkoutput
         else if d.protocol == "network" and d.command == "data"
             @emit 'network-data', d.payload
+        else if d.protocol == "runtime" and d.command == "ports"
+            @emit 'runtime-ports-changed', d.payload
         else
             console.log 'UI received unknown message', d
 
@@ -80,15 +82,17 @@ class MockUi extends EventEmitter
         @connection.sendUTF JSON.stringify msg
 
 class RuntimeProcess
-    constructor: (debug) ->
+    constructor: (debug, graph) ->
         @process = null
         @started = false
         @debug = debug
         @errors = []
+        @graph = graph
 
     start: (success) ->
         exec = './install/env.sh'
         args = ['./install/bin/imgflo-runtime', '--port', '3888']
+        args = args.concat ['--graph', @graph] if @graph
         if @debug
             console.log 'Debug mode: setup runtime yourself!', exec, args
             return success 0
