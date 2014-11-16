@@ -374,10 +374,15 @@ ui_connection_handle_message(UiConnection *self,
         }
 
     } else if (g_strcmp0(protocol, "runtime") == 0 && g_strcmp0(command, "packet") == 0) {
-        const gchar *graph_id = json_object_get_string_member(payload, "graph");
+        gchar *graph_id = g_strdup(json_object_get_string_member(payload, "graph"));
         const gchar *port = json_object_get_string_member(payload, "port");
         const gchar *event = json_object_get_string_member(payload, "event");
+        if (!graph_id) {
+            // NoFlo RemoteSubGraph currently does not send graph info
+            graph_id = g_strdup(self->main_network);
+        }
         Network *network = (graph_id) ? g_hash_table_lookup(self->network_map, graph_id) : NULL;
+        g_free(graph_id);
         g_return_if_fail(network);
 
         if (g_strcmp0(event, "data") == 0) {
