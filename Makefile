@@ -8,6 +8,7 @@ PORT=3569
 HOST=localhost
 EXTPORT=$(PORT)
 #GRAPH=graphs/checker.json
+#TESTS=
 
 ifneq ("$(wildcard /app)","")
 # Heroku build. TODO: find better way to detect
@@ -29,6 +30,9 @@ ifdef GRAPH
 RUN_ARGUMENTS+=--graph $(GRAPH)
 endif
 
+ifdef TESTS
+TEST_ARGUMENTS=--grep $(TESTS)
+endif
 
 all: install
 
@@ -89,7 +93,7 @@ glib:
 	cd dependencies && make PREFIX=$(PREFIX) glib
 
 check: install
-	$(PREFIX)/env.sh npm test
+	$(PREFIX)/env.sh ./node_modules/.bin/mocha --reporter spec --compilers .coffee:coffee-script/register ./spec/*.coffee $(TEST_ARGUMENTS)
 
 clean:
 	git clean -dfx --exclude node_modules --exclude install
