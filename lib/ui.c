@@ -21,14 +21,10 @@ typedef struct {
     gchar *main_network;
 } UiConnection;
 
-static void
-send_response(SoupWebsocketConnection *ws,
-            const gchar *protocol, const gchar *command, JsonObject *payload)
+GBytes *
+form_response(const gchar *protocol, const gchar *command, JsonObject *payload)
 {
-    g_return_if_fail(ws);
-
     JsonObject *response = json_object_new();
-    g_assert(response);
 
     json_object_set_string_member(response, "protocol", protocol);
     json_object_set_string_member(response, "command", command);
@@ -37,8 +33,32 @@ send_response(SoupWebsocketConnection *ws,
     gsize len = 0;
     gchar *data = json_stringify(response, &len);
     GBytes *resp = g_bytes_new_take(data, len);
+    return resp;
+}
+
+static void
+send_response(SoupWebsocketConnection *ws,
+            const gchar *protocol, const gchar *command, JsonObject *payload)
+{
+    g_return_if_fail(ws);
+
+    GBytes *resp = form_response(protocol, command, payload);
+    gsize len = 0;
+    const gchar *data = g_bytes_get_data(resp, &len);
+
     g_debug ("SEND: %.*s\n", (int)len, data);
     soup_websocket_connection_send(ws, SOUP_WEBSOCKET_DATA_TEXT, resp);
+}
+
+// Must not call g_log family functions to avoid recursion
+static void
+send_response_nodebug(SoupWebsocketConnection *ws,
+            const gchar *protocol, const gchar *command, JsonObject *payload)
+{
+    if (ws) {
+        GBytes *resp = form_response(protocol, command, payload);
+        soup_websocket_connection_send(ws, SOUP_WEBSOCKET_DATA_TEXT, resp);
+    }
 }
 
 void
@@ -624,7 +644,7 @@ ui_log_handler(const gchar *log_domain, GLogLevelFlags log_level,
         JsonObject *msg = json_object_new();
         const gchar *cmd = (TRUE) ? "output" : "error"; // FIXME: check level
         json_object_set_string_member(msg, "message", message);
-        send_response(ui->connection, "network", cmd, msg);
+        send_response_nodebug(ui->connection, "network", cmd, msg);
     }
     g_print("%s:\n", message); // FIXME: differentiate between levels
 }
