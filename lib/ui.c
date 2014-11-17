@@ -78,12 +78,23 @@ send_preview_invalidated(Network *network, Processor *processor, GeglRectangle r
 
     const gchar *node = graph_find_processor_name(network->graph, processor);
     gchar *url = ui_get_process_url(ui, network, node);
+
+    // For interactive preview
     JsonObject *payload = json_object_new();
     json_object_set_string_member(payload, "type", "previewurl");
     json_object_set_string_member(payload, "url", url);
+
+    // For remote subgraph support
+    JsonObject *packet = json_object_new();
+    json_object_set_string_member(packet, "graph", network->graph->id);
+    json_object_set_string_member(packet, "port", "output"); // FIXME: unhardcode, look up on Network/Graph
+    json_object_set_string_member(packet, "event", "data"); // TODO: send connect+disconnect also?
+    json_object_set_string_member(packet, "payload", url);
+
     g_free(url);
     if (ui->connection) {
         send_response(ui->connection, "network", "output", payload);
+        send_response(ui->connection, "runtime", "packet", packet);
     }
 }
 
@@ -115,6 +126,50 @@ send_edge_data_changed(Network *network, const GraphEdge *edge, gpointer user_da
     if (ui->connection) {
         send_response(ui->connection, "network", "data", payload);
     }
+}
+
+void
+send_ports(Network *network, SoupWebsocketConnection *ws) {
+    g_return_if_fail(network);
+    g_return_if_fail(network->graph);
+    GHashTableIter iter;
+    gpointer key = NULL;
+    gpointer value = NULL;
+
+    JsonObject *payload = json_object_new();
+    json_object_set_string_member(payload, "graph", network->graph->id);
+
+    // Inports
+    JsonArray *inports = json_array_new();
+    json_object_set_array_member(payload, "inPorts", inports);
+    g_hash_table_iter_init(&iter, network->graph->inports);
+    while (g_hash_table_iter_next(&iter, &key, &value)) {
+        const gchar *exported_port = (const gchar *)(key);
+        JsonObject *port = json_object_new();
+        json_object_set_string_member(port, "id", exported_port);
+        json_object_set_string_member(port, "type", "any");
+        json_object_set_string_member(port, "description", "");
+        json_object_set_boolean_member(port, "addressable", FALSE);
+        json_object_set_boolean_member(port, "required", FALSE);
+        json_array_add_object_element(inports, port);
+    }
+
+    // Outports
+    JsonArray *outports = json_array_new();
+    json_object_set_array_member(payload, "outPorts", outports);
+    g_hash_table_iter_init(&iter, network->graph->outports);
+    while (g_hash_table_iter_next(&iter, &key, &value)) {
+        const gchar *exported_port = (const gchar *)(key);
+        JsonObject *port = json_object_new();
+        json_object_set_string_member(port, "id", exported_port);
+        json_object_set_string_member(port, "type", "any");
+        json_object_set_string_member(port, "description", "");
+        json_object_set_boolean_member(port, "addressable", FALSE);
+        json_object_set_boolean_member(port, "required", FALSE);
+        json_array_add_object_element(outports, port);
+    }
+
+    send_response(ws, "runtime", "ports", payload);
 }
 
 void
@@ -306,6 +361,7 @@ ui_connection_handle_message(UiConnection *self,
         JsonArray *capabilities = json_array_new();
         json_array_add_string_element(capabilities, "protocol:component");
         json_array_add_string_element(capabilities, "protocol:graph");
+        json_array_add_string_element(capabilities, "protocol:runtime");
         json_array_add_string_element(capabilities, "protocol:network");
         json_array_add_string_element(capabilities, "component:getsource");
         json_array_add_string_element(capabilities, "component:setsource");
@@ -313,6 +369,30 @@ ui_connection_handle_message(UiConnection *self,
 
         send_response(ws, "runtime", "runtime", runtime);
 
+        if (self->main_network) {
+            send_ports(g_hash_table_lookup(self->network_map, self->main_network), ws);
+        }
+
+    } else if (g_strcmp0(protocol, "runtime") == 0 && g_strcmp0(command, "packet") == 0) {
+        gchar *graph_id = g_strdup(json_object_get_string_member(payload, "graph"));
+        const gchar *port = json_object_get_string_member(payload, "port");
+        const gchar *event = json_object_get_string_member(payload, "event");
+        if (!graph_id) {
+            // NoFlo RemoteSubGraph currently does not send graph info
+            graph_id = g_strdup(self->main_network);
+        }
+        Network *network = (graph_id) ? g_hash_table_lookup(self->network_map, graph_id) : NULL;
+        g_free(graph_id);
+        g_return_if_fail(network);
+
+        if (g_strcmp0(event, "data") == 0) {
+            GValue data = G_VALUE_INIT;
+            json_node_get_value(json_object_get_member(payload, "payload"), &data);
+            network_send_packet(network, port, &data);
+        } else {
+            // TODO: support connect/disconnect?
+            g_warning("Unknown runtime:packet event: %s", event);
+        }
     } else {
         g_warning("Unhandled message: protocol='%s', command='%s'", protocol, command);
     }

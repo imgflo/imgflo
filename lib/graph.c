@@ -90,12 +90,18 @@ typedef void (* GraphEdgeVisitFunc)
 typedef void (* GraphNodeAdded) // Note: only one of @node and @proc are set
     (struct _Graph *graph, const gchar *name, GeglNode *node, Processor *proc, gpointer user_data);
 
+typedef enum _GraphPortDirection {
+    GraphOutPort = 0,
+    GraphInPort = 1
+} GraphPortDirection;
 
 typedef struct _Graph {
     gchar *id;
     GeglNode *top;
     GHashTable *node_map;
     GHashTable *processor_map;
+    GHashTable *inports;
+    GHashTable *outports;
     Library *component_lib; // unowned
 
     // signals
@@ -110,6 +116,29 @@ typedef struct _GraphEdge {
     const gchar *tgt_port;
 } GraphEdge;
 
+typedef struct _GraphNodePort {
+    gchar *node;
+    gchar *port;
+} GraphNodePort;
+
+GraphNodePort *
+graph_node_port_new(const gchar *node, const gchar *port)
+{
+    GraphNodePort *self = g_new(GraphNodePort, 1);
+    self->node = g_strdup(node);
+    self->port = g_strdup(port);
+    return self;
+}
+void
+graph_node_port_free(GraphNodePort *self)
+{
+    if (!self) {
+        return;
+    }
+    g_free(self->node);
+    g_free(self->port);
+}
+
 Graph *
 graph_new(const gchar *id, Library *lib) {
     g_return_val_if_fail(id, NULL);
@@ -121,6 +150,9 @@ graph_new(const gchar *id, Library *lib) {
     self->top = gegl_node_new();
     self->node_map = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
     self->processor_map = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+
+    self->inports = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)graph_node_port_free);
+    self->outports = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)graph_node_port_free);
 
     self->on_node_added = NULL;
     self->on_node_added_data = NULL;
@@ -140,7 +172,29 @@ graph_free(Graph *self) {
     g_hash_table_destroy(self->node_map);
     g_hash_table_destroy(self->processor_map);
 
+    g_hash_table_destroy(self->inports);
+    g_hash_table_destroy(self->outports);
+
     g_free(self);
+}
+
+void
+graph_add_port(Graph *self, GraphPortDirection dir, const gchar *exported,
+                 const gchar *node, const gchar *port)
+{
+    g_return_if_fail(self);
+    g_return_if_fail(dir==GraphInPort || dir==GraphOutPort);
+    GHashTable *ports = (dir == GraphInPort) ? self->inports : self->outports;
+    g_hash_table_replace(ports, g_strdup(exported), graph_node_port_new(node, port));
+}
+
+
+void
+graph_remove_port(Graph *self, GraphPortDirection dir, const gchar *exported)
+{
+    g_return_if_fail(self);
+    GHashTable *ports = (dir == GraphInPort) ? self->inports : self->outports;
+    g_hash_table_remove(ports, exported);
 }
 
 void
@@ -407,6 +461,26 @@ graph_load_json(Graph *self, JsonParser *parser) {
             graph_add_iip(self, tgt_proc, tgt_port, &value);
             g_value_unset(&value);
         }
+    }
+
+    // Exported ports
+    JsonObject *inports = json_object_get_object_member(root, "inports");
+    GList *inport_names = json_object_get_members(inports);
+    for (int i=0; i<g_list_length(inport_names); i++) {
+        const gchar *name = g_list_nth_data(inport_names, i);
+        JsonObject *conn = json_object_get_object_member(inports, name);
+        const gchar *proc = json_object_get_string_member(conn, "process");
+        const gchar *port = json_object_get_string_member(conn, "port");
+        graph_add_port(self, GraphInPort, name, proc, port);
+    }
+    JsonObject *outports = json_object_get_object_member(root, "outports");
+    GList *outport_names = json_object_get_members(outports);
+    for (int i=0; i<g_list_length(outport_names); i++) {
+        const gchar *name = g_list_nth_data(outport_names, i);
+        JsonObject *conn = json_object_get_object_member(outports, name);
+        const gchar *proc = json_object_get_string_member(conn, "process");
+        const gchar *port = json_object_get_string_member(conn, "port");
+        graph_add_port(self, GraphOutPort, name, proc, port);
     }
 }
 

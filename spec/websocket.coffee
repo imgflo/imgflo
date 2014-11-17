@@ -62,6 +62,8 @@ describe 'FBP runtime protocol,', () ->
                 chai.expect(info.capabilities).to.include "component:getsource"
             it 'should include "component:setsource"', ->
                 chai.expect(info.capabilities).to.include "component:setsource"
+            it 'should include "protocol:runtime"', ->
+                chai.expect(info.capabilities).to.include "protocol:runtime"
 
     describe 'sending component list', ->
         it 'should return more than 100 components', (done) ->
