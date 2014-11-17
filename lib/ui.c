@@ -640,20 +640,24 @@ ui_log_handler(const gchar *log_domain, GLogLevelFlags log_level,
     UiConnection *ui = (UiConnection *)user_data;
     g_assert(ui);
 
+    // note, this does not catch errors like
+    // g_return_if_fail, as that goes right to g_critical
+    // same with unexpected failures inside GEGL and libsoup
     if (ui->connection) {
+        const gboolean is_error = (log_level&G_LOG_LEVEL_CRITICAL) || (log_level&G_LOG_LEVEL_WARNING);
+        const gboolean is_debug = (log_level&G_LOG_LEVEL_DEBUG) == G_LOG_LEVEL_DEBUG;
+        const gchar *cmd = (is_error) ? "error" : "output";
         JsonObject *msg = json_object_new();
-        const gchar *cmd = (TRUE) ? "output" : "error"; // FIXME: check level
         json_object_set_string_member(msg, "message", message);
-        send_response_nodebug(ui->connection, "network", cmd, msg);
+        if (!is_debug) { // TODO: make configureable?
+            send_response_nodebug(ui->connection, "network", cmd, msg);
+        }
     }
-    g_print("%s:\n", message); // FIXME: differentiate between levels
 }
 
 void
-setup_glib_log_handler(UiConnection *ui) {
-
-//    g_log_set_handler ("imgflo", G_LOG_LEVEL_WARNING | G_LOG_FLAG_FATAL
-//                       | G_LOG_FLAG_RECURSION, ui_log_handler, ui);
+setup_log_handlers(UiConnection *ui) {
+    imgflo_log_set_handler("imgflo", G_LOG_FLAG_RECURSION, ui_log_handler, ui);
 }
 
 gboolean
@@ -680,7 +684,7 @@ ui_connection_new(const gchar *hostname, int internal_port, int external_port) {
     self->registry = registry_new(runtime_info_new_from_env(hostname, external_port));
     self->component_lib = library_new();
 
-    setup_glib_log_handler(self);
+    setup_log_handlers(self);
 
     self->server = soup_server_new(SOUP_SERVER_SERVER_HEADER, "imgflo-runtime", NULL);
     if (!self->server) {

@@ -21,6 +21,7 @@ class MockUi extends EventEmitter
         @runtimeinfo = {}
         @networkrunning = false
         @networkoutput = {}
+        @runtimeerrors = []
 
         @client.on 'connect', (connection) =>
             @connection = connection
@@ -58,6 +59,9 @@ class MockUi extends EventEmitter
         else if d.protocol == "network" and d.command == "output"
             @networkoutput = d.payload
             @emit 'network-output', @networkoutput
+        else if d.protocol == "network" and d.command == "error"
+            @runtimeerrors.push d.payload
+            @emit 'network-output', d.payload
         else if d.protocol == "network" and d.command == "data"
             @emit 'network-data', d.payload
         else if d.protocol == "runtime" and d.command == "ports"

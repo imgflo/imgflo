@@ -45,7 +45,7 @@ static GLogFunc global_imgflo_log_handler =  NULL;
 static gpointer global_imgflo_log_handler_data = NULL;
 
 guint
-g_log_set_handler (const gchar *log_domain,
+imgflo_log_set_handler (const gchar *log_domain,
                    GLogLevelFlags log_levels,
                    GLogFunc log_func,
                    gpointer user_data)
