@@ -72,14 +72,14 @@ png_encoder_encode_rgba(PngEncoder *self, int width, int height, gchar *buffer) 
 
     png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr)
-        g_critical("[write_png_file] png_create_write_struct failed");
+        imgflo_critical("[write_png_file] png_create_write_struct failed");
 
     png_infop info_ptr = png_create_info_struct(png_ptr);
     if (!info_ptr)
-        g_critical("[write_png_file] png_create_info_struct failed");
+        imgflo_critical("[write_png_file] png_create_info_struct failed");
 
     if (setjmp(png_jmpbuf(png_ptr)))
-        g_critical("[write_png_file] Error during writing bytes");
+        imgflo_critical("[write_png_file] Error during writing bytes");
     png_set_rows(png_ptr, info_ptr, row_pointers);
 
     FILE *fp = NULL;
@@ -89,22 +89,22 @@ png_encoder_encode_rgba(PngEncoder *self, int width, int height, gchar *buffer) 
         png_set_write_fn(png_ptr, self, write_data, flush_data);
     }
     if (setjmp(png_jmpbuf(png_ptr)))
-        g_critical("[write_png_file] Error during init_io");
+        imgflo_critical("[write_png_file] Error during init_io");
 
     /* write header */
     if (setjmp(png_jmpbuf(png_ptr)))
-        g_critical("[write_png_file] Error during writing header");
+        imgflo_critical("[write_png_file] Error during writing header");
     png_set_IHDR(png_ptr, info_ptr, width, height,
                  bit_depth, color_type, PNG_INTERLACE_NONE,
                  PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
     png_write_info(png_ptr, info_ptr);
 
     if (setjmp(png_jmpbuf(png_ptr)))
-        g_critical("[write_png_file] Error during writing bytes");
+        imgflo_critical("[write_png_file] Error during writing bytes");
     png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
 
     /* end write */
     if (setjmp(png_jmpbuf(png_ptr)))
-        g_critical("[write_png_file] Error during end of write");
+        imgflo_critical("[write_png_file] Error during end of write");
     png_write_end(png_ptr, NULL);
 }

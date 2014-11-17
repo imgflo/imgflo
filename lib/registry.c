@@ -173,11 +173,11 @@ registry_register(Registry *self) {
     const guint status = soup_session_send_message(self->session, msg);
     gboolean success = FALSE;
     if (status == 201 || status == 200) {
-        g_info("Registered runtime.\n"
+        imgflo_info("Registered runtime.\n"
                  "IMGFLO_RUNTIME_ID=%s\n", rt->id);
         success = TRUE;
     } else {
-        g_warning("Failed to register Flowhub runtime: status=%d, %s\n", status, msg->response_body->data);
+        imgflo_warning("Failed to register Flowhub runtime: status=%d, %s\n", status, msg->response_body->data);
     }
     g_object_unref(msg);
     return success;

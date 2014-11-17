@@ -61,11 +61,11 @@ static GeglRectangle
 sanitized_roi(Processor *self, GeglRectangle in) {
     GeglRectangle out = in;
     if (out.width > self->max_size) {
-        g_warning("Processor: requested width exceeded max: %d", out.width);
+        imgflo_warning("Processor: requested width exceeded max: %d", out.width);
         out.width = self->max_size;
     }
     if (out.height > self->max_size) {
-        g_warning("Processor: requested height exceeded max: %d", out.height);
+        imgflo_warning("Processor: requested height exceeded max: %d", out.height);
         out.height = self->max_size;
     }
     return out;
@@ -110,7 +110,7 @@ trigger_processing(Processor *self, GeglRectangle roi)
 static void
 computed_event(GeglNode *node, GeglRectangle *rect, Processor *self)
 {
-    g_debug("%s\n", __PRETTY_FUNCTION__);
+    imgflo_debug("%s\n", __PRETTY_FUNCTION__);
 }
 
 static void
