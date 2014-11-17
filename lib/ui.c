@@ -652,8 +652,8 @@ ui_log_handler(const gchar *log_domain, GLogLevelFlags log_level,
 void
 setup_glib_log_handler(UiConnection *ui) {
 
-    g_log_set_handler ("imgflo", G_LOG_LEVEL_WARNING | G_LOG_FLAG_FATAL
-                       | G_LOG_FLAG_RECURSION, ui_log_handler, ui);
+//    g_log_set_handler ("imgflo", G_LOG_LEVEL_WARNING | G_LOG_FLAG_FATAL
+//                       | G_LOG_FLAG_RECURSION, ui_log_handler, ui);
 }
 
 gboolean
