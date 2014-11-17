@@ -90,6 +90,7 @@ class RuntimeProcess
         @debug = debug
         @errors = []
         @graph = graph
+        @verbose = process.env.IMGFLO_TESTS_VERBOSE?
 
     start: (success) ->
         exec = './install/env.sh'
@@ -110,6 +111,7 @@ class RuntimeProcess
 
         @process.stderr.on 'data', (d) =>
             output = d.toString()
+            console.log output if @verbose
             lines = output.split '\n'
             for line in lines
                 err = line.trim()
@@ -117,8 +119,7 @@ class RuntimeProcess
 
         stdout = ""
         @process.stdout.on 'data', (d) ->
-            if @debug
-                console.log d
+            console.log d if @verbose
             stdout += d.toString()
             if stdout.indexOf 'running on port' != -1
                 if not @started
