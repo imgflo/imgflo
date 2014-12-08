@@ -18,7 +18,7 @@ testDataDir = path.join projectDir, 'spec/data'
 tempDir = path.join projectDir, 'spec/out'
 
 describe 'FBP protocol, remote runtime,', () ->
-    runtime = new utils.RuntimeProcess debug, 'graphs/checker.json'
+    runtime = new utils.RuntimeProcess debug, path.join projectDir, 'graphs/checker.json'
     ui = new utils.MockUi
 
     utils.rmrf tempDir
