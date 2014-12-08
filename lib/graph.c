@@ -464,23 +464,28 @@ graph_load_json(Graph *self, JsonParser *parser) {
     }
 
     // Exported ports
-    JsonObject *inports = json_object_get_object_member(root, "inports");
-    GList *inport_names = json_object_get_members(inports);
-    for (int i=0; i<g_list_length(inport_names); i++) {
-        const gchar *name = g_list_nth_data(inport_names, i);
-        JsonObject *conn = json_object_get_object_member(inports, name);
-        const gchar *proc = json_object_get_string_member(conn, "process");
-        const gchar *port = json_object_get_string_member(conn, "port");
-        graph_add_port(self, GraphInPort, name, proc, port);
+    if (json_object_has_member(root, "inports")) {
+        JsonObject *inports = json_object_get_object_member(root, "inports");
+        GList *inport_names = json_object_get_members(inports);
+        for (int i=0; i<g_list_length(inport_names); i++) {
+            const gchar *name = g_list_nth_data(inport_names, i);
+            JsonObject *conn = json_object_get_object_member(inports, name);
+            const gchar *proc = json_object_get_string_member(conn, "process");
+            const gchar *port = json_object_get_string_member(conn, "port");
+            graph_add_port(self, GraphInPort, name, proc, port);
+        }
     }
-    JsonObject *outports = json_object_get_object_member(root, "outports");
-    GList *outport_names = json_object_get_members(outports);
-    for (int i=0; i<g_list_length(outport_names); i++) {
-        const gchar *name = g_list_nth_data(outport_names, i);
-        JsonObject *conn = json_object_get_object_member(outports, name);
-        const gchar *proc = json_object_get_string_member(conn, "process");
-        const gchar *port = json_object_get_string_member(conn, "port");
-        graph_add_port(self, GraphOutPort, name, proc, port);
+
+    if (json_object_has_member(root, "outports")) {
+        JsonObject *outports = json_object_get_object_member(root, "outports");
+        GList *outport_names = json_object_get_members(outports);
+        for (int i=0; i<g_list_length(outport_names); i++) {
+            const gchar *name = g_list_nth_data(outport_names, i);
+            JsonObject *conn = json_object_get_object_member(outports, name);
+            const gchar *proc = json_object_get_string_member(conn, "process");
+            const gchar *port = json_object_get_string_member(conn, "port");
+            graph_add_port(self, GraphOutPort, name, proc, port);
+        }
     }
 }
 
