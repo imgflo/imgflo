@@ -82,3 +82,35 @@ One could also generalize the current abstraction that represents "Processor"
 as a FBP component into a mini C/glib-based FBP runtime.
 It should then have solid GObject Introspection bindings, and be possible to use
 the operations without modification in noflo-gnome.
+
+
+
+Functinal high-performance programming
+======================================
+
+Can we express the C functions/blocks that 
+performs the processing as something we can reason about
+and manipulate using a functional language like Haskell?
+
+Can we use this as a basis for automatic paralelliztion and inlining?
+
+pixel -> pixel
+pixels -> pixels
+
+monoid:
+closure
+associative
+identity
+endomorphisms:functions with input and output of same type, is a monoid
+
+"any function containing an endomorphism can be converted into a monoid"
+
+monad laws are just monoid definitions in disguise
+
+References
+
+* monoids explanation slide 200+: http://www.slideshare.net/ScottWlaschin/fp-patterns-buildstufflt
+
+
+
+
