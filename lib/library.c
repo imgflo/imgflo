@@ -293,12 +293,15 @@ Library *
 library_new() {
     Library *self = g_new(Library, 1);
 
-    self->source_path = g_strdup("spec/out/components2");
-    self->build_path = g_strdup("spec/out/build2");
+    gchar *cwd = g_get_current_dir();
+
+    self->source_path = g_strdup_printf("%s/spec/out/components2", cwd);
+    self->build_path = g_strdup_printf("%s/spec/out/build2", cwd);
     g_assert(g_mkdir_with_parents(self->build_path, 0755) == 0);
     g_assert(g_mkdir_with_parents(self->source_path, 0755) == 0);
     self->setsource_components = g_hash_table_new_full(g_str_hash, g_str_equal,
                                                         g_free, NULL);
+    g_free(cwd);
 
     return self;
 }
@@ -350,8 +353,8 @@ compile_plugin(GFile *file, const gchar *build_dir, gint rev) {
     argv[5] = g_strdup_printf("COMPONENTINSTALLDIR=%s", build_dir);
     argv[6] = g_strdup_printf("COMPONENT_NAME_PREFIX=\"%s\"", SETSOURCE_COMP_PREFIX);
     argv[7] = g_strdup_printf("COMPONENT_NAME_SUFFIX=\"-%d\"", rev);
-
-    gboolean success = g_spawn_sync(NULL, argv, NULL,
+ 
+    const gboolean success = g_spawn_sync(NULL, argv, NULL,
                               G_SPAWN_DEFAULT, NULL, NULL,
                               &stdout, &stderr, &exitcode, &err);
     try_print_error(err);
