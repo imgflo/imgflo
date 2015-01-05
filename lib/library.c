@@ -142,7 +142,7 @@ noflo_type_for_param(GParamSpec *prop) {
     if (is_integer) {
         return "int";
     } else if (g_type_is_a(G_PARAM_SPEC_TYPE(prop), GEGL_TYPE_PARAM_URI)) {
-        return "file"; // TODO: use uri instead
+        return "uri";
     } else if (g_type_is_a(type, G_TYPE_FLOAT) || g_type_is_a(type, G_TYPE_DOUBLE)) {
         return "number";
     } else if (g_type_is_a(type, G_TYPE_BOOLEAN)) {
