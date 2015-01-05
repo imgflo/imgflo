@@ -233,6 +233,11 @@ inports_for_operation(const gchar *name)
         const gchar *nick = g_param_spec_get_nick(prop);
         const gchar *description = (blurb) ? blurb : nick;
 
+        // HACK: give special port type. GEGL op should annotate this itself
+        if (g_strcmp0(id, "uri") == 0) {
+            type_name = "file";
+        }
+
         JsonObject *port = json_object_new();
         json_object_set_string_member(port, "id", id);
         json_object_set_string_member(port, "type", type_name);
