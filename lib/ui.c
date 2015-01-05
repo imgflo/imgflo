@@ -274,6 +274,8 @@ handle_graph_message(UiConnection *self, const gchar *command, JsonObject *paylo
             json_object_get_string_member(tgt, "node"),
             json_object_get_string_member(tgt, "port")
         );
+    } else if (g_strcmp0(command, "changeedge") == 0) {
+        // Just metadata, ignored
     } else {
         imgflo_warning("Unhandled message on protocol 'graph', command='%s'", command);
     }
