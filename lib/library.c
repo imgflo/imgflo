@@ -134,13 +134,15 @@ json_for_enum(GType type) {
 }
 
 static const gchar *
-noflo_type_for_gtype(GType type) {
-
+noflo_type_for_param(GParamSpec *prop) {
+    GType type = G_PARAM_SPEC_VALUE_TYPE(prop);
     const char *n = g_type_name(type);
     const gboolean is_integer = g_type_is_a(type, G_TYPE_INT) || g_type_is_a(type, G_TYPE_INT64)
             || g_type_is_a(type, G_TYPE_UINT) || g_type_is_a(type, G_TYPE_UINT64);
     if (is_integer) {
         return "int";
+    } else if (g_type_is_a(G_PARAM_SPEC_TYPE(prop), GEGL_TYPE_PARAM_URI)) {
+        return "file"; // TODO: use uri instead
     } else if (g_type_is_a(type, G_TYPE_FLOAT) || g_type_is_a(type, G_TYPE_DOUBLE)) {
         return "number";
     } else if (g_type_is_a(type, G_TYPE_BOOLEAN)) {
@@ -226,17 +228,12 @@ inports_for_operation(const gchar *name)
         GParamSpec *prop = properties[i];
         const gchar *id = g_param_spec_get_name(prop);
         GType type = G_PARAM_SPEC_VALUE_TYPE(prop);
-        const gchar *type_name = noflo_type_for_gtype(type);
+        const gchar *type_name = noflo_type_for_param(prop);
         const GValue *def = g_param_spec_get_default_value(prop);
         JsonNode *def_json = json_from_gvalue(def, NULL);
         const gchar *blurb = g_param_spec_get_blurb(prop);
         const gchar *nick = g_param_spec_get_nick(prop);
         const gchar *description = (blurb) ? blurb : nick;
-
-        // HACK: give special port type. GEGL op should annotate this itself
-        if (g_strcmp0(id, "uri") == 0) {
-            type_name = "file";
-        }
 
         JsonObject *port = json_object_new();
         json_object_set_string_member(port, "id", id);
