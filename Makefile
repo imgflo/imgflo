@@ -85,6 +85,8 @@ $(COMPONENTINSTALLDIR)/%.so: $(COMPONENTDIR)/%.c
 dependencies:
 	cd dependencies && make PREFIX=$(PREFIX) dependencies
 
+babl:
+	cd dependencies && make PREFIX=$(PREFIX) babl
 gegl:
 	cd dependencies && make PREFIX=$(PREFIX) gegl
 libsoup:
