@@ -361,7 +361,7 @@ compile_plugin(GFile *file, const gchar *build_dir, gint rev) {
                               &stdout, &stderr, &exitcode, &err);
     try_print_error(err);
     if (!success || stderr) {
-        imgflo_info("%s", stderr);
+        imgflo_message("%s", stderr);
     }
     g_free(stdout);
     g_free(stderr);

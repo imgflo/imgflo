@@ -214,7 +214,7 @@ graph_add_iip(Graph *self, const gchar *node, const gchar *port, GValue *value)
     if (paramspec) {
         const gboolean success = set_property(t, port, paramspec, value);
         if (success) {
-            imgflo_info("\t'%s' -> %s %s\n", iip, port, node);
+            imgflo_message("\t'%s' -> %s %s\n", iip, port, node);
         } else {
             GType value_type = G_VALUE_TYPE(value);
             GType target_type = G_PARAM_SPEC_VALUE_TYPE(paramspec);
@@ -235,7 +235,7 @@ graph_remove_iip(Graph *self, const gchar *node, const gchar *port)
     g_return_if_fail(node);
     g_return_if_fail(port);
 
-    imgflo_info("\tDEL '%s' -> %s %s\n", "IIP", node, port);
+    imgflo_message("\tDEL '%s' -> %s %s\n", "IIP", node, port);
 
     GeglNode *t = g_hash_table_lookup(self->node_map, node);
     g_return_if_fail(t);
@@ -258,7 +258,7 @@ graph_add_node(Graph *self, const gchar *name, const gchar *component)
     if (g_strcmp0(component, "Processor") == 0) {
         Processor *proc = processor_new();
         g_hash_table_insert(self->processor_map, (gpointer)g_strdup(name), (gpointer)proc);
-        imgflo_info("\tAdding Processor: %s\n", name);
+        imgflo_message("\tAdding Processor: %s\n", name);
         if (self->on_node_added) {
             self->on_node_added(self, name, NULL, proc, self->on_node_added_data);
         }
@@ -272,7 +272,7 @@ graph_add_node(Graph *self, const gchar *name, const gchar *component)
 
     g_return_if_fail(n);
 
-    imgflo_info("\t%s(%s)\n", name, op);
+    imgflo_message("\t%s(%s)\n", name, op);
     g_hash_table_insert(self->node_map, (gpointer)g_strdup(name), (gpointer)n);
     if (self->on_node_added) {
         self->on_node_added(self, name, n, NULL, self->on_node_added_data);
@@ -289,7 +289,7 @@ graph_remove_node(Graph *self, const gchar *name)
 
     Processor *p = g_hash_table_lookup(self->processor_map, name);
     if (p) {
-        imgflo_info("\tDeleting Processor '%s'\n", name);
+        imgflo_message("\tDeleting Processor '%s'\n", name);
         g_hash_table_remove(self->processor_map, name);
         processor_free(p);
         return;
@@ -298,7 +298,7 @@ graph_remove_node(Graph *self, const gchar *name)
     GeglNode *n = g_hash_table_lookup(self->node_map, name);
     g_return_if_fail(n);
 
-    imgflo_info("\t DEL %s()\n", name);
+    imgflo_message("\t DEL %s()\n", name);
     g_hash_table_remove(self->node_map, name);
     gegl_node_remove_child(self->top, n);
 }
@@ -366,7 +366,7 @@ graph_add_edge(Graph *self,
     if (p) {
         GeglNode *s = g_hash_table_lookup(self->node_map, src);
         g_return_if_fail(s);
-        imgflo_info("\tConnecting Processor '%s' to node '%s'\n", tgt, src);
+        imgflo_message("\tConnecting Processor '%s' to node '%s'\n", tgt, src);
         processor_set_target(p, s);
         return;
     }
@@ -377,7 +377,7 @@ graph_add_edge(Graph *self,
     g_return_if_fail(t);
     g_return_if_fail(s);
 
-    imgflo_info("\t%s %s -> %s %s\n",
+    imgflo_message("\t%s %s -> %s %s\n",
            src, srcport, tgtport, tgt);
     gegl_node_connect_to(s, srcport, t, tgtport);
 }
@@ -397,7 +397,7 @@ graph_remove_edge(Graph *self,
     if (p) {
         GeglNode *s = g_hash_table_lookup(self->node_map, src);
         g_return_if_fail(s);
-        imgflo_info("\tDisconnecting Processor '%s' from node '%s'\n", tgt, src);
+        imgflo_message("\tDisconnecting Processor '%s' from node '%s'\n", tgt, src);
         processor_set_target(p, NULL);
         return;
     }
@@ -407,7 +407,7 @@ graph_remove_edge(Graph *self,
     g_return_if_fail(t);
     g_return_if_fail(s);
 
-    imgflo_info("\tDEL %s %s -> %s %s\n",
+    imgflo_message("\tDEL %s %s -> %s %s\n",
             src, srcport, tgtport, tgt);
     gegl_node_disconnect(t, tgtport);
 }

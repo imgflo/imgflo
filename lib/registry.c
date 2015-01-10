@@ -173,7 +173,7 @@ registry_register(Registry *self) {
     const guint status = soup_session_send_message(self->session, msg);
     gboolean success = FALSE;
     if (status == 201 || status == 200) {
-        imgflo_info("Registered runtime.\n"
+        imgflo_message("Registered runtime.\n"
                  "IMGFLO_RUNTIME_ID=%s\n", rt->id);
         success = TRUE;
     } else {
