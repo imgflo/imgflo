@@ -83,9 +83,13 @@ ui_net_state_changed(Network *network, gboolean running,
 
 gchar *
 ui_get_process_url(UiConnection *ui, Network *network, const gchar *node) {
-    gchar *url = g_strdup_printf("http://%s:%d/process?graph=%s&node=%s",
-                                ui->hostname, ui->registry->info->port,
-                                network->graph->id, node);
+    gchar *endpoint = "/process";
+    if (g_str_has_suffix(ui->hostname, "/")) {
+        endpoint = "process";
+    }
+
+    gchar *url = g_strdup_printf("%s%s?graph=%s&node=%s",
+                                ui->hostname, endpoint, network->graph->id, node);
     return url;
 }
 
@@ -420,14 +424,32 @@ ui_connection_handle_message(UiConnection *self,
     }
 }
 
+static gboolean
+ensure_hostname_set(UiConnection *self, SoupURI *uri) {
+    if (g_strcmp0(self->hostname, "") != 0) {
+        // Already configured
+        return FALSE;
+    }
+
+    SoupURI *hostUri = soup_uri_copy_host(uri);
+    g_free(self->hostname);
+    self->hostname = soup_uri_to_string(hostUri, FALSE);
+    soup_uri_free(hostUri);
+    // NOTE: does not check wether existing hostname was equivalent
+    return TRUE;
+}
+
 static void
 on_web_socket_open(SoupWebsocketConnection *ws, gpointer user_data)
 {
-	gchar *url = soup_uri_to_string(soup_websocket_connection_get_uri (ws), FALSE);
+    SoupURI *uri = soup_websocket_connection_get_uri(ws);
+	gchar *url = soup_uri_to_string(uri, FALSE);
+
 	imgflo_message("WebSocket: client opened %s with %s\n", soup_websocket_connection_get_protocol(ws), url);
 
     UiConnection *self = (UiConnection *)user_data;
     g_assert(self);
+    ensure_hostname_set(self, uri);
     self->connection = ws;
 
 	g_free(url);
@@ -617,15 +639,16 @@ server_callback (SoupServer *server, SoupMessage *msg,
 
     SoupMessageHeadersIter iter;
     const char *name, *value;
+    UiConnection *self = (UiConnection *)data;
 
     imgflo_message("%s %s HTTP/1.%d\n", msg->method, path,
          soup_message_get_http_version(msg));
-    imgflo_message("HTTP URI: %s", soup_uri_to_string(soup_message_get_uri(msg), FALSE));
+    ensure_hostname_set(self, soup_message_get_uri(msg));
 
     if (g_strcmp0(path, "/process") == 0 && msg->method == SOUP_METHOD_GET) {
-        process_image_callback(server, msg, path, query, context, data);
+        process_image_callback(server, msg, path, query, context, self);
     } else if (g_strcmp0(path, "/") == 0 && msg->method == SOUP_METHOD_GET) {
-        serve_frontpage(server, msg, path, query, context, data);
+        serve_frontpage(server, msg, path, query, context, self);
     } else {
         imgflo_warning("Unknown HTTP request: %s, %s", msg->method, path);
         soup_message_headers_iter_init(&iter, msg->request_headers);

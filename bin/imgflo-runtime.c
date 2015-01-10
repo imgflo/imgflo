@@ -21,7 +21,7 @@ quit(int sig)
 
 static int port = 3569;
 static int extport = 3569;
-static gchar *host = "localhost";
+static gchar *host = "";
 static gchar *defaultgraph = "";
 
 static GOptionEntry entries[] = {

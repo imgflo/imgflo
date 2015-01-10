@@ -5,10 +5,10 @@ PREFIX=$(shell echo `pwd`/install)
 FLAGS=-Wall -Werror -std=c99 -g -DHAVE_UUID -I$(PREFIX)/include/uuid
 DEBUGPROG=
 PORT=3569
-HOST=localhost
 EXTPORT=$(PORT)
 #GRAPH=graphs/checker.json
 #TESTS=
+#HOST=localhost
 
 ifneq ("$(wildcard /app)","")
 # Heroku build. TODO: find better way to detect
@@ -25,9 +25,12 @@ LIBS=gegl-0.3 gio-unix-2.0 json-glib-1.0 libsoup-2.4 libpng uuid
 DEPS=$(shell $(PREFIX)/env.sh pkg-config $(PKGCONFIG_ARGS) --libs --cflags $(LIBS))
 TRAVIS_DEPENDENCIES=$(shell echo `cat .vendor_urls | sed -e "s/heroku/travis/" | tr -d '\n'`)
 
-RUN_ARGUMENTS:=--port $(PORT) --host $(HOST) --external-port=$(EXTPORT)
+RUN_ARGUMENTS:=--port $(PORT) --external-port=$(EXTPORT)
 ifdef GRAPH
 RUN_ARGUMENTS+=--graph $(GRAPH)
+endif
+ifdef HOST
+RUN_ARGUMENTS+=--host $(HOST)
 endif
 
 ifdef TESTS
