@@ -620,6 +620,7 @@ server_callback (SoupServer *server, SoupMessage *msg,
 
     imgflo_message("%s %s HTTP/1.%d\n", msg->method, path,
          soup_message_get_http_version(msg));
+    imgflo_message("HTTP URI: %s", soup_uri_to_string(soup_message_get_uri(msg)));
 
     if (g_strcmp0(path, "/process") == 0 && msg->method == SOUP_METHOD_GET) {
         process_image_callback(server, msg, path, query, context, data);
