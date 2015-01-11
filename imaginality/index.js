@@ -29,9 +29,9 @@ var generateCardData = function() {
     var data = [];
 
     // For now simple 2d grid over one val
-    images.forEach(function(url, x) { 
-       data[x] = []; 
-       evensteps(10, 100, 3).forEach(function(val, y) {
+    evensteps(10, 100, 3).forEach(function(val, y) {
+       data[y] = [];
+       images.forEach(function(url, x) {
            // annoying there are two
            // FIXME: hardcoded properties for a given graph
            var props = {
@@ -39,7 +39,7 @@ var generateCardData = function() {
                 'std-dev-x': val,
                 'std-dev-y': val
            };
-           data[x][y] = {
+           data[y][x] = {
                 id: x.toString()+"-"+y.toString(),
                 properties: props
            };
@@ -53,7 +53,7 @@ var generateCardData = function() {
 
 // User interface
 
-var iterate2dCards = function(cards, callback) {
+var iterate2dCards = function(cards, itemcallback) {
     cards.forEach(function(row, x) {
         row.forEach(function(card, y) {
             return callback(card, x, y);
@@ -67,14 +67,29 @@ var setupImages = function (container, cards) {
 
     var columns = cards.length;
     var rows = cards[0].length;
-    iterate2dCards(cards, function(card, x, y) {
-        var img = document.createElement("img");
-        img.className = "image";
-        img.id = card.id;
-        img.hack_properties = card.properties;
 
-        images.push(img);
-        container.appendChild(img);
+    var div = function(klass, parent) {
+        var e = document.createElement("div");
+        e.className = klass;
+        parent.appendChild(e);
+        return e;
+    }
+
+    var table = div('table', container);
+
+    cards.forEach(function(r, y) {
+        var row = div('tr', table);
+        r.forEach(function(card, x) {
+            var cell = div('td', row);
+
+            var img = document.createElement("img");
+            img.className = "image";
+            img.id = card.id;
+            img.hack_properties = card.properties;
+
+            cell.appendChild(img);
+            images.push(img);
+        });
     });
 
     return images;

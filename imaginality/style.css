@@ -12,10 +12,31 @@
    width: 150px;
 }
 
+.table {
+    display:table;
+}
+
+.row {
+    padding:2px;
+}
+
+.tr {
+    display:table-row;
+}
+
+.th,.td {
+    display:table-cell;
+    padding:2px 5px;
+}
+
 
 /* Style */
 img {
    padding:2px;
    border:2px solid #021a40;
+}
+
+.th {
+    font-weight:bold;
 }
 
