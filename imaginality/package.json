@@ -1,0 +1,41 @@
+{
+  "name": "imaginality",
+  "version": "0.0.0",
+  "description": "",
+  "keywords": [
+    "fbp",
+    "noflo",
+    "GEGL",
+    "flowhub",
+    "graphics",
+    "dataflow",
+    "image processing"
+  ],
+  "author": "Jon Nordby <jononor@gmail.com> (http://www.jonnor.com)",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/jonnor/imgflo.git"
+  },
+  "bugs": "http://github.com/jonnor/imgflo/issues",
+  "homepage": "http://imgflo.org",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "mocha --reporter spec --compilers .coffee:coffee-script/register ./spec/*.coffee"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "dependencies": {
+    "async": "^0.7.0",
+    "coffee-script": "^1.7.1",
+    "simple-server": "^1.0.1"
+  },
+  "devDependencies": {
+    "chai": "~1.8.0",
+    "js-yaml": "^3.0.2",
+    "mocha": "~1.9.0",
+    "grunt-cli": "^0.1.11"
+  }
+}
