@@ -295,6 +295,20 @@ describe 'FBP runtime protocol,', () ->
 
     # FIXME: test start/stop and running/complete behavior
 
+    describe 'getting code for stock GEGL', ->
+        opname = 'gegl/checkerboard'
+        it 'should give component:source', (done) ->
+            ui.send "component", "getsource",
+                name: opname
+            ui.once 'component-source', (id, info) ->
+                chai.expect(id).to.equal opname
+                chai.expect(info.source).to.be.a 'string'
+                chai.expect(info.source).to.contain 'This file is an image processing operation for GEGL'
+                done()
+
+        itSkipDebug 'should not have produced any errors', ->
+            chai.expect(runtime.popErrors()).to.eql []
+
     describe 'adding a component using component:source', ->
         @timeout 2000
         code = utils.testData 'dynamiccomponent1.c'
