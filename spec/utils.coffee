@@ -119,7 +119,7 @@ class RuntimeProcess
             lines = output.split '\n'
             for line in lines
                 err = line.trim()
-                @errors.push err if err
+                @errors.push err if err and err.indexOf('imgflo-Message:') != 0
 
         stdout = ""
         @process.stdout.on 'data', (d) ->
