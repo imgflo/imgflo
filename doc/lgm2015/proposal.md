@@ -17,8 +17,7 @@ imgflo uses the Flowhub visual programming IDE to allow
 image processing pipelines to be developed using
 a visual, interactive, node-based editor.
 The pipelines can then be deployed to the server,
-or one can use them in other GEGL-based applications
-- including GIMP.
+or one can use them in other GEGL-based applications - including GIMP.
 
 The talk will cover motivation for an image processing server,
 possible uses, and demo current capabilities.
