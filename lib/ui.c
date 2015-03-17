@@ -21,7 +21,7 @@ typedef struct {
     gchar *main_network;
 } UiConnection;
 
-GBytes *
+gchar *
 form_response(const gchar *protocol, const gchar *command, JsonObject *payload)
 {
     JsonObject *response = json_object_new();
@@ -32,8 +32,7 @@ form_response(const gchar *protocol, const gchar *command, JsonObject *payload)
 
     gsize len = 0;
     gchar *data = json_stringify(response, &len);
-    GBytes *resp = g_bytes_new_take(data, len);
-    return resp;
+    return data;
 }
 
 static void
@@ -42,12 +41,10 @@ send_response(SoupWebsocketConnection *ws,
 {
     g_return_if_fail(ws);
 
-    GBytes *resp = form_response(protocol, command, payload);
-    gsize len = 0;
-    const gchar *data = g_bytes_get_data(resp, &len);
-
-    imgflo_debug ("SEND: %.*s\n", (int)len, data);
-    soup_websocket_connection_send(ws, SOUP_WEBSOCKET_DATA_TEXT, resp);
+    gchar *text = form_response(protocol, command, payload);
+    imgflo_debug ("SEND: %s\n", text);
+    soup_websocket_connection_send_text(ws, text);
+    g_free(text);
 }
 
 // Must not call g_log family functions to avoid recursion
@@ -56,8 +53,9 @@ send_response_nodebug(SoupWebsocketConnection *ws,
             const gchar *protocol, const gchar *command, JsonObject *payload)
 {
     if (ws) {
-        GBytes *resp = form_response(protocol, command, payload);
-        soup_websocket_connection_send(ws, SOUP_WEBSOCKET_DATA_TEXT, resp);
+        gchar *text = form_response(protocol, command, payload);
+        soup_websocket_connection_send_text(ws, text);
+        g_free(text);
     }
 }
 
@@ -450,7 +448,7 @@ on_web_socket_open(SoupWebsocketConnection *ws, gpointer user_data)
     UiConnection *self = (UiConnection *)user_data;
     g_assert(self);
     ensure_hostname_set(self, uri);
-    self->connection = ws;
+    self->connection = g_object_ref(ws);
 
 	g_free(url);
 }
@@ -514,15 +512,16 @@ on_web_socket_close(SoupWebsocketConnection *ws, gpointer user_data)
 }
 
 void websocket_callback(SoupServer *server,
-					    const char *path,
 					    SoupWebsocketConnection *connection,
+                        const char *path,
 					    SoupClientContext *client,
 					    gpointer user_data)
 {
-	g_signal_connect(connection, "open", G_CALLBACK(on_web_socket_open), user_data);
-	g_signal_connect(connection, "message", G_CALLBACK(on_web_socket_message), user_data);
-	g_signal_connect(connection, "error", G_CALLBACK(on_web_socket_error), user_data);
-	g_signal_connect(connection, "close", G_CALLBACK(on_web_socket_close), user_data);
+    g_signal_connect(connection, "message", G_CALLBACK(on_web_socket_message), user_data);
+    g_signal_connect(connection, "error", G_CALLBACK(on_web_socket_error), user_data);
+    g_signal_connect(connection, "closed", G_CALLBACK(on_web_socket_close), user_data);
+
+    on_web_socket_open(connection, user_data);
 }
 
 static void
@@ -631,26 +630,40 @@ serve_frontpage(SoupServer *server, SoupMessage *msg,
     //g_free(html);
 }
 
+static gboolean
+msg_is_upgrade(SoupMessage *msg) {
+    const char *name, *value;
+    SoupMessageHeadersIter iter;
+    soup_message_headers_iter_init(&iter, msg->request_headers);
+    while (soup_message_headers_iter_next(&iter, &name, &value)) {
+        if (g_strcmp0(name, "Connection") == 0 && g_strcmp0(value, "Upgrade") == 0) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 static void
 server_callback (SoupServer *server, SoupMessage *msg,
 		 const char *path, GHashTable *query,
 		 SoupClientContext *context, gpointer data)
 {
-
-    SoupMessageHeadersIter iter;
-    const char *name, *value;
     UiConnection *self = (UiConnection *)data;
 
     imgflo_message("%s %s HTTP/1.%d\n", msg->method, path,
          soup_message_get_http_version(msg));
     ensure_hostname_set(self, soup_message_get_uri(msg));
 
-    if (g_strcmp0(path, "/process") == 0 && msg->method == SOUP_METHOD_GET) {
+    if (msg->method == SOUP_METHOD_GET && g_strcmp0(path, "/process") == 0) {
         process_image_callback(server, msg, path, query, context, self);
-    } else if (g_strcmp0(path, "/") == 0 && msg->method == SOUP_METHOD_GET) {
+    } else if (msg_is_upgrade(msg)) {
+        // fall-through, let libsoup WebSocket handle this
+    } else if (msg->method == SOUP_METHOD_GET && g_strcmp0(path, "/") == 0) {
         serve_frontpage(server, msg, path, query, context, self);
     } else {
         imgflo_warning("Unknown HTTP request: %s, %s", msg->method, path);
+        SoupMessageHeadersIter iter;
+        const char *name, *value;
         soup_message_headers_iter_init(&iter, msg->request_headers);
         while (soup_message_headers_iter_next(&iter, &name, &value))
             imgflo_debug("%s: %s\n", name, value);
@@ -718,10 +731,11 @@ ui_connection_new(const gchar *hostname, int internal_port, int external_port) {
         return NULL;
     }
 
-    soup_server_add_websocket_handler(self->server, NULL, NULL, NULL,
-        websocket_callback, self, NULL);
     soup_server_add_handler(self->server, NULL,
         server_callback, self, NULL);
+
+    soup_server_add_websocket_handler(self->server, NULL, NULL, NULL,
+        websocket_callback, self, NULL);
 
     soup_server_listen_all(self->server, internal_port, SOUP_SERVER_LISTEN_IPV4_ONLY, NULL);
 

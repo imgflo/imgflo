@@ -72,7 +72,7 @@ class MockUi extends EventEmitter
             console.log 'UI received unknown message', d
 
     connect: ->
-        @client.connect 'ws://localhost:3888/', "noflo"
+        @client.connect 'ws://localhost:3888/'
     disconnect: ->
         @connection.close()
         @emit 'disconnected'
