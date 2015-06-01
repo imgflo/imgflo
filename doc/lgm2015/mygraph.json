@@ -1,0 +1,355 @@
+{
+    "properties": {
+        "name": "main",
+        "id": "imgflo-live/main",
+        "project": "imgflo-live",
+        "environment": {
+            "type": "imgflo"
+        },
+        "changed": true
+    },
+    "inports": {
+        "input": {
+            "process": "svg/src-over_3e1ka",
+            "port": "input",
+            "metadata": {
+                "x": 216,
+                "y": -72,
+                "width": 72,
+                "height": 72
+            }
+        },
+        "grid-opacity": {
+            "process": "gegl/opacity_ng10y",
+            "port": "value",
+            "metadata": {
+                "x": 144,
+                "y": 360,
+                "width": 72,
+                "height": 72
+            }
+        }
+    },
+    "outports": {
+        "output": {
+            "process": "gegl/vignette_lmltx",
+            "port": "output",
+            "metadata": {
+                "x": 756,
+                "y": -72,
+                "width": 72,
+                "height": 72
+            }
+        }
+    },
+    "groups": [],
+    "processes": {
+        "gegl/vignette_lmltx": {
+            "component": "gegl/vignette",
+            "metadata": {
+                "label": "gegl/vignette",
+                "x": 648,
+                "y": 72,
+                "width": 72,
+                "height": 96
+            }
+        },
+        "gegl/grid_vkki7": {
+            "component": "gegl/grid",
+            "metadata": {
+                "label": "gegl/grid",
+                "x": 108,
+                "y": 216,
+                "width": 72,
+                "height": 72
+            }
+        },
+        "svg/src-over_3e1ka": {
+            "component": "svg/src-over",
+            "metadata": {
+                "label": "svg/src-over",
+                "x": 360,
+                "y": 72,
+                "width": 72,
+                "height": 72
+            }
+        },
+        "gegl/opacity_ng10y": {
+            "component": "gegl/opacity",
+            "metadata": {
+                "label": "gegl/opacity",
+                "x": 252,
+                "y": 216,
+                "width": 72,
+                "height": 72
+            }
+        },
+        "gegl/gradient-map_iutjk": {
+            "component": "gegl/gradient-map",
+            "metadata": {
+                "label": "gegl/gradient-map",
+                "x": 504,
+                "y": 72,
+                "width": 72,
+                "height": 108
+            }
+        }
+    },
+    "connections": [
+        {
+            "src": {
+                "process": "gegl/grid_vkki7",
+                "port": "output"
+            },
+            "tgt": {
+                "process": "gegl/opacity_ng10y",
+                "port": "input"
+            },
+            "metadata": {
+                "route": null
+            }
+        },
+        {
+            "src": {
+                "process": "svg/src-over_3e1ka",
+                "port": "output"
+            },
+            "tgt": {
+                "process": "gegl/gradient-map_iutjk",
+                "port": "input"
+            },
+            "metadata": {
+                "route": null
+            }
+        },
+        {
+            "src": {
+                "process": "gegl/gradient-map_iutjk",
+                "port": "output"
+            },
+            "tgt": {
+                "process": "gegl/vignette_lmltx",
+                "port": "input"
+            },
+            "metadata": {
+                "route": null
+            }
+        },
+        {
+            "src": {
+                "process": "gegl/opacity_ng10y",
+                "port": "output"
+            },
+            "tgt": {
+                "process": "svg/src-over_3e1ka",
+                "port": "aux"
+            },
+            "metadata": {
+                "route": null
+            }
+        },
+        {
+            "data": "#000000ff",
+            "tgt": {
+                "process": "gegl/vignette_lmltx",
+                "port": "color"
+            }
+        },
+        {
+            "data": 0.8,
+            "tgt": {
+                "process": "gegl/vignette_lmltx",
+                "port": "softness"
+            }
+        },
+        {
+            "data": 1,
+            "tgt": {
+                "process": "gegl/vignette_lmltx",
+                "port": "proportion"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "gegl/vignette_lmltx",
+                "port": "squeeze"
+            }
+        },
+        {
+            "data": 0.5,
+            "tgt": {
+                "process": "gegl/vignette_lmltx",
+                "port": "x"
+            }
+        },
+        {
+            "data": 0.5,
+            "tgt": {
+                "process": "gegl/vignette_lmltx",
+                "port": "y"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "gegl/vignette_lmltx",
+                "port": "rotation"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "gegl/grid_vkki7",
+                "port": "x-offset"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "gegl/grid_vkki7",
+                "port": "y-offset"
+            }
+        },
+        {
+            "data": 4,
+            "tgt": {
+                "process": "gegl/grid_vkki7",
+                "port": "line-width"
+            }
+        },
+        {
+            "data": 4,
+            "tgt": {
+                "process": "gegl/grid_vkki7",
+                "port": "line-height"
+            }
+        },
+        {
+            "data": 64,
+            "tgt": {
+                "process": "gegl/grid_vkki7",
+                "port": "x"
+            }
+        },
+        {
+            "data": 64,
+            "tgt": {
+                "process": "gegl/grid_vkki7",
+                "port": "y"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "gegl/gradient-map_iutjk",
+                "port": "stop1"
+            }
+        },
+        {
+            "data": 1,
+            "tgt": {
+                "process": "gegl/gradient-map_iutjk",
+                "port": "stop2"
+            }
+        },
+        {
+            "data": "#ffffffff",
+            "tgt": {
+                "process": "gegl/gradient-map_iutjk",
+                "port": "color3"
+            }
+        },
+        {
+            "data": 1,
+            "tgt": {
+                "process": "gegl/gradient-map_iutjk",
+                "port": "stop3"
+            }
+        },
+        {
+            "data": "#ffffffff",
+            "tgt": {
+                "process": "gegl/gradient-map_iutjk",
+                "port": "color4"
+            }
+        },
+        {
+            "data": 1,
+            "tgt": {
+                "process": "gegl/gradient-map_iutjk",
+                "port": "stop4"
+            }
+        },
+        {
+            "data": "#ffffffff",
+            "tgt": {
+                "process": "gegl/gradient-map_iutjk",
+                "port": "color5"
+            }
+        },
+        {
+            "data": 1,
+            "tgt": {
+                "process": "gegl/gradient-map_iutjk",
+                "port": "stop5"
+            }
+        },
+        {
+            "data": true,
+            "tgt": {
+                "process": "gegl/gradient-map_iutjk",
+                "port": "srgb"
+            }
+        },
+        {
+            "data": "#003422",
+            "tgt": {
+                "process": "gegl/gradient-map_iutjk",
+                "port": "color1"
+            }
+        },
+        {
+            "data": 1.4,
+            "tgt": {
+                "process": "gegl/vignette_lmltx",
+                "port": "radius"
+            }
+        },
+        {
+            "data": 1.6,
+            "tgt": {
+                "process": "gegl/vignette_lmltx",
+                "port": "gamma"
+            }
+        },
+        {
+            "data": "#00cf75",
+            "tgt": {
+                "process": "gegl/gradient-map_iutjk",
+                "port": "color2"
+            }
+        },
+        {
+            "data": false,
+            "tgt": {
+                "process": "svg/src-over_3e1ka",
+                "port": "srgb"
+            }
+        },
+        {
+            "data": 0.3,
+            "tgt": {
+                "process": "gegl/opacity_ng10y",
+                "port": "value"
+            }
+        },
+        {
+            "data": "#c2c2c2",
+            "tgt": {
+                "process": "gegl/grid_vkki7",
+                "port": "line-color"
+            }
+        }
+    ]
+}
