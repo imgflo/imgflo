@@ -33,3 +33,4 @@ spec/data/dynamiccomponent1-withprop.c
 lib/utils.c
 spec/remoteruntime.coffee
 graphs/checker.fbp
+lib/trace.c

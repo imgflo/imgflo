@@ -120,16 +120,15 @@ send_preview_invalidated(Network *network, Processor *processor, GeglRectangle r
     }
 }
 
-void
-send_edge_data_changed(Network *network, const GraphEdge *edge, gpointer user_data) {
-    UiConnection *ui = (UiConnection *)user_data;
+JsonObject *
+format_edge_data(UiConnection *ui, Network *network, const GraphEdge *edge) {
 
-     // FIXME: remove once noflo-ui no longer needs it
+    // FIXME: remove once noflo-ui no longer needs it
     gchar *src_port = g_utf8_strup(edge->src_port, -1);
     gchar *tgt_port = g_utf8_strup(edge->tgt_port, -1);
     gchar *edge_id = g_strdup_printf("%s() %s -> %s %s()",
-                                     edge->src_name, src_port,
-                                     tgt_port, edge->tgt_name);
+                                    edge->src_name, src_port,
+                                    tgt_port, edge->tgt_name);
     g_free(src_port);
     g_free(tgt_port);
 
@@ -144,6 +143,15 @@ send_edge_data_changed(Network *network, const GraphEdge *edge, gpointer user_da
     json_object_set_string_member(data, "type", "previewurl");
 
     g_free(url);
+    return payload;
+}
+
+void
+on_edge_data_changed(Network *network, const GraphEdge *edge, gpointer user_data) {
+    UiConnection *ui = (UiConnection *)user_data;
+
+    // TODO: also pass to tracer
+    JsonObject *payload = format_edge_data(ui, network, edge);
 
     if (ui->connection) {
         send_response(ui->connection, "network", "data", payload);

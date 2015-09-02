@@ -12,6 +12,8 @@
 #include "lib/registry.c"
 #include "lib/ui.c"
 
+static Tracer *tracer = NULL;
+
 static void
 quit(int sig)
 {
@@ -23,12 +25,14 @@ static int port = 3569;
 static int extport = 3569;
 static gchar *host = "";
 static gchar *defaultgraph = "";
+static gboolean trace = FALSE;
 
 static GOptionEntry entries[] = {
 	{ "port", 'p', 0, G_OPTION_ARG_INT, &port, "Port to listen on", NULL },
     { "external-port", 'e', 0, G_OPTION_ARG_INT, &extport, "Port we are available on for clients", NULL },
     { "host", 'h', 0, G_OPTION_ARG_STRING, &host, "Hostname", NULL },
     { "graph", 'g', 0, G_OPTION_ARG_STRING, &defaultgraph, "Default graph", NULL },
+    { "trace", 't', 0, G_OPTION_ARG_BOOLEAN, &trace, "Enable tracing", NULL },
 	{ NULL }
 };
 
