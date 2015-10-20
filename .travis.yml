@@ -1,9 +1,7 @@
 language: node_js
 node_js:
 - '0.10'
-before_install:
-- sudo apt-get update -qq
-- sudo apt-get install libjson-glib-dev libsdl1.2-dev libgif-dev gdb
+sudo: false
 script:
 - make travis-deps
 - make release RELOCATE_DEPS=true
