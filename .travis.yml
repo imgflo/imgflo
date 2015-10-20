@@ -2,6 +2,11 @@ language: node_js
 node_js:
 - '0.10'
 sudo: false
+addons:
+  apt:
+    packages:
+    - libsdl1.2-dev
+    - libgif-dev
 script:
 - make travis-deps
 - make release RELOCATE_DEPS=true
