@@ -1,8 +1,11 @@
 language: node_js
 node_js:
 - '0.12'
-sudo: false
+sudo: required
 dist: trusty
+before_install:
+- sudo apt-get update -qq
+- sudo apt-get --assume-yes install libsdl1.2-dev libgif-dev libjson-glib-dev libglib2.0-dev
 script:
 - make travis-deps
 - make release RELOCATE_DEPS=true
