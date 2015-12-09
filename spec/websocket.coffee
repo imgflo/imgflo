@@ -87,7 +87,7 @@ describe 'FBP runtime protocol,', () ->
                 chai.expect(output[0].type).to.equal "buffer"
             it 'should also have inports for properties "x", "y", "width" and "height"', ->
                 c = ui.components['gegl/crop']
-                chai.expect(Object.keys(c.inPorts).length).to.equal 5
+                chai.expect(Object.keys(c.inPorts).length).to.be.at.least 5
                 chai.expect((c.inPorts.filter (p) -> p.id == 'width')[0].type).to.equal 'number'
                 chai.expect((c.inPorts.filter (p) -> p.id == 'height')[0].type).to.equal 'number'
                 chai.expect((c.inPorts.filter (p) -> p.id == 'x')[0].type).to.equal 'number'
