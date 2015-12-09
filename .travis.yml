@@ -2,6 +2,7 @@ language: node_js
 node_js:
 - '0.12'
 sudo: false
+dist: trusty
 script:
 - make travis-deps
 - make release RELOCATE_DEPS=true
@@ -18,6 +19,8 @@ addons:
     packages:
     - libsdl1.2-dev
     - libgif-dev
+    - libjson-glib-dev
+    - libglib2.0-dev
 env:
   global:
   - secure: CEEU3wEYghclP+xxrNOh0SrrHpviu9eDfVTOAlez4YLKKy4MTriB4+MyTPdWV6nvGji3hh4bFAAfEw8aaQtNKSDYxpcqoUVaMhnqITzhd/6J+zuRTXNZqsk13ybtTE+gfvdVIOREcEyeh2n7gXut+T2lC+p8H4ZDvHM8VKx3I4Q=
