@@ -21,14 +21,16 @@ quit(int sig)
 
 static int port = 3569;
 static int extport = 3569;
-static gchar *host = "";
+static gchar *host = "localhost";
 static gchar *defaultgraph = "";
+static gchar *ide = "http://app.flowhub.io";
 
 static GOptionEntry entries[] = {
 	{ "port", 'p', 0, G_OPTION_ARG_INT, &port, "Port to listen on", NULL },
     { "external-port", 'e', 0, G_OPTION_ARG_INT, &extport, "Port we are available on for clients", NULL },
     { "host", 'h', 0, G_OPTION_ARG_STRING, &host, "Hostname", NULL },
     { "graph", 'g', 0, G_OPTION_ARG_STRING, &defaultgraph, "Default graph", NULL },
+    { "ide", 'i', 0, G_OPTION_ARG_STRING, &ide, "FBP IDE to use", NULL },
 	{ NULL }
 };
 
@@ -83,6 +85,9 @@ main (int argc, char **argv)
 	    g_print("\nRuntime running on port %d, external port %d\n", port, extport);
 
         ui_connection_try_register(ui);
+        gchar *live_url = ui_connection_get_liveurl(ui, ide);
+        g_print("Live URL: %s\n", live_url);
+        g_free(live_url);
 
 	    g_main_loop_run (loop);
 

@@ -47,6 +47,21 @@ runtime_info_free(RuntimeInfo *self) {
     g_free(self->hostname);
 }
 
+gchar *
+runtime_info_liveurl(RuntimeInfo *self, gchar *ide) {
+    gchar address[120];
+    g_snprintf(address, sizeof(address), "ws://%s:%d", self->hostname, self->port);
+
+    gchar *params = soup_form_encode(
+        "protocol", "websocket",
+        "address", address,
+        NULL
+    );
+    gchar *live_url = g_strdup_printf("%s#runtime/endpoint?%s", ide, params);
+    g_free(params);
+    return live_url;
+}
+
 
 // TODO: error handling
 typedef struct _Registry {

@@ -742,6 +742,11 @@ ui_connection_new(const gchar *hostname, int internal_port, int external_port) {
     return self;
 }
 
+gchar *
+ui_connection_get_liveurl(UiConnection *self, gchar *ide) {
+    return runtime_info_liveurl(self->registry->info, ide);
+}
+
 void
 ui_connection_free(UiConnection *self) {
 
