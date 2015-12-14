@@ -590,26 +590,11 @@ process_image_callback (SoupServer *server, SoupMessage *msg,
     }
 }
 
-/*
-var addr = window.location.origin.replace("http://", "ws://");
-var ide = "http://app.flowhub.io";
-console.log(ide+"/#runtime/endpoint?protocol=websocket&address=encodeURIComponent(addr))
-Uncaught SyntaxError: Unexpected token ILLEGAL VM207:732
-console.log(ide+"/#runtime/endpoint?protocol=websocket&address="+encodeURIComponent(addr))
-*/
-
 static void
 serve_frontpage(SoupServer *server, SoupMessage *msg,
 		 const char *path, GHashTable *query,
 		 SoupClientContext *context, gpointer user_data) {
 
-    gchar *params = soup_form_encode(
-        "protocol", "websocket",
-        "address", "ws://localhost:3569",
-        NULL
-    );
-    gchar *flowhub_url = g_strdup_printf("http://app.flowhub.io#runtime/endpoint?%s", params);
-    g_free(params);
     static const gchar *html = \
         "\n<a id=\"flowhub_url\">Open in Flowhub</a>"
         "\n<script>"
@@ -622,7 +607,6 @@ serve_frontpage(SoupServer *server, SoupMessage *msg,
         "\n</script>"
         ;
     //gchar *html = g_strdup_printf(html_template, flowhub_url, "Open in Flowhub");
-    g_free(flowhub_url);
 
     const gsize len = strlen(html);
     soup_message_set_status(msg, SOUP_STATUS_OK);
