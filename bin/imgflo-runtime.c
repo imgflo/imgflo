@@ -24,6 +24,7 @@ static int extport = 3569;
 static gchar *host = "localhost";
 static gchar *defaultgraph = "";
 static gchar *ide = "http://app.flowhub.io";
+static gboolean launch_ide = FALSE;
 
 static GOptionEntry entries[] = {
 	{ "port", 'p', 0, G_OPTION_ARG_INT, &port, "Port to listen on", NULL },
@@ -31,9 +32,27 @@ static GOptionEntry entries[] = {
     { "host", 'h', 0, G_OPTION_ARG_STRING, &host, "Hostname", NULL },
     { "graph", 'g', 0, G_OPTION_ARG_STRING, &defaultgraph, "Default graph", NULL },
     { "ide", 'i', 0, G_OPTION_ARG_STRING, &ide, "FBP IDE to use", NULL },
+    { "autolaunch", 'i', 0, G_OPTION_ARG_NONE, &launch_ide, "Automatically launch FBP IDE", NULL },
 	{ NULL }
 };
 
+void
+show_liveurl(void *user_data) {
+    UiConnection *ui = (UiConnection *)user_data;
+
+    gchar *live_url = ui_connection_get_liveurl(ui, ide);
+    g_print("Live URL: %s\n", live_url);
+
+    if (launch_ide) {
+        GError *err = NULL;
+        g_app_info_launch_default_for_uri(live_url, NULL, &err);
+        if (err != NULL) {
+            g_error("%s\n", err->message);
+            g_error_free(err);
+        }
+    }
+    g_free(live_url);
+}
 
 int
 main (int argc, char **argv)
@@ -85,9 +104,8 @@ main (int argc, char **argv)
 	    g_print("\nRuntime running on port %d, external port %d\n", port, extport);
 
         ui_connection_try_register(ui);
-        gchar *live_url = ui_connection_get_liveurl(ui, ide);
-        g_print("Live URL: %s\n", live_url);
-        g_free(live_url);
+
+        g_idle_add_full(G_PRIORITY_LOW, (GSourceFunc)show_liveurl, ui, NULL);
 
 	    g_main_loop_run (loop);
 
