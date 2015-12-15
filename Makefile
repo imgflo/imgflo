@@ -49,6 +49,9 @@ run-noinstall:
 
 run: install run-noinstall
 
+process: install
+	$(PREFIX)/env.sh $(DEBUGPROG) ./bin/imgflo $(PROCESS_ARGUMENTS)
+
 install: env imgflo imgflo-runtime
 	cp ./bin/imgflo $(PREFIX)/bin/
 	cp ./bin/imgflo-runtime $(PREFIX)/bin/
