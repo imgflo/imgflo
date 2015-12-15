@@ -36,7 +36,7 @@ static GOptionEntry entries[] = {
 	{ NULL }
 };
 
-void
+gboolean
 show_liveurl(void *user_data) {
     UiConnection *ui = (UiConnection *)user_data;
 
@@ -52,6 +52,7 @@ show_liveurl(void *user_data) {
         }
     }
     g_free(live_url);
+    return FALSE;
 }
 
 int
