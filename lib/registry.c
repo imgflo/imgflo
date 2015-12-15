@@ -30,7 +30,13 @@ runtime_info_new_from_env(const gchar *host, gint port) {
     self->label = g_strdup(label);
     self->id = g_strdup(id);
     self->user_id = g_strdup(user_id);
-    self->hostname = g_strdup(host);
+    if (g_strcmp0(host, "") != 0) {
+        self->hostname = g_strdup(host);
+    } else {
+        // TODO: autodetect external interface IP
+        self->hostname = g_strdup("localhost");
+    }
+
     self->port = port;
 
     return self;

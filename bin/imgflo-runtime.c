@@ -21,7 +21,7 @@ quit(int sig)
 
 static int port = 3569;
 static int extport = 3569;
-static gchar *host = "localhost";
+static gchar *host = ""; // defaults to autodetect/localhost
 static gchar *defaultgraph = "";
 static gchar *ide = "http://app.flowhub.io";
 static gboolean launch_ide = FALSE;
