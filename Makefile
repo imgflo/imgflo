@@ -25,7 +25,7 @@ LIBS=gegl-0.3 libsoup-2.4 uuid
 SYSTEM_LIBS=gio-unix-2.0 json-glib-1.0 libpng
 DEPS=$(shell $(PREFIX)/env.sh pkg-config $(PKGCONFIG_ARGS) --libs --cflags $(LIBS))
 DEPS+=$(shell $(PREFIX)/env.sh pkg-config --libs --cflags $(SYSTEM_LIBS))
-TRAVIS_DEPENDENCIES=$(shell echo `cat .vendor_urls | sed -e "s/heroku/travis/" | tr -d '\n'`)
+TRAVIS_DEPENDENCIES=$(shell echo `cat .vendor_urls | sed -e "s/heroku/travis-${TRAVIS_OS_NAME}/" | tr -d '\n'`)
 
 RUN_ARGUMENTS:=--port $(PORT) --external-port=$(EXTPORT) --autolaunch
 ifdef GRAPH
