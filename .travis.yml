@@ -1,6 +1,10 @@
-language: node_js
-node_js:
-- '4.2'
+os:
+- linux
+- osx
+matrix:
+  allow_failures:
+    - os: osx
+language: c
 sudo: required
 dist: trusty
 before_install:
