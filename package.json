@@ -24,9 +24,6 @@
     "start": "node index.js",
     "test": "mocha --reporter spec --compilers .coffee:coffee-script/register ./spec/*.coffee"
   },
-  "engines": {
-    "node": ">=0.10.0"
-  },
   "dependencies": {
   },
   "devDependencies": {
