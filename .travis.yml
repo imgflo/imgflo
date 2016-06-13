@@ -9,6 +9,8 @@ sudo: required
 dist: trusty
 before_install:
 - sh ./travis/install-dependencies.sh
+install:
+- npm install
 script:
 - make travis-deps
 - make release RELOCATE_DEPS=true
