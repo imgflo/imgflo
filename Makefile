@@ -2,7 +2,7 @@
 VERSION=$(shell echo `git describe --tags`)
 #PREFIX=/opt/imgflo
 PREFIX=$(shell echo `pwd`/install)
-FLAGS=-Wall -Werror -std=c99 -g -DHAVE_UUID -I$(PREFIX)/include/uuid
+FLAGS=-Wall -Werror -std=c99 -g
 DEBUGPROG=
 PORT=3569
 EXTPORT=$(PORT)

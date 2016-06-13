@@ -22,6 +22,13 @@ imgflo_uuid_new_string() {
     return ret;
 }
 
-#else
-#error "No UUID library available"
+#else //HAVE_UUID
+
+#include "../thirdparty/uuid.c"
+gchar *
+imgflo_uuid_new_string() {
+    return gabble_generate_id();
+}
+
+
 #endif //HAVE_UUID
