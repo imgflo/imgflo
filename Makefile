@@ -39,6 +39,13 @@ ifdef TESTS
 TEST_ARGUMENTS=--grep $(TESTS)
 endif
 
+OS:=$(shell uname)
+ifeq "$(OS)" "Darwin"
+	SHAREDLIB_SUFFIX=dylib
+else
+	SHAREDLIB_SUFFIX=so
+endif
+
 all: install
 
 server: install
@@ -73,8 +80,8 @@ travis-deps:
 
 COMPONENTINSTALLDIR=$(PREFIX)/lib/imgflo/operations
 COMPONENT_SOURCES = $(wildcard $(COMPONENTDIR)/*.c)
-COMPONENT_PLUGINS = $(patsubst $(COMPONENTDIR)/%.c,$(COMPONENTINSTALLDIR)/%.so,$(COMPONENT_SOURCES))
-COMPONENT_OUT = $(patsubst %.c,$(COMPONENTINSTALLDIR)/%.so,$(COMPONENT))
+COMPONENT_PLUGINS = $(patsubst $(COMPONENTDIR)/%.c,$(COMPONENTINSTALLDIR)/%.$(SHAREDLIB_SUFFIX),$(COMPONENT_SOURCES))
+COMPONENT_OUT = $(patsubst %.c,$(COMPONENTINSTALLDIR)/%.$(SHAREDLIB_SUFFIX),$(COMPONENT))
 
 COMPONENT_FLAGS = -shared -rdynamic -fPIC -I$(COMPONENTDIR) $(FLAGS)
 ifdef COMPONENT_NAME_PREFIX
@@ -87,7 +94,7 @@ component-install-dir: env
 components: component-install-dir $(COMPONENT_PLUGINS)
 component: component-install-dir $(COMPONENT_OUT)
 
-$(COMPONENTINSTALLDIR)/%.so: $(COMPONENTDIR)/%.c
+$(COMPONENTINSTALLDIR)/%.$(SHAREDLIB_SUFFIX): $(COMPONENTDIR)/%.c
 	$(PREFIX)/env.sh $(CC) -o $@ $< -DGEGL_OP_C_FILE=\"`basename $<`\" $(COMPONENT_FLAGS) $(DEPS)
 
 dependencies:
