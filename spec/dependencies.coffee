@@ -34,9 +34,16 @@ describeIfSlow = if slowEnabled then describe else describe.skip
 describe 'Dependencies', ->
 
     describeIfSlow "for Travis", ->
-        it 'should be released', (done) ->
+        it 'should be released for OSX', (done) ->
             @timeout 5000
-            listVendorUrls 'travis', (err, urls) ->
+            listVendorUrls 'travis-osx', (err, urls) ->
+                for u in urls
+                    ftpFileExists u, (err, res) ->
+                        chai.expect(res).to.equal true
+                        done()
+        it 'should be released for Linux', (done) ->
+            @timeout 5000
+            listVendorUrls 'travis-linux', (err, urls) ->
                 for u in urls
                     ftpFileExists u, (err, res) ->
                         chai.expect(res).to.equal true
