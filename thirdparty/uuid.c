@@ -30,7 +30,7 @@
  * Returns: A string with RFC41122 version 4 random UUID, must be freed with
  *          g_free().
  */
-gchar *
+static gchar *
 gabble_generate_id (void)
 {
   GRand *grand;
