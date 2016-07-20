@@ -27,7 +27,11 @@ DEPS=$(shell $(PREFIX)/env.sh pkg-config $(PKGCONFIG_ARGS) --libs --cflags $(LIB
 DEPS+=$(shell $(PREFIX)/env.sh pkg-config --libs --cflags $(SYSTEM_LIBS))
 TRAVIS_DEPENDENCIES=$(shell echo `cat .vendor_urls | sed -e "s/heroku/travis-${TRAVIS_OS_NAME}/" | tr -d '\n'`)
 
-RUN_ARGUMENTS:=--port $(PORT) --external-port=$(EXTPORT) --autolaunch
+RUN_ARGUMENTS:=--port $(PORT) --external-port=$(EXTPORT)
+ifdef NOAUTOLAUNCH
+else
+RUN_ARGUMENTS+=--autolaunch
+endif
 ifdef GRAPH
 RUN_ARGUMENTS+=--graph $(GRAPH)
 endif
