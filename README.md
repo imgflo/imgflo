@@ -6,7 +6,7 @@ imgflo
 imgflo is an image-processing runtime built on top of [GEGL](http://gegl.org)
 which can be visually programmed using [Flowhub.io](http://flowhub.io).
 
-It is used by [imgflo-server](https://github.com/jonnor/imgflo-server), which
+It is used by [imgflo-server](https://github.com/imgflo/imgflo-server), which
 adds a HTTP API for image processing.
 
 imgflo is pronounced "Imageflo(w)".

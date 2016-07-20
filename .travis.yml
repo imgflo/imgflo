@@ -17,7 +17,7 @@ script:
 addons:
   coverity_scan:
     project:
-      name: jonnor/imgflo
+      name: imgflo/imgflo
       description: Build submitted via Travis CI
     notification_email: jononor@gmail.com
     build_command_prepend: make travis-deps

@@ -2,7 +2,7 @@ imgflo 0.3.0
 =============
 Released: January 23, 2015
 
-See-also [imgflo-server release notes](https://github.com/jonnor/imgflo-server)
+See-also [imgflo-server release notes](https://github.com/imgflo/imgflo-server)
 
 Changes
 --------

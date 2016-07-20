@@ -14,9 +14,9 @@
   "author": "Jon Nordby <jononor@gmail.com> (http://www.jonnor.com)",
   "repository": {
     "type": "git",
-    "url": "http://github.com/jonnor/imgflo.git"
+    "url": "http://github.com/imgflo/imgflo.git"
   },
-  "bugs": "http://github.com/jonnor/imgflo/issues",
+  "bugs": "http://github.com/imgflo/imgflo/issues",
   "homepage": "http://imgflo.org",
   "license": "MIT",
   "main": "index.js",
