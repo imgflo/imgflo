@@ -61,7 +61,9 @@ process: install
 	$(PREFIX)/env.sh $(DEBUGPROG) ./bin/imgflo $(PROCESS_ARGUMENTS)
 
 install: env imgflo imgflo-runtime imgflo-graphinfo
-	cp ./bin/{imgflo,imgflo-runtime,imgflo-graphinfo} $(PREFIX)/bin/
+	cp ./bin/imgflo $(PREFIX)/bin/
+	cp ./bin/imgflo-runtime $(PREFIX)/bin/
+	cp ./bin/imgflo-graphinfo $(PREFIX)/bin/
 
 imgflo:
 	$(PREFIX)/env.sh $(CC) -o ./bin/imgflo bin/imgflo.c -I. $(FLAGS) $(DEPS)
