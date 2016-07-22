@@ -183,8 +183,8 @@ add_pad_ports(JsonArray *ports, gchar **pads) {
     }
 }
 
-static JsonArray *
-outports_for_operation(const gchar *name)
+JsonArray *
+library_outports_for_operation(const gchar *name)
 {
     JsonArray *outports = json_array_new();
 
@@ -209,8 +209,8 @@ outports_for_operation(const gchar *name)
     return outports;
 }
 
-static JsonArray *
-inports_for_operation(const gchar *name)
+JsonArray *
+library_inports_for_operation(const gchar *name)
 {
     JsonArray *inports = json_array_new();
 
@@ -536,10 +536,10 @@ library_get_component(Library *self, const gchar *comp)
     json_object_set_string_member(component, "description", description);
     json_object_set_string_member(component, "icon", icon_for_op(op, categories));
 
-    JsonArray *inports = inports_for_operation(op);
+    JsonArray *inports = library_inports_for_operation(op);
     json_object_set_array_member(component, "inPorts", inports);
 
-    JsonArray *outports = outports_for_operation(op);
+    JsonArray *outports = library_outports_for_operation(op);
     json_object_set_array_member(component, "outPorts", outports);
 
     g_free(op);
