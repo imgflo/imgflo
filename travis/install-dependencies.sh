@@ -1,4 +1,6 @@
-if [[ $TRAVIS_OS_NAME = "osx" ]]
+OS=`uname`
+
+if [[ $OS = "Darwin" ]]
 then
     brew install pkg-config
     brew install glib json-glib
