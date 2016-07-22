@@ -69,6 +69,11 @@ Developing and running locally
 Note: imgflo has only been tested on GNU/Linux and Mac OSX systems.
 _Root is not needed_ for any of the build.
 
+Download it via git
+
+    git clone https://github.com/imgflo/imgflo.git
+    cd imgflo
+
 Pre-requisites
 ---------------
 imgflo requires git master of GEGL and BABL, as well as a custom version of libsoup.
