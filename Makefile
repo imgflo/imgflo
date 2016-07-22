@@ -60,12 +60,16 @@ run: install run-noinstall
 process: install
 	$(PREFIX)/env.sh $(DEBUGPROG) ./bin/imgflo $(PROCESS_ARGUMENTS)
 
-install: env imgflo imgflo-runtime
+install: env imgflo imgflo-runtime imgflo-graphinfo
 	cp ./bin/imgflo $(PREFIX)/bin/
 	cp ./bin/imgflo-runtime $(PREFIX)/bin/
+	cp ./bin/imgflo-graphinfo $(PREFIX)/bin/
 
 imgflo:
 	$(PREFIX)/env.sh $(CC) -o ./bin/imgflo bin/imgflo.c -I. $(FLAGS) $(DEPS)
+
+imgflo-graphinfo:
+	$(PREFIX)/env.sh $(CC) -o ./bin/imgflo-graphinfo bin/imgflo-graphinfo.c -I. $(FLAGS) $(DEPS)
 
 imgflo-runtime:
 	$(PREFIX)/env.sh $(CC) -o ./bin/imgflo-runtime bin/imgflo-runtime.c -I. $(FLAGS) $(DEPS)
@@ -119,4 +123,4 @@ clean:
 release: check
 	cd $(PREFIX) && tar -czf ../imgflo-$(VERSION).tgz ./
 
-.PHONY:all imgflo imgflo-runtime run dependencies
+.PHONY:all check release imgflo imgflo-graphinfo imgflo-runtime run dependencies

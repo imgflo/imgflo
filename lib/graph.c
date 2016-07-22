@@ -585,6 +585,60 @@ void add_edge_json_func(Graph *graph, const GraphEdge *edge, gpointer user_data)
     json_array_add_object_element(connections, conn);
 }
 
+gchar *
+lookup_type(JsonArray *ports, char *port_name) {
+    const gchar *found = NULL;
+    for (int i=0; i<json_array_get_length(ports); i++) {
+        JsonObject *info = json_array_get_object_element(ports, i);
+        const gchar *id = json_object_get_string_member(info, "id");
+        const gchar *type = json_object_get_string_member(info, "type");
+        //g_print("inport id=%s search=%s type=%s, i=%d\n", id, internal->port, type, i);
+        if (g_strcmp0(port_name, id) == 0) {
+            found = type;
+            break;
+        }
+    }
+    return g_strdup(found);
+}
+
+gchar *
+graph_inport_type(Graph *self, const char *port) {
+    GraphNodePort *internal = g_hash_table_lookup(self->inports, port);
+    g_return_val_if_fail(internal, NULL);
+
+    gchar *component = graph_get_node_component(self, internal->node);
+    g_return_val_if_fail(component, NULL);
+
+    gchar *operation = component2geglop(component);
+    g_free(component);
+    JsonArray *ports = library_inports_for_operation(operation);
+    g_free(operation);
+    g_return_val_if_fail(ports, NULL);
+
+    gchar *type = lookup_type(ports, internal->port);
+    g_return_val_if_fail(type, NULL);
+    return type;
+}
+
+gchar *
+graph_outport_type(Graph *self, const char *port) {
+    GraphNodePort *internal = g_hash_table_lookup(self->outports, port);
+    g_return_val_if_fail(internal, NULL);
+
+    gchar *component = graph_get_node_component(self, internal->node);
+    g_return_val_if_fail(component, NULL);
+
+    gchar *operation = component2geglop(component);
+    g_free(component);
+    JsonArray *ports = library_outports_for_operation(operation);
+    g_free(operation);
+    g_return_val_if_fail(ports, NULL);
+
+    gchar *type = lookup_type(ports, internal->port);
+    g_return_val_if_fail(type, NULL);
+    return type;
+}
+
 JsonObject *
 graph_save_json(Graph *self) {
 
@@ -595,6 +649,7 @@ graph_save_json(Graph *self) {
     json_object_set_object_member(root, "properties", properties);
 
     // Exported ports
+    // FIXME: actually populate in/outports
     JsonObject *inports = json_object_new();
     json_object_set_object_member(root, "inports", inports);
     JsonObject *outports = json_object_new();

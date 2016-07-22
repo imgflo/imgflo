@@ -34,3 +34,4 @@ lib/utils.c
 spec/remoteruntime.coffee
 graphs/checker.fbp
 lib/video.c
+bin/imgflo-graphinfo.c

@@ -134,7 +134,7 @@ json_for_enum(GType type) {
 }
 
 static const gchar *
-noflo_type_for_param(GParamSpec *prop) {
+fbp_type_for_param(GParamSpec *prop) {
     GType type = G_PARAM_SPEC_VALUE_TYPE(prop);
     const char *n = g_type_name(type);
     const gboolean is_integer = g_type_is_a(type, G_TYPE_INT) || g_type_is_a(type, G_TYPE_INT64)
@@ -183,8 +183,8 @@ add_pad_ports(JsonArray *ports, gchar **pads) {
     }
 }
 
-static JsonArray *
-outports_for_operation(const gchar *name)
+JsonArray *
+library_outports_for_operation(const gchar *name)
 {
     JsonArray *outports = json_array_new();
 
@@ -209,8 +209,8 @@ outports_for_operation(const gchar *name)
     return outports;
 }
 
-static JsonArray *
-inports_for_operation(const gchar *name)
+JsonArray *
+library_inports_for_operation(const gchar *name)
 {
     JsonArray *inports = json_array_new();
 
@@ -228,7 +228,7 @@ inports_for_operation(const gchar *name)
         GParamSpec *prop = properties[i];
         const gchar *id = g_param_spec_get_name(prop);
         GType type = G_PARAM_SPEC_VALUE_TYPE(prop);
-        const gchar *type_name = noflo_type_for_param(prop);
+        const gchar *type_name = fbp_type_for_param(prop);
         const GValue *def = g_param_spec_get_default_value(prop);
         JsonNode *def_json = json_from_gvalue(def, NULL);
         const gchar *blurb = g_param_spec_get_blurb(prop);
@@ -536,10 +536,10 @@ library_get_component(Library *self, const gchar *comp)
     json_object_set_string_member(component, "description", description);
     json_object_set_string_member(component, "icon", icon_for_op(op, categories));
 
-    JsonArray *inports = inports_for_operation(op);
+    JsonArray *inports = library_inports_for_operation(op);
     json_object_set_array_member(component, "inPorts", inports);
 
-    JsonArray *outports = outports_for_operation(op);
+    JsonArray *outports = library_outports_for_operation(op);
     json_object_set_array_member(component, "outPorts", outports);
 
     g_free(op);

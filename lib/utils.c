@@ -89,6 +89,7 @@ imgflo_log (const gchar   *log_domain,
 gchar *
 json_stringify_node(JsonNode *node, gsize *length_out) {
     JsonGenerator *generator = json_generator_new();
+    json_generator_set_pretty(generator, TRUE);
     json_generator_set_root(generator, node);
 
     gsize len = 0;
