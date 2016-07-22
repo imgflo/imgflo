@@ -595,6 +595,7 @@ graph_save_json(Graph *self) {
     json_object_set_object_member(root, "properties", properties);
 
     // Exported ports
+    // FIXME: actually populate in/outports
     JsonObject *inports = json_object_new();
     json_object_set_object_member(root, "inports", inports);
     JsonObject *outports = json_object_new();
