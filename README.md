@@ -66,7 +66,7 @@ See "Run the runtime" for more detail
 
 Developing and running locally
 ==========================
-Note: imgflo has only been tested on GNU/Linux systems.
+Note: imgflo has only been tested on GNU/Linux and Mac OSX systems.
 _Root is not needed_ for any of the build.
 
 Pre-requisites
@@ -74,7 +74,16 @@ Pre-requisites
 imgflo requires git master of GEGL and BABL, as well as a custom version of libsoup.
 It is recommended to let make setup this for you, but you can use existing checkouts
 by customizing PREFIX.
-You only need to install the dependencies once, or when they have changed, see 'git log -- thirdparty'
+
+Install [node.js](https://nodejs.org/) dependencies. Only needed for tests
+
+    npm install
+
+For Mac OSX, you must [install Homebrew](http://brew.sh/)
+
+### Building dependencies from source (recommended on Linux)
+
+You only need to build the dependencies once, or when they have changed. See 'git log -- thirdparty'
 
     git submodule update --init
     make dependencies
@@ -83,9 +92,11 @@ _If_ you are on an older distribution, you may also need a newer glib version
 
     # make glib # only for older distros, where GEGL fails to build due to too old glib
 
-Install node.js dependencies
+### Installing pre-built dependencies (recommended on OSX)
 
-    npm install
+If you use this option, you must specify `RELOCATE_DEPS=true` in the commands below.
+
+    make travis-deps
 
 Build
 -------
@@ -97,10 +108,22 @@ To verify that things are working, run the test suite
 
     make check
 
-Run the runtime
-----------------
+Run
+----
+To start the runtime
 
-To actually be able to use it from Flowhub, you need to register the runtime (once).
+    make run GRAPH=graphs/checker.json
+
+This should open Flowhub automatically in your browser and connect to the runtime.
+
+If the browser does not open, and you get "Operation not supported", add `NOAUTOLAUNCH=1`.
+Then you need to copy/paste the "Live URL:" into your browser manually to connect.
+
+
+## Registering runtime
+
+imgflo can automatically ping Flowhub when it is available.
+
 * Open [Flowhub](http://app.flowhub.io)
 * Login with your Github account
 * Click "Register" under "runtimes" to find your user ID. Copy it and paste in command below
