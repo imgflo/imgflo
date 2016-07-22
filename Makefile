@@ -123,4 +123,4 @@ clean:
 release: check
 	cd $(PREFIX) && tar -czf ../imgflo-$(VERSION).tgz ./
 
-.PHONY:all imgflo imgflo-graphinfo imgflo-runtime run dependencies
+.PHONY:all check release imgflo imgflo-graphinfo imgflo-runtime run dependencies
