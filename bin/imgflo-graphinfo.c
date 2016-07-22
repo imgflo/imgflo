@@ -120,8 +120,7 @@ main (int argc, char **argv)
             JsonObject *root = json_node_get_object(rootnode);
 
             inject_exported_port_types(g, root);
-
-            gchar *output = json_to_string(rootnode, TRUE);
+            gchar *output = json_stringify(root, NULL);
 
             g_print("%s", output);
             g_free(output);
