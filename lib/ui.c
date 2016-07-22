@@ -169,7 +169,7 @@ send_ports(Network *network, SoupWebsocketConnection *ws) {
         const gchar *exported_port = (const gchar *)(key);
         JsonObject *port = json_object_new();
         json_object_set_string_member(port, "id", exported_port);
-        json_object_set_string_member(port, "type", "any");
+        json_object_set_string_member(port, "type", "any"); // TODO: should be that of the target
         json_object_set_string_member(port, "description", "");
         json_object_set_boolean_member(port, "addressable", FALSE);
         json_object_set_boolean_member(port, "required", FALSE);
@@ -184,7 +184,7 @@ send_ports(Network *network, SoupWebsocketConnection *ws) {
         const gchar *exported_port = (const gchar *)(key);
         JsonObject *port = json_object_new();
         json_object_set_string_member(port, "id", exported_port);
-        json_object_set_string_member(port, "type", "any");
+        json_object_set_string_member(port, "type", "any"); // TODO: should be that of the target
         json_object_set_string_member(port, "description", "");
         json_object_set_boolean_member(port, "addressable", FALSE);
         json_object_set_boolean_member(port, "required", FALSE);
