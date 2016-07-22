@@ -26,6 +26,47 @@ static GOptionEntry entries[] = {
 };
 
 
+void
+set_port_type(JsonObject *port, char *type) {
+    if (!type) { return; }
+
+    if (!json_object_has_member(port, "metadata")) {
+        g_print("adding metadta\n");
+        json_object_set_object_member(port, "metadata", json_object_new());
+    }
+    JsonObject *metadata = json_object_get_object_member(port, "metadata");
+    json_object_set_string_member(metadata, "type", type);
+
+}
+
+gboolean
+inject_exported_port_types(Graph *g, JsonObject *root) {
+    if (json_object_has_member(root, "inports")) {
+        JsonObject *inports = json_object_get_object_member(root, "inports");
+        GList *inport_names = json_object_get_members(inports);
+        for (int i=0; i<g_list_length(inport_names); i++) {
+            const gchar *name = g_list_nth_data(inport_names, i);
+            char *type = graph_inport_type(g, name);
+            //g_print("exported inport %s type=%s\n", name, type);
+            JsonObject *port = json_object_get_object_member(inports, name);
+            set_port_type(port, type);
+        }
+    }
+
+    if (json_object_has_member(root, "outports")) {
+        JsonObject *outports = json_object_get_object_member(root, "outports");
+        GList *outport_names = json_object_get_members(outports);
+        for (int i=0; i<g_list_length(outport_names); i++) {
+            const gchar *name = g_list_nth_data(outport_names, i);
+            char *type = graph_outport_type(g, name);
+            //g_print("exported outport %s type=%s\n", name, type);
+            JsonObject *port = json_object_get_object_member(outports, name);
+            set_port_type(port, type);
+        }
+    }
+    return TRUE;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -65,27 +106,25 @@ main (int argc, char **argv)
                 return 1;
             }
 
-
-            GHashTableIter iter;
-            gpointer key, value;
-
-            g_hash_table_iter_init(&iter, g->inports);
-            while (g_hash_table_iter_next(&iter, &key, &value))
-            {
-                const gchar *port = (const gchar *)key;
-                char *type = graph_inport_type(g, port);
-                g_print("exported inport %s type=%s\n", port, type);
+            // To ensure we preserve all metadata, we operate directly on the JSON,
+            // instead of potentially lossy roundtrip in Graph datastructure
+            JsonParser *parser = json_parser_new();
+            gboolean success = json_parser_load_from_file(parser, graphfile, &err);
+            if (!success) {
+                g_printerr("Failed to load graph: %s", err->message);
+                return 1;
             }
 
-            g_hash_table_iter_init(&iter, g->outports);
-            while (g_hash_table_iter_next(&iter, &key, &value))
-            {
-                const gchar *port = (const gchar *)key;
-                char *type = graph_outport_type(g, port);
-                g_print("exported outport %s type=%s\n", port, type);
-            }
+            JsonNode *rootnode = json_parser_get_root(parser);
+            g_assert(JSON_NODE_HOLDS_OBJECT(rootnode));
+            JsonObject *root = json_node_get_object(rootnode);
 
-            // FIXME: put into exported port .metadata
+            inject_exported_port_types(g, root);
+
+            gchar *output = json_to_string(rootnode, TRUE);
+
+            g_print("%s", output);
+            g_free(output);
 
         } else {
             g_printerr("No --graph specified");
