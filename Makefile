@@ -120,6 +120,6 @@ clean:
 	git clean -dfx --exclude node_modules --exclude install
 
 release: check
-	cd $(PREFIX) && tar -caf ../imgflo-$(VERSION).tgz ./
+	cd $(PREFIX) && tar -czf ../imgflo-$(VERSION).tgz ./
 
 .PHONY:all imgflo imgflo-runtime run dependencies
