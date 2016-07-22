@@ -51,7 +51,7 @@ else
 endif
 
 all: install
-npm
+
 run-noinstall:
 	$(PREFIX)/env.sh $(DEBUGPROG) ./bin/imgflo-runtime $(RUN_ARGUMENTS)
 
