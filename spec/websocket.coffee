@@ -5,6 +5,7 @@
 utils = require './utils'
 fs = require 'fs'
 path = require 'path'
+os = require 'os'
 
 chai = require 'chai'
 
@@ -12,6 +13,7 @@ debug = process.env.IMGFLO_TESTS_DEBUG?
 # Used for checks which cannot be evaluated when running in debug,
 # when we don't get the stdout of the runtime for instance.
 itSkipDebug = if debug then it.skip else it
+itSkipDebugOrMac = if debug or os.platform() == 'darwin' then it.skip else it
 
 projectDir = path.resolve __dirname, '..'
 testDataDir = path.join projectDir, 'spec/data'
@@ -199,7 +201,7 @@ describe 'FBP runtime protocol,', () ->
             ui.once 'runtime-info-changed', ->
                 done()
 
-        itSkipDebug 'should not have produced any errors', ->
+        itSkipDebugOrMac 'should not have produced any errors', ->
             chai.expect(runtime.popErrors()).to.eql []
 
     describe 'starting the network', ->
@@ -218,7 +220,7 @@ describe 'FBP runtime protocol,', () ->
                     done() if exists
                     clearInterval checkInterval
             checkInterval = setInterval checkExistence, 50
-        itSkipDebug 'should not have produced any errors', ->
+        itSkipDebugOrMac 'should not have produced any errors', ->
             chai.expect(runtime.popErrors()).to.eql []
 
     describe 'stopping the network', ->
@@ -228,7 +230,7 @@ describe 'FBP runtime protocol,', () ->
             ui.send "network", "stop", {graph: graph}
             ui.once 'network-running', (running) ->
                 done() if not running
-        itSkipDebug 'should not have produced any errors', ->
+        itSkipDebugOrMac 'should not have produced any errors', ->
             chai.expect(runtime.popErrors()).to.eql []
 
     describe 'graph tear down', ->
@@ -251,7 +253,7 @@ describe 'FBP runtime protocol,', () ->
             ui.once 'runtime-info-changed', ->
                 done()
 
-        it 'should not have produced any errors', ->
+        itSkipDebugOrMac 'should not have produced any errors', ->
             chai.expect(runtime.popErrors()).to.eql []
 
     describe 'processing a node without anything connected', ->
@@ -267,7 +269,7 @@ describe 'FBP runtime protocol,', () ->
                     chai.expect(resp.statusCode).to.equal 400
                     done()
 
-        itSkipDebug 'should have produced 1 error', ->
+        itSkipDebugOrMac 'should have produced 1 error', ->
             errors = runtime.popErrors()
             chai.expect(errors).to.have.length 1, errors.toString()
 
@@ -289,7 +291,7 @@ describe 'FBP runtime protocol,', () ->
                     chai.expect(resp.headers['content-type']).to.equal "image/png"
                     done()
 
-        itSkipDebug 'should have produced 2 errors', ->
+        itSkipDebugOrMac 'should have produced 2 errors', ->
             errors = runtime.popErrors()
             chai.expect(errors).to.have.length 2, errors.toString()
 
@@ -306,7 +308,7 @@ describe 'FBP runtime protocol,', () ->
                 chai.expect(info.source).to.contain 'This file is an image processing operation for GEGL'
                 done()
 
-        itSkipDebug 'should not have produced any errors', ->
+        itSkipDebugOrMac 'should not have produced any errors', ->
             chai.expect(runtime.popErrors()).to.eql []
 
     describe 'adding a component using component:source', ->
@@ -325,7 +327,7 @@ describe 'FBP runtime protocol,', () ->
                 chai.expect(x).to.have.length 0
                 done()
 
-        itSkipDebug 'should not have produced any errors', ->
+        itSkipDebugOrMac 'should not have produced any errors', ->
             chai.expect(runtime.popErrors()).to.eql []
 
     describe 'getting a component using component:getsource', ->
@@ -340,14 +342,14 @@ describe 'FBP runtime protocol,', () ->
                 chai.expect(ui.components[opname].source).to.equal code
                 done()
 
-        itSkipDebug 'should not have produced any errors', ->
+        itSkipDebugOrMac 'should not have produced any errors', ->
             chai.expect(runtime.popErrors()).to.eql []
 
     describe 'changing a component using component:source', ->
         @timeout 2000
         code = utils.testData 'dynamiccomponent1-withprop.c'
         opname = 'dynamiccomponent1'
-        it 'should now have a X property', (done) ->
+        itSkipDebugOrMac 'should now have a X property', (done) ->
             ui.send "component", "source",
                 name: opname,
                 language: 'c',
@@ -360,5 +362,5 @@ describe 'FBP runtime protocol,', () ->
                 chai.expect(x[0].type).to.equal 'number'
                 done()
 
-        itSkipDebug 'should not have produced any errors', ->
+        itSkipDebugOrMac 'should not have produced any errors', ->
             chai.expect(runtime.popErrors()).to.eql []
