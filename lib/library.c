@@ -134,7 +134,7 @@ json_for_enum(GType type) {
 }
 
 static const gchar *
-noflo_type_for_param(GParamSpec *prop) {
+fbp_type_for_param(GParamSpec *prop) {
     GType type = G_PARAM_SPEC_VALUE_TYPE(prop);
     const char *n = g_type_name(type);
     const gboolean is_integer = g_type_is_a(type, G_TYPE_INT) || g_type_is_a(type, G_TYPE_INT64)
@@ -228,7 +228,7 @@ inports_for_operation(const gchar *name)
         GParamSpec *prop = properties[i];
         const gchar *id = g_param_spec_get_name(prop);
         GType type = G_PARAM_SPEC_VALUE_TYPE(prop);
-        const gchar *type_name = noflo_type_for_param(prop);
+        const gchar *type_name = fbp_type_for_param(prop);
         const GValue *def = g_param_spec_get_default_value(prop);
         JsonNode *def_json = json_from_gvalue(def, NULL);
         const gchar *blurb = g_param_spec_get_blurb(prop);
