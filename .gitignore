@@ -1,5 +1,7 @@
 bin/imgflo
 bin/imgflo-runtime
+bin/imgflo-graphinfo
+bin/imgflo-stat
 testtemp/
 install/
 *~
