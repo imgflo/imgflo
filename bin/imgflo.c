@@ -13,14 +13,27 @@
 #include "lib/video.c"
 
 static gboolean process_video = FALSE;
+static gchar *node_info = NULL;
 
 static GOptionEntry entries[] = {
     { "video", 'v', 0, G_OPTION_ARG_NONE, &process_video, "Input should be processed as a video", NULL },
+    { "nodeinfo", 'i', 0, G_OPTION_ARG_STRING, &node_info, "Show info from these (comma,separated) nodes", NULL },
     { NULL }
 };
 
 void video_progress(Network *net, gint frame, gint total, gpointer user_data) {
     g_debug("frame: %d / %d\n", frame, total);
+}
+
+void
+show_node_info(Network *net, const gchar *info) {
+    gchar **names = g_strsplit(info, ",", 0);
+    for (int i = 0; names[i]; ++i) {
+        const gchar *name = names[i];
+        GeglRectangle bbox = network_get_bounding_box(net, name);
+        g_print("NodeInfo: { \"name\":\"%s\", \"x\":%d, \"y\":%d, \"width\":%d, \"height\":%d }\n", name, bbox.x, bbox.y, bbox.width, bbox.height);
+    }
+    g_strfreev(names);
 }
 
 int main(int argc, char *argv[]) {
@@ -76,6 +89,10 @@ int main(int argc, char *argv[]) {
         }
     } else {
         network_process(net);
+
+        if (node_info) {
+            show_node_info(net, node_info);
+        }
     }
 
     network_free(net);
