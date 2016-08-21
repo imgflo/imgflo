@@ -183,3 +183,9 @@ network_send_packet(Network *self, const gchar *port, GValue *data) {
 
     return set_property(target, internal->port, paramspec, data);
 }
+
+GeglRectangle
+network_get_bounding_box(Network *self, const gchar *node_name) {
+    GeglNode *node = graph_get_gegl_node(self->graph, node_name);
+    return gegl_node_get_bounding_box(node);
+}
