@@ -57,6 +57,7 @@ static gchar *stat_image(const gchar *filepath) {
   g_object_unref (graph);
   g_object_unref (buffer);
 
+  // FIXME: GEGL load return invalid width/height when image fails to load
   if (width && height) {
       return g_strdup_printf("{\n\t\"width\": %d,\n\t\"height\": %d\n}\n", width, height);
   } else {
