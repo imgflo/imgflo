@@ -2,7 +2,8 @@
 VERSION=$(shell echo `git describe --tags`)
 #PREFIX=/opt/imgflo
 PREFIX=$(shell echo `pwd`/install)
-FLAGS=-Wall -Werror -std=c99 -g
+FLAGS=-Wall -Werror -std=c99 -O3
+#DEBUG=
 DEBUGPROG=
 PORT=3569
 EXTPORT=$(PORT)
@@ -13,6 +14,10 @@ EXTPORT=$(PORT)
 ifneq ("$(wildcard /app)","")
 # Heroku build. TODO: find better way to detect
 RELOCATE_DEPS:=true
+endif
+
+ifdef DEBUG
+FLAGS+=-g
 endif
 
 ifdef RELOCATE_DEPS
