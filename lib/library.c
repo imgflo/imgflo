@@ -360,8 +360,8 @@ compile_plugin(GFile *file, const gchar *build_dir, gint rev) {
                               G_SPAWN_DEFAULT, NULL, NULL,
                               &stdout, &stderr, &exitcode, &err);
     try_print_error(err);
-    if (!success || stderr) {
-        imgflo_error("%s", stderr);
+    if (!success) {
+        imgflo_error("Failed to compile operation: %s", stderr);
     }
     g_free(stdout);
     g_free(stderr);
