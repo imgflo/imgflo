@@ -45,3 +45,7 @@ describe 'imgflo-graphinfo', () ->
     describe 'graph with port description set already', ->
         it 'should exit with success'
         it 'description should be kept'
+
+    describe 'non-imgflo graph', ->
+        it 'should exit with success'
+        it 'should output graph unchanged'
