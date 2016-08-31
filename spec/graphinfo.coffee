@@ -65,9 +65,9 @@ describe 'imgflo-graphinfo', () ->
             p = outgraph.inports['abyss-policy']
             chai.expect(p.metadata.type).to.equal 'enum'
             chai.expect(p.metadata.values).eql ['none', 'clamp', 'black']
-        it.skip 'inport now has default value', () ->
+        it 'inport now has default value', () ->
             p = outgraph.inports['abyss-policy']
-            chai.expect(p.metadata.default).to.equal 'none'
+            chai.expect(p.metadata.default).to.equal 'clamp'
 
     describe 'graph with numeric inport', ->
         it 'should exit with success'

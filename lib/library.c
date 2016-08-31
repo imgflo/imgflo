@@ -102,7 +102,7 @@ json_from_gvalue(const GValue *val, gboolean *supported_out) {
         // TODO: support GeglPath / GeglCurve
         json_node_init_null(ret);
     } else if (G_VALUE_HOLDS_ENUM(val)) {
-        // TODO: support enums
+        // TODO: support enums, see nick_for_enum()
         json_node_init_null(ret);
     } else if (G_VALUE_HOLDS_POINTER(val) || G_VALUE_HOLDS_OBJECT(val)) {
         // TODO: go over operations which report this generic
@@ -132,6 +132,23 @@ json_for_enum(GType type) {
 
     return array;
 }
+
+gchar *
+nick_for_enum(GType type, const GValue *val) {
+    GEnumClass *klass = (GEnumClass *)g_type_class_ref(type);
+    const gint enum_value = g_value_get_enum(val);
+    const gchar *found = NULL;
+
+    for (int i=klass->minimum; i<klass->maximum; i++) {
+        GEnumValue *val = g_enum_get_value(klass, i);
+        if (val->value == enum_value) {
+            found = val->value_nick;
+            break;
+        }
+    }
+    return g_strdup(found);
+}
+
 
 static const gchar *
 fbp_type_for_param(GParamSpec *prop) {
@@ -243,9 +260,13 @@ library_inports_for_operation(const gchar *name)
         if (!json_node_is_null(def_json)) {
             json_object_set_member(port, "default", def_json);
         }
+
         if (G_TYPE_IS_ENUM(type)) {
             JsonArray *values = json_for_enum(type);
             json_object_set_array_member(port, "values", values);
+            gchar *enum_default = nick_for_enum(type, def);
+            json_object_set_string_member(port, "default", enum_default);
+            g_free(enum_default);
         }
 
         json_array_add_object_element(inports, port);
