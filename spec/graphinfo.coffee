@@ -53,9 +53,21 @@ describe 'imgflo-graphinfo', () ->
             chai.expect(p.metadata.y).to.be.a 'number'
 
     describe 'graph with enum inport', ->
-        it 'should exit with success'
-        it 'inport now has enum values'
-        it 'inport now has default value'
+        p = fixture 'gaussianblur.json'
+        outgraph = null
+        it 'should exit with success', (done) ->
+            graphInfo p, (err, stdout, stderr) ->
+                chai.expect(err).to.not.exist
+                chai.expect(stderr).to.equal ""
+                outgraph = JSON.parse stdout
+                return done()
+        it 'inport now has enum values', () ->
+            p = outgraph.inports['abyss-policy']
+            chai.expect(p.metadata.type).to.equal 'enum'
+            chai.expect(p.metadata.values).eql ['none', 'clamp', 'black']
+        it.skip 'inport now has default value', () ->
+            p = outgraph.inports['abyss-policy']
+            chai.expect(p.metadata.default).to.equal 'none'
 
     describe 'graph with numeric inport', ->
         it 'should exit with success'
