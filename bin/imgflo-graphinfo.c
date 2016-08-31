@@ -27,15 +27,24 @@ static GOptionEntry entries[] = {
 
 
 void
-set_port_type(JsonObject *port, char *type) {
-    if (!type) { return; }
+merge_port_info(JsonObject *port, JsonObject *port_info) {
 
+    // Add metadata container object, if needed
     if (!json_object_has_member(port, "metadata")) {
         json_object_set_object_member(port, "metadata", json_object_new());
     }
     JsonObject *metadata = json_object_get_object_member(port, "metadata");
-    json_object_set_string_member(metadata, "type", type);
 
+    JsonObjectIter iter;
+    const gchar *key;
+    JsonNode *node;
+    json_object_iter_init (&iter, port_info);
+    while (json_object_iter_next (&iter, &key, &node)) {
+        gboolean allowed = (g_strcmp0(key, "id") != 0);
+        if (allowed && !json_object_has_member(metadata, key)) {
+            json_object_set_member(metadata, key, node);
+        }
+    }
 }
 
 gboolean
@@ -45,10 +54,10 @@ inject_exported_port_types(Graph *graph, JsonObject *root) {
         GList *inport_names = json_object_get_members(inports);
         for (int i=0; i<g_list_length(inport_names); i++) {
             const gchar *name = g_list_nth_data(inport_names, i);
-            char *type = graph_inport_type(graph, name);
+            JsonObject *info = graph_inport_info(graph, name);
             //g_print("exported inport %s type=%s\n", name, type);
             JsonObject *port = json_object_get_object_member(inports, name);
-            set_port_type(port, type);
+            merge_port_info(port, info);
         }
     }
 
@@ -57,10 +66,10 @@ inject_exported_port_types(Graph *graph, JsonObject *root) {
         GList *outport_names = json_object_get_members(outports);
         for (int i=0; i<g_list_length(outport_names); i++) {
             const gchar *name = g_list_nth_data(outport_names, i);
-            char *type = graph_outport_type(graph, name);
+            JsonObject *info = graph_outport_info(graph, name);
             //g_print("exported outport %s type=%s\n", name, type);
             JsonObject *port = json_object_get_object_member(outports, name);
-            set_port_type(port, type);
+            merge_port_info(port, info);
         }
     }
     return TRUE;
