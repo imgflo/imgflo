@@ -24,6 +24,24 @@ describe 'imgflo-graphinfo', () ->
 
     describe 'with a base graph', ->
         it 'should exit with success'
-        it 'graph now has type metadata on inports'
-        it 'graph now has type metadata on outports'
+        it 'graph now has type on exported ports'
+        it 'graph now has decription on exported ports'
         it 'graph still has unknown node metadata'
+
+    describe 'graph with enum inport', ->
+        it 'should exit with success'
+        it 'inport now has enum values'
+        it 'inport now has default value'
+
+    describe 'graph with numeric inport', ->
+        it 'should exit with success'
+        it 'should now have default value'
+        it 'should now have min&max value'
+
+    describe 'graph with default value set as IIP', ->
+        it 'should exit with success'
+        it 'default value comes from IIP not port'
+
+    describe 'graph with port description set already', ->
+        it 'should exit with success'
+        it 'description should be kept'
