@@ -31,7 +31,6 @@ set_port_type(JsonObject *port, char *type) {
     if (!type) { return; }
 
     if (!json_object_has_member(port, "metadata")) {
-        g_print("adding metadta\n");
         json_object_set_object_member(port, "metadata", json_object_new());
     }
     JsonObject *metadata = json_object_get_object_member(port, "metadata");
