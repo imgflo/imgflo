@@ -13,6 +13,7 @@ chai = require 'chai'
 # when we don't get the stdout of the runtime for instance.
 debug = process.env.IMGFLO_TESTS_DEBUG?
 itSkipDebug = if debug then it.skip else it
+describeSkipMac = if os.platform() == 'darwin' then describe.skip else describe
 
 projectDir = path.resolve __dirname, '..'
 testDataDir = path.join projectDir, 'spec/data'
@@ -26,7 +27,7 @@ graphInfo = (graphpath, callback) ->
     args = ['--graph', graphpath]
     child = childProcess.execFile prog, args, callback
 
-describe 'imgflo-graphinfo', () ->
+describeSkipMac 'imgflo-graphinfo', () ->
 
     describe 'with a basic graph', ->
         p = fixture 'enhancelowres.json'
