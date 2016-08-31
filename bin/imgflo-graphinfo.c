@@ -39,13 +39,13 @@ set_port_type(JsonObject *port, char *type) {
 }
 
 gboolean
-inject_exported_port_types(Graph *g, JsonObject *root) {
+inject_exported_port_types(Graph *graph, JsonObject *root) {
     if (json_object_has_member(root, "inports")) {
         JsonObject *inports = json_object_get_object_member(root, "inports");
         GList *inport_names = json_object_get_members(inports);
         for (int i=0; i<g_list_length(inport_names); i++) {
             const gchar *name = g_list_nth_data(inport_names, i);
-            char *type = graph_inport_type(g, name);
+            char *type = graph_inport_type(graph, name);
             //g_print("exported inport %s type=%s\n", name, type);
             JsonObject *port = json_object_get_object_member(inports, name);
             set_port_type(port, type);
@@ -57,7 +57,7 @@ inject_exported_port_types(Graph *g, JsonObject *root) {
         GList *outport_names = json_object_get_members(outports);
         for (int i=0; i<g_list_length(outport_names); i++) {
             const gchar *name = g_list_nth_data(outport_names, i);
-            char *type = graph_outport_type(g, name);
+            char *type = graph_outport_type(graph, name);
             //g_print("exported outport %s type=%s\n", name, type);
             JsonObject *port = json_object_get_object_member(outports, name);
             set_port_type(port, type);
