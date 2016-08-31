@@ -28,11 +28,25 @@ graphInfo = (graphpath, callback) ->
 
 describe 'imgflo-graphinfo', () ->
 
-    describe 'with a base graph', ->
-        it 'should exit with success'
-        it 'graph now has type on exported ports'
-        it 'graph now has decription on exported ports'
-        it 'graph still has unknown node metadata'
+    describe 'with a basic graph', ->
+        p = fixture 'enhancelowres.json'
+        outgraph = null
+        it 'should exit with success', (done) ->
+            graphInfo p, (err, stdout, stderr) ->
+                chai.expect(err).to.not.exist
+                chai.expect(stderr).to.equal ""
+                outgraph = JSON.parse stdout
+                return done()
+        it 'graph now has type on exported ports', () ->
+            o = outgraph
+            chai.expect(o.outports.output.metadata.type, 'output').to.equal 'buffer'
+            chai.expect(o.inports.input.metadata.type, 'input').to.equal 'buffer'
+            chai.expect(o.inports.iterations.metadata.type, 'iterations').to.equal 'int'
+        it 'graph now has decription on exported ports' # TODO: implement
+        it 'unknown node metadata is preserved', () ->
+            p = outgraph.outports.output
+            chai.expect(p.metadata.x).to.be.a 'number'
+            chai.expect(p.metadata.y).to.be.a 'number'
 
     describe 'graph with enum inport', ->
         it 'should exit with success'

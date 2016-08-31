@@ -1,0 +1,215 @@
+{
+    "properties": {
+        "name": "enhancelowres",
+        "project": "imgflo2",
+        "id": "imgflo2/enhancelowres",
+        "environment": {
+            "type": "imgflo"
+        },
+        "changed": true
+    },
+    "inports": {
+        "input": {
+            "process": "gegl/noise-reduction_knyda",
+            "port": "input",
+            "metadata": {
+                "x": 180,
+                "y": 216,
+                "width": 72,
+                "height": 72
+            }
+        },
+        "iterations": {
+            "process": "gegl/noise-reduction_knyda",
+            "port": "iterations",
+            "metadata": {
+                "x": 252,
+                "y": 72,
+                "width": 72,
+                "height": 72
+            }
+        }
+    },
+    "outports": {
+        "output": {
+            "process": "svg/src-over_pl1jt",
+            "port": "output",
+            "metadata": {
+                "x": 792,
+                "y": 216,
+                "width": 72,
+                "height": 72
+            }
+        }
+    },
+    "groups": [],
+    "processes": {
+        "gegl/load_any3a": {
+            "component": "gegl/load",
+            "metadata": {
+                "label": "gegl/load",
+                "x": 108,
+                "y": 108,
+                "width": 72,
+                "height": 72
+            }
+        },
+        "Processor_duf3e": {
+            "component": "Processor",
+            "metadata": {
+                "label": "Processor",
+                "x": 720,
+                "y": 72,
+                "width": 72,
+                "height": 72
+            }
+        },
+        "gegl/noise-reduction_knyda": {
+            "component": "gegl/noise-reduction",
+            "metadata": {
+                "label": "gegl/noise-reduction",
+                "x": 360,
+                "y": 216,
+                "width": 72,
+                "height": 72
+            }
+        },
+        "svg/src-over_pl1jt": {
+            "component": "svg/src-over",
+            "metadata": {
+                "label": "svg/src-over",
+                "x": 648,
+                "y": 216,
+                "width": 72,
+                "height": 72
+            }
+        },
+        "gegl/noise-cie-lch_qp70v": {
+            "component": "gegl/noise-cie-lch",
+            "metadata": {
+                "label": "gegl/noise-cie-lch",
+                "x": 504,
+                "y": 216,
+                "width": 72,
+                "height": 72
+            }
+        }
+    },
+    "connections": [
+        {
+            "src": {
+                "process": "gegl/load_any3a",
+                "port": "output"
+            },
+            "tgt": {
+                "process": "gegl/noise-reduction_knyda",
+                "port": "input"
+            },
+            "metadata": {
+                "route": 0
+            }
+        },
+        {
+            "src": {
+                "process": "gegl/noise-cie-lch_qp70v",
+                "port": "output"
+            },
+            "tgt": {
+                "process": "svg/src-over_pl1jt",
+                "port": "input"
+            },
+            "metadata": {
+                "route": null
+            }
+        },
+        {
+            "src": {
+                "process": "gegl/noise-reduction_knyda",
+                "port": "output"
+            },
+            "tgt": {
+                "process": "gegl/noise-cie-lch_qp70v",
+                "port": "input"
+            },
+            "metadata": {
+                "route": null
+            }
+        },
+        {
+            "src": {
+                "process": "svg/src-over_pl1jt",
+                "port": "output"
+            },
+            "tgt": {
+                "process": "Processor_duf3e",
+                "port": "input"
+            },
+            "metadata": {
+                "route": null
+            }
+        },
+        {
+            "data": "",
+            "tgt": {
+                "process": "gegl/load_any3a",
+                "port": "uri"
+            }
+        },
+        {
+            "data": "hqdefault.jpg",
+            "tgt": {
+                "process": "gegl/load_any3a",
+                "port": "path"
+            }
+        },
+        {
+            "data": 4,
+            "tgt": {
+                "process": "gegl/noise-reduction_knyda",
+                "port": "iterations"
+            }
+        },
+        {
+            "data": true,
+            "tgt": {
+                "process": "svg/src-over_pl1jt",
+                "port": "srgb"
+            }
+        },
+        {
+            "data": 0,
+            "tgt": {
+                "process": "gegl/noise-cie-lch_qp70v",
+                "port": "seed"
+            }
+        },
+        {
+            "data": 5,
+            "tgt": {
+                "process": "gegl/noise-cie-lch_qp70v",
+                "port": "hue-distance"
+            }
+        },
+        {
+            "data": 10,
+            "tgt": {
+                "process": "gegl/noise-cie-lch_qp70v",
+                "port": "holdness"
+            }
+        },
+        {
+            "data": 3,
+            "tgt": {
+                "process": "gegl/noise-cie-lch_qp70v",
+                "port": "lightness-distance"
+            }
+        },
+        {
+            "data": 3,
+            "tgt": {
+                "process": "gegl/noise-cie-lch_qp70v",
+                "port": "chroma-distance"
+            }
+        }
+    ]
+}
