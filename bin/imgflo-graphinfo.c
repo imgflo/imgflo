@@ -35,11 +35,10 @@ merge_port_info(JsonObject *port, JsonObject *port_info) {
     }
     JsonObject *metadata = json_object_get_object_member(port, "metadata");
 
-    JsonObjectIter iter;
-    const gchar *key;
-    JsonNode *node;
-    json_object_iter_init (&iter, port_info);
-    while (json_object_iter_next (&iter, &key, &node)) {
+    GList *keys = json_object_get_members(port_info);
+    for (int i=0; i<g_list_length(keys); i++) {
+        const gchar *key = g_list_nth_data(keys, i);
+        JsonNode *node = json_object_get_member(port_info, key);
         gboolean allowed = (g_strcmp0(key, "id") != 0);
         if (allowed && !json_object_has_member(metadata, key)) {
             json_object_set_member(metadata, key, node);
