@@ -67,8 +67,17 @@ describe 'imgflo-graphinfo', () ->
         it 'default value comes from IIP not port'
 
     describe 'graph with port description set already', ->
-        it 'should exit with success'
-        it 'description should be kept'
+        p = fixture 'enhancelowres_description.json'
+        outgraph = null
+        it 'should exit with success', (done) ->
+            graphInfo p, (err, stdout, stderr) ->
+                chai.expect(err).to.not.exist
+                chai.expect(stderr).to.equal ""
+                outgraph = JSON.parse stdout
+                return done()
+        it 'description should be kept', ->
+            p = outgraph.inports.iterations
+            chai.expect(p.metadata.description).to.contain 'Manually set description'
 
     describe 'non-imgflo graph', ->
         p = fixture 'noflo_insta_hefe.json'
