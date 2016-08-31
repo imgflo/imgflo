@@ -178,6 +178,7 @@ add_pad_ports(JsonArray *ports, gchar **pads) {
         JsonObject *port = json_object_new();
         json_object_set_string_member(port, "id", pad_name);
         json_object_set_string_member(port, "type", type);
+        json_object_set_string_member(port, "description", "Image buffer"); // TODO: read from pad?
         json_array_add_object_element(ports, port);
         pad_name = *(++pads);
     }
