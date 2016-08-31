@@ -294,10 +294,10 @@ handle_network_message(UiConnection *self, const gchar *command, JsonObject *pay
     g_return_if_fail(network);
 
     if (g_strcmp0(command, "start") == 0) {
-        imgflo_message("\tNetwork START\n");
+        imgflo_info("\tNetwork START\n");
         network_set_running(network, TRUE);
     } else if (g_strcmp0(command, "stop") == 0) {
-        imgflo_message("\tNetwork STOP\n");
+        imgflo_info("\tNetwork STOP\n");
         network_set_running(network, FALSE);
     } else if (g_strcmp0(command, "getstatus") == 0) {
         JsonObject *info = json_object_new();
@@ -443,7 +443,7 @@ on_web_socket_open(SoupWebsocketConnection *ws, gpointer user_data)
     SoupURI *uri = soup_websocket_connection_get_uri(ws);
 	gchar *url = soup_uri_to_string(uri, FALSE);
 
-	imgflo_message("WebSocket: client opened %s with %s\n", soup_websocket_connection_get_protocol(ws), url);
+	imgflo_debug("WebSocket: client opened %s with %s\n", soup_websocket_connection_get_protocol(ws), url);
 
     UiConnection *self = (UiConnection *)user_data;
     g_assert(self);
@@ -507,7 +507,7 @@ on_web_socket_close(SoupWebsocketConnection *ws, gpointer user_data)
 		imgflo_warning("WebSocket: close: %d %s\n", code,
 			    soup_websocket_connection_get_close_data(ws));
 	} else {
-		imgflo_message("WebSocket: close\n");
+		imgflo_debug("WebSocket: close\n");
     }
 }
 
@@ -634,7 +634,7 @@ server_callback (SoupServer *server, SoupMessage *msg,
 {
     UiConnection *self = (UiConnection *)data;
 
-    imgflo_message("%s %s HTTP/1.%d\n", msg->method, path,
+    imgflo_debug("%s %s HTTP/1.%d\n", msg->method, path,
          soup_message_get_http_version(msg));
     ensure_hostname_set(self, soup_message_get_uri(msg));
 
