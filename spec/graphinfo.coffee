@@ -42,7 +42,11 @@ describe 'imgflo-graphinfo', () ->
             chai.expect(o.outports.output.metadata.type, 'output').to.equal 'buffer'
             chai.expect(o.inports.input.metadata.type, 'input').to.equal 'buffer'
             chai.expect(o.inports.iterations.metadata.type, 'iterations').to.equal 'int'
-        it 'graph now has decription on exported ports' # TODO: implement
+        it 'graph now has decription on exported ports', () ->
+            [i, o] = [outgraph.inports, outgraph.outports]
+            chai.expect(o.output.metadata.description, 'output').to.equal 'Image buffer'
+            chai.expect(i.input.metadata.description, 'input').to.equal 'Image buffer'
+            chai.expect(i.iterations.metadata.description).to.contain 'Controls the number of iterations'
         it 'unknown node metadata is preserved', () ->
             p = outgraph.outports.output
             chai.expect(p.metadata.x).to.be.a 'number'
