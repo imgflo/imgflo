@@ -60,7 +60,10 @@ int main(int argc, char *argv[]) {
 
     const char *path = argv[1];
 
+    const double before_init = imgflo_get_time();
     gegl_init(0, NULL);
+    const double after_init = imgflo_get_time();
+    g_print("GeglInit: { \"duration\":%f }\n", (after_init-before_init)*1000.0);
 
     Library *lib = library_new();
     Graph *graph = graph_new("stdin", lib);

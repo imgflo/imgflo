@@ -110,3 +110,24 @@ json_stringify(JsonObject *root, gsize *length_out) {
     return json_stringify_node(node, length_out);
 }
 
+// imgflo_get_time(): Fast precision timecounting, for benchmarking etc. Returns time in seconds.
+#ifdef WIN32
+#include <windows.h>
+double imgflo_get_time(void)
+{
+    LARGE_INTEGER t, f;
+    QueryPerformanceCounter(&t);
+    QueryPerformanceFrequency(&f);
+    return (double)t.QuadPart/(double)f.QuadPart;
+}
+
+#else
+#include <sys/time.h>
+#include <sys/resource.h>
+double imgflo_get_time(void)
+{
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    return t.tv_sec + t.tv_usec*1e-6;
+}
+#endif
