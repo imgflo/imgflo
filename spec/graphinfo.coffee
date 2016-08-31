@@ -17,8 +17,14 @@ itSkipDebug = if debug then it.skip else it
 projectDir = path.resolve __dirname, '..'
 testDataDir = path.join projectDir, 'spec/data'
 
+fixture = (name) ->
+    return path.join testDataDir, 'graphs', name
+
 graphInfo = (graphpath, callback) ->
-    child_process = require 'child_process'
+    childProcess = require 'child_process'
+    prog = 'imgflo-graphinfo'
+    args = ['--graph', graphpath]
+    child = childProcess.execFile prog, args, callback
 
 describe 'imgflo-graphinfo', () ->
 
@@ -47,5 +53,18 @@ describe 'imgflo-graphinfo', () ->
         it 'description should be kept'
 
     describe 'non-imgflo graph', ->
-        it 'should exit with success'
-        it 'should output graph unchanged'
+        p = fixture 'noflo_insta_hefe.json'
+        output = null
+        it 'should exit with success', (done) ->
+            graphInfo p, (err, stdout, stderr) ->
+                output = stdout
+                chai.expect(err).to.not.exist
+                chai.expect(stderr).to.equal ""
+                return done()
+        it 'should output graph unchanged', (done) ->
+            fs.readFile p, 'utf-8', (err, inp) ->
+                chai.expect(err).to.not.exist
+                input = JSON.parse inp
+                out = JSON.parse output
+                chai.expect(out).to.eql input
+                return done()

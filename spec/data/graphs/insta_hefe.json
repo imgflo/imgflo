@@ -1,0 +1,161 @@
+{
+    "properties": {
+        "name": "insta_hefe",
+        "id": "imgflo-server_graphs_insta_hefe",
+        "project": "imgflo-server",
+        "environment": {
+            "type": "noflo-nodejs"
+        },
+        "changed": true,
+        "sha": "cfdd1f9cef7ee5d3c2935f467d0ed643895c7c52"
+    },
+    "inports": {
+        "canvas": {
+            "process": "SetContrast",
+            "port": "canvas",
+            "metadata": {
+                "x": -72,
+                "y": 252,
+                "width": 72,
+                "height": 72
+            }
+        }
+    },
+    "outports": {
+        "output": {
+            "process": "SetVignette",
+            "port": "canvas",
+            "metadata": {
+                "x": 648,
+                "y": 252,
+                "width": 72,
+                "height": 72
+            }
+        }
+    },
+    "groups": [],
+    "processes": {
+        "Hefe": {
+            "component": "image/GetPresetCurve",
+            "metadata": {
+                "label": "Hefe",
+                "x": 216,
+                "y": 144,
+                "width": 72,
+                "height": 72
+            }
+        },
+        "ApplyCurve": {
+            "component": "image/ApplyAdjustmentCurve",
+            "metadata": {
+                "label": "ApplyCurve",
+                "x": 360,
+                "y": 252,
+                "width": 72,
+                "height": 72
+            }
+        },
+        "SetContrast": {
+            "component": "image/AdjustContrast",
+            "metadata": {
+                "label": "SetContrast",
+                "x": 72,
+                "y": 252,
+                "width": 72,
+                "height": 72
+            }
+        },
+        "SetBrightness": {
+            "component": "image/AdjustBrightness",
+            "metadata": {
+                "label": "SetBrightness",
+                "x": 216,
+                "y": 252,
+                "width": 72,
+                "height": 72
+            }
+        },
+        "SetVignette": {
+            "component": "image/ApplyVignette",
+            "metadata": {
+                "label": "SetVignette",
+                "x": 504,
+                "y": 252,
+                "width": 72,
+                "height": 72
+            }
+        }
+    },
+    "connections": [
+        {
+            "src": {
+                "process": "Hefe",
+                "port": "curve"
+            },
+            "tgt": {
+                "process": "ApplyCurve",
+                "port": "curve"
+            },
+            "metadata": {
+                "route": 4
+            }
+        },
+        {
+            "src": {
+                "process": "SetContrast",
+                "port": "canvas"
+            },
+            "tgt": {
+                "process": "SetBrightness",
+                "port": "canvas"
+            }
+        },
+        {
+            "src": {
+                "process": "ApplyCurve",
+                "port": "canvas"
+            },
+            "tgt": {
+                "process": "SetVignette",
+                "port": "canvas"
+            },
+            "metadata": {
+                "route": null
+            }
+        },
+        {
+            "src": {
+                "process": "SetBrightness",
+                "port": "canvas"
+            },
+            "tgt": {
+                "process": "ApplyCurve",
+                "port": "canvas"
+            },
+            "metadata": {
+                "route": null
+            }
+        },
+        {
+            "data": "-0.2",
+            "tgt": {
+                "process": "SetContrast",
+                "port": "level"
+            }
+        },
+        {
+            "data": "-13",
+            "tgt": {
+                "process": "SetBrightness",
+                "port": "level"
+            }
+        },
+        {
+            "data": "hefe",
+            "tgt": {
+                "process": "Hefe",
+                "port": "presetname"
+            }
+        }
+    ]
+}
