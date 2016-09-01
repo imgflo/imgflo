@@ -46,10 +46,64 @@ merge_port_info(JsonObject *port, JsonObject *port_info) {
     }
 }
 
+// Returns object with { "inport": { "default": IIPVALUE } }
+static JsonObject *
+find_iip_for_inports(JsonObject *graph) {
+    JsonObject *ret = json_object_new();
+
+    JsonArray *connections = json_object_get_array_member(graph, "connections");
+    g_assert(connections);
+    for (int i=0; i<json_array_get_length(connections); i++) {
+        JsonObject *conn = json_array_get_object_element(connections, i);
+        JsonObject *tgt_node = json_object_get_object_member(conn, "tgt");
+        JsonNode *data = json_object_get_member(conn, "data");
+        if (!data) {
+            continue; // Not an IIP, probably connection
+        }
+
+        const gchar *iip_process = json_object_get_string_member(tgt_node, "process");
+        const gchar *iip_port = json_object_get_string_member(tgt_node, "port");
+
+        // Does this IIP correspond to an inport?
+        JsonObject *inports = json_object_get_object_member(graph, "inports");
+        GList *inport_names = json_object_get_members(inports);
+        for (int i=0; i<g_list_length(inport_names); i++) {
+            const gchar *name = g_list_nth_data(inport_names, i);
+            JsonObject *exported = json_object_get_object_member(inports, name);
+            const gchar *exported_process = json_object_get_string_member(exported, "process");
+            const gchar *exported_port = json_object_get_string_member(exported, "port");
+
+            const gboolean process_match = g_strcmp0(exported_process, iip_process) == 0;
+            const gboolean port_match = g_strcmp0(exported_port, iip_port) == 0;
+           // g_printerr("IIP check export=%s  processm=%s portm=%s \n",
+            //            name, process_match ? "TRUE" : "FALSE", port_match ? "TRUE" : "FALSE");
+            if (process_match && port_match) {
+                // Return the IIP value as "default"
+                JsonObject *info = json_object_new();
+                json_object_set_member(info, "default", data);
+                json_object_set_object_member(ret, name, info);
+            }
+        }
+    }
+    return ret;
+}
+
 gboolean
 inject_exported_port_types(Graph *graph, JsonObject *root) {
     if (json_object_has_member(root, "inports")) {
         JsonObject *inports = json_object_get_object_member(root, "inports");
+
+        // Set defaults from IIPs
+        JsonObject *iip_defaults = find_iip_for_inports(root);
+        GList *keys = json_object_get_members(iip_defaults);
+        for (int i=0; i<g_list_length(keys); i++) {
+            const gchar *name = g_list_nth_data(keys, i);
+            JsonObject *port = json_object_get_object_member(inports, name);
+            JsonObject *info = json_object_get_object_member(iip_defaults, name);
+            merge_port_info(port, info);
+        }
+
+        // Infer metadata from type information of target port
         GList *inport_names = json_object_get_members(inports);
         for (int i=0; i<g_list_length(inport_names); i++) {
             const gchar *name = g_list_nth_data(inport_names, i);
