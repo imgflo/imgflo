@@ -23,8 +23,8 @@ fixture = (name) ->
 
 graphInfo = (graphpath, callback) ->
     childProcess = require 'child_process'
-    prog = 'imgflo-graphinfo'
-    args = ['--graph', graphpath]
+    prog = './install/env.sh'
+    args = ['imgflo-graphinfo', '--graph', graphpath]
     child = childProcess.execFile prog, args, callback
 
 describeSkipMac 'imgflo-graphinfo', () ->
