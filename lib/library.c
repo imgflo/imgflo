@@ -183,6 +183,66 @@ fbp_type_for_param(GParamSpec *prop) {
     }
 }
 
+// Returns TRUE if param has min/max, else FALSE
+gboolean
+numeric_param_minmax(GParamSpec *param, double *out_min, double *out_max) {
+    gboolean has_minmax = TRUE;
+    double min = -1337.0;
+    double max = -1337.0;
+
+    if (G_TYPE_CHECK_INSTANCE_TYPE(param, G_TYPE_PARAM_CHAR)) {
+        GParamSpecChar *char_param = G_PARAM_SPEC_CHAR(param);
+        min = char_param->minimum;
+        max = char_param->maximum;
+    } else if (G_TYPE_CHECK_INSTANCE_TYPE(param, G_TYPE_PARAM_UCHAR)) {
+        GParamSpecUChar *uchar_param = G_PARAM_SPEC_UCHAR(param);
+        min = uchar_param->minimum;
+        max = uchar_param->maximum;
+    } else if (G_TYPE_CHECK_INSTANCE_TYPE(param, G_TYPE_PARAM_INT)) {
+        GParamSpecInt *int_param = G_PARAM_SPEC_INT(param);
+        min = int_param->minimum;
+        max = int_param->maximum;
+    } else if (G_TYPE_CHECK_INSTANCE_TYPE(param, G_TYPE_PARAM_UINT)) {
+        GParamSpecUInt *uint_param = G_PARAM_SPEC_UINT(param);
+        min = uint_param->minimum;
+        max = uint_param->maximum;
+    } else if (G_TYPE_CHECK_INSTANCE_TYPE(param, G_TYPE_PARAM_LONG)) {
+        GParamSpecLong *long_param = G_PARAM_SPEC_LONG(param);
+        min = long_param->minimum;
+        max = long_param->maximum;
+    } else if (G_TYPE_CHECK_INSTANCE_TYPE(param, G_TYPE_PARAM_ULONG)) {
+        GParamSpecULong *ulong_param = G_PARAM_SPEC_ULONG(param);
+        min = ulong_param->minimum;
+        max = ulong_param->maximum;
+    } else if (G_TYPE_CHECK_INSTANCE_TYPE(param, G_TYPE_PARAM_INT64)) {
+        GParamSpecInt64 *int64_param = G_PARAM_SPEC_INT64(param);
+        min = int64_param->minimum;
+        max = int64_param->maximum;
+    } else if (G_TYPE_CHECK_INSTANCE_TYPE(param, G_TYPE_PARAM_UINT64)) {
+        GParamSpecUInt64 *uint64_param = G_PARAM_SPEC_UINT64(param);
+        min = uint64_param->minimum;
+        max = uint64_param->maximum;
+    } else if (G_TYPE_CHECK_INSTANCE_TYPE(param, G_TYPE_PARAM_FLOAT)) {
+        GParamSpecFloat *float_param = G_PARAM_SPEC_FLOAT(param);
+        min = float_param->minimum;
+        max = float_param->maximum;
+    } else if (G_TYPE_CHECK_INSTANCE_TYPE(param, G_TYPE_PARAM_DOUBLE)) {
+        GParamSpecDouble *double_param = G_PARAM_SPEC_DOUBLE(param);
+        min = double_param->minimum;
+        max = double_param->maximum;
+    } else {
+        has_minmax = FALSE;
+    }
+
+    if (out_min) {
+        *out_min = min;
+    }
+    if (out_max) {
+        *out_max = max;
+    }
+    return has_minmax;
+}
+
 static void
 add_pad_ports(JsonArray *ports, gchar **pads) {
     if (pads == NULL) {
@@ -267,6 +327,14 @@ library_inports_for_operation(const gchar *name)
             gchar *enum_default = nick_for_enum(type, def);
             json_object_set_string_member(port, "default", enum_default);
             g_free(enum_default);
+        }
+        
+        double max = -666;
+        double min = -666;
+        gboolean has_minmax = numeric_param_minmax(prop, &min, &max);
+        if (has_minmax) {
+            json_object_set_double_member(port, "minimum", min);
+            json_object_set_double_member(port, "maximum", max);
         }
 
         json_array_add_object_element(inports, port);
