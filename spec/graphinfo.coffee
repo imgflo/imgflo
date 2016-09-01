@@ -71,9 +71,20 @@ describeSkipMac 'imgflo-graphinfo', () ->
             chai.expect(p.metadata.default).to.equal 'clamp'
 
     describe 'graph with numeric inport', ->
-        it 'should exit with success'
-        it 'should now have default value'
-        it 'should now have min&max value'
+        p = fixture 'gaussianblur.json'
+        outgraph = null
+        it 'should exit with success', (done) ->
+            graphInfo p, (err, stdout, stderr) ->
+                chai.expect(err).to.not.exist
+                chai.expect(stderr).to.equal ""
+                outgraph = JSON.parse stdout
+                return done()
+        it 'should now have default value', ->
+            p = outgraph.inports['std-dev-x']
+            chai.expect(p.metadata.default).to.equal 1.5
+        it 'should now have min&max value', ->
+            chai.expect(p.metadata.minimum).to.equal 0.0
+            chai.expect(p.metadata.maximum).to.equal 1500.0
 
     describe 'graph with default value set as IIP', ->
         it 'should exit with success'
