@@ -27,15 +27,23 @@ static GOptionEntry entries[] = {
 
 
 void
-set_port_type(JsonObject *port, char *type) {
-    if (!type) { return; }
+merge_port_info(JsonObject *port, JsonObject *port_info) {
 
+    // Add metadata container object, if needed
     if (!json_object_has_member(port, "metadata")) {
         json_object_set_object_member(port, "metadata", json_object_new());
     }
     JsonObject *metadata = json_object_get_object_member(port, "metadata");
-    json_object_set_string_member(metadata, "type", type);
 
+    GList *keys = json_object_get_members(port_info);
+    for (int i=0; i<g_list_length(keys); i++) {
+        const gchar *key = g_list_nth_data(keys, i);
+        JsonNode *node = json_object_get_member(port_info, key);
+        gboolean allowed = (g_strcmp0(key, "id") != 0);
+        if (allowed && !json_object_has_member(metadata, key)) {
+            json_object_set_member(metadata, key, node);
+        }
+    }
 }
 
 gboolean
@@ -45,10 +53,10 @@ inject_exported_port_types(Graph *graph, JsonObject *root) {
         GList *inport_names = json_object_get_members(inports);
         for (int i=0; i<g_list_length(inport_names); i++) {
             const gchar *name = g_list_nth_data(inport_names, i);
-            char *type = graph_inport_type(graph, name);
+            JsonObject *info = graph_inport_info(graph, name);
             //g_print("exported inport %s type=%s\n", name, type);
             JsonObject *port = json_object_get_object_member(inports, name);
-            set_port_type(port, type);
+            merge_port_info(port, info);
         }
     }
 
@@ -57,32 +65,41 @@ inject_exported_port_types(Graph *graph, JsonObject *root) {
         GList *outport_names = json_object_get_members(outports);
         for (int i=0; i<g_list_length(outport_names); i++) {
             const gchar *name = g_list_nth_data(outport_names, i);
-            char *type = graph_outport_type(graph, name);
+            JsonObject *info = graph_outport_info(graph, name);
             //g_print("exported outport %s type=%s\n", name, type);
             JsonObject *port = json_object_get_object_member(outports, name);
-            set_port_type(port, type);
+            merge_port_info(port, info);
         }
     }
     return TRUE;
 }
 
+gchar *
+graph_runtime_type(JsonObject *graph) {
+    gchar *type = NULL;
+    // ... Optional if-doom. Precisely the kind of thing a JSONPath expression would be nice for
+    if (json_object_has_member(graph, "properties")) {
+        JsonObject *properties = json_object_get_object_member(graph, "properties");
+        if (json_object_has_member(properties, "environment")) {
+            JsonObject *environment = json_object_get_object_member(properties, "environment");
+            if (json_object_has_member(environment, "type")) {
+                type = g_strdup(json_object_get_string_member(environment, "type"));
+            }
+        }
+    }
+    return type;
+}
+
 JsonObject *
 add_graphinfo(char *data, ssize_t length) {
     GError *err = NULL;
-    Library *lib = library_new();
-    Graph *g = graph_new("default/main", lib);
-    gboolean loaded = graph_load_json_data(g, data, length, &err);
-    if (!loaded) {
-        g_printerr("Failed to load graph: %s", err->message);
-        return NULL;
-    }
 
     // To ensure we preserve all metadata, we operate directly on the JSON,
     // instead of potentially lossy roundtrip in Graph datastructure
     JsonParser *parser = json_parser_new();
     gboolean success = json_parser_load_from_data(parser, data, length, &err);
     if (!success) {
-        g_printerr("Failed to load graph: %s", err->message);
+        g_printerr("Failed to load JSON: %s", err->message);
         return NULL;
     }
 
@@ -90,7 +107,23 @@ add_graphinfo(char *data, ssize_t length) {
     g_assert(JSON_NODE_HOLDS_OBJECT(rootnode));
     JsonObject *root = json_node_get_object(rootnode);
 
-    inject_exported_port_types(g, root);
+    // Only attempt to enrich imgflo graphs. Others passed through as-is
+    gchar *runtime = graph_runtime_type(root);
+    if (g_strcmp0(runtime, "imgflo") == 0) {
+        Library *lib = library_new();
+        Graph *graph = graph_new("default/main", lib);
+        gboolean loaded = graph_load_json_data(graph, data, length, &err);
+        if (!loaded) {
+            g_printerr("Failed to load graph: %s", err->message);
+            return NULL;
+        }
+
+        inject_exported_port_types(graph, root);
+        graph_free(graph);
+        library_free(lib);
+    }
+    g_free(runtime);
+
     return root;
 }
 

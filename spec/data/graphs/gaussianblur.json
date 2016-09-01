@@ -1,0 +1,106 @@
+{
+    "properties": {
+        "name": "gaussianblur",
+        "environment": {
+            "type": "imgflo",
+            "content": ""
+        }
+    },
+    "inports": {
+        "std-dev-x": {
+            "process": "gegl/gaussian-blur-iir_d4sgv",
+            "port": "std-dev-x",
+            "metadata": {
+                "x": 396,
+                "y": 0,
+                "width": 72,
+                "height": 72
+            }
+        },
+        "input": {
+            "process": "gegl/gaussian-blur-iir_d4sgv",
+            "port": "input",
+            "metadata": {
+                "x": 324,
+                "y": 180,
+                "width": 72,
+                "height": 72
+            }
+        },
+        "std-dev-y": {
+            "process": "gegl/gaussian-blur-iir_d4sgv",
+            "port": "std-dev-y",
+            "metadata": {
+                "x": 468,
+                "y": -108,
+                "width": 72,
+                "height": 72
+            }
+        },
+        "abyss-policy": {
+            "process": "gegl/gaussian-blur-iir_d4sgv",
+            "port": "abyss-policy",
+            "metadata": {
+                "x": 648,
+                "y": -72,
+                "width": 72,
+                "height": 72
+            }
+        }
+    },
+    "outports": {
+        "output": {
+            "process": "gegl/gaussian-blur-iir_d4sgv",
+            "port": "output",
+            "metadata": {
+                "x": 900,
+                "y": 144,
+                "width": 72,
+                "height": 72
+            }
+        }
+    },
+    "groups": [],
+    "processes": {
+        "gegl/gaussian-blur-iir_d4sgv": {
+            "component": "gegl/gaussian-blur",
+            "metadata": {
+                "label": "gegl/gaussian-blur-iir",
+                "x": 648,
+                "y": 144,
+                "width": 72,
+                "height": 72
+            }
+        }
+    },
+    "connections": [
+        {
+            "data": 1.5,
+            "tgt": {
+                "process": "gegl/gaussian-blur-iir_d4sgv",
+                "port": "std-dev-x"
+            }
+        },
+        {
+            "data": 1.5,
+            "tgt": {
+                "process": "gegl/gaussian-blur-iir_d4sgv",
+                "port": "std-dev-y"
+            }
+        },
+        {
+            "data": true,
+            "tgt": {
+                "process": "gegl/gaussian-blur-iir_d4sgv",
+                "port": "clip-extent"
+            }
+        },
+        {
+            "data": "clamp",
+            "tgt": {
+                "process": "gegl/gaussian-blur-iir_d4sgv",
+                "port": "abyss-policy"
+            }
+        }
+    ]
+}
