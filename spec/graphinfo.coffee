@@ -54,7 +54,7 @@ describeSkipMac 'imgflo-graphinfo', () ->
             chai.expect(p.metadata.y).to.be.a 'number'
 
     describe 'graph with enum inport', ->
-        p = fixture 'gaussianblur.json'
+        p = fixture 'gaussianblur_no_override.json'
         outgraph = null
         it 'should exit with success', (done) ->
             graphInfo p, (err, stdout, stderr) ->
@@ -71,7 +71,7 @@ describeSkipMac 'imgflo-graphinfo', () ->
             chai.expect(p.metadata.default).to.equal 'clamp'
 
     describe 'graph with numeric inport', ->
-        p = fixture 'gaussianblur.json'
+        p = fixture 'gaussianblur_no_override.json'
         outgraph = null
         it 'should exit with success', (done) ->
             graphInfo p, (err, stdout, stderr) ->
@@ -87,8 +87,18 @@ describeSkipMac 'imgflo-graphinfo', () ->
             chai.expect(p.metadata.maximum).to.equal 1500.0
 
     describe 'graph with default value set as IIP', ->
-        it 'should exit with success'
-        it 'default value comes from IIP not port'
+        p = fixture 'gaussianblur_iip_override.json'
+        outgraph = null
+        it 'should exit with success', (done) ->
+            graphInfo p, (err, stdout, stderr) ->
+                chai.expect(err).to.not.exist
+                chai.expect(stderr).to.equal ""
+                outgraph = JSON.parse stdout
+                return done()
+        it 'default value comes from IIP instead of port', ->
+            inp = outgraph.inports
+            chai.expect(inp['abyss-policy'].metadata.default).to.equal 'black'
+            chai.expect(inp['std-dev-x'].metadata.default).to.equal 3.5
 
     describe 'graph with port description set already', ->
         p = fixture 'enhancelowres_description.json'

@@ -75,31 +75,10 @@
     },
     "connections": [
         {
-            "data": 1.5,
-            "tgt": {
-                "process": "gegl/gaussian-blur-iir_d4sgv",
-                "port": "std-dev-x"
-            }
-        },
-        {
-            "data": 1.5,
-            "tgt": {
-                "process": "gegl/gaussian-blur-iir_d4sgv",
-                "port": "std-dev-y"
-            }
-        },
-        {
             "data": true,
             "tgt": {
                 "process": "gegl/gaussian-blur-iir_d4sgv",
                 "port": "clip-extent"
-            }
-        },
-        {
-            "data": "clamp",
-            "tgt": {
-                "process": "gegl/gaussian-blur-iir_d4sgv",
-                "port": "abyss-policy"
             }
         }
     ]
