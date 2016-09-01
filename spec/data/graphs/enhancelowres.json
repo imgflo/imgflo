@@ -156,13 +156,6 @@
             }
         },
         {
-            "data": "hqdefault.jpg",
-            "tgt": {
-                "process": "gegl/load_any3a",
-                "port": "path"
-            }
-        },
-        {
             "data": 4,
             "tgt": {
                 "process": "gegl/noise-reduction_knyda",
