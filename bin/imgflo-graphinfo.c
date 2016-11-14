@@ -5,6 +5,7 @@
 // imgflo-graphinfo: Introspect graph and populate metadata
 
 #include "lib/utils.c"
+#include "lib/uuid.c"
 #include "lib/png.c"
 #include "lib/processor.c"
 #include "lib/library.c"

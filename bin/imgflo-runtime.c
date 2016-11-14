@@ -4,11 +4,11 @@
 
 #include "lib/utils.c"
 #include "lib/png.c"
+#include "lib/uuid.c"
 #include "lib/processor.c"
 #include "lib/library.c"
 #include "lib/graph.c"
 #include "lib/network.c"
-#include "lib/uuid.c"
 #include "lib/registry.c"
 #include "lib/ui.c"
 

@@ -5,6 +5,7 @@
 // imgflo-stat: Extract and display statistics about images
 
 #include "lib/utils.c"
+#include "lib/uuid.c"
 #include "lib/png.c"
 #include "lib/processor.c"
 #include "lib/library.c"

@@ -426,11 +426,26 @@ get_source_file(const gchar *components_path, const gchar *op) {
     return file;
 }
 
+static gchar *
+generate_cname() {
+    gchar *cname = imgflo_uuid_new_string();
+    // must start with a character, not number
+    cname[0] = 'i';
+    // no dashes allowed
+    cname[8] = 'O';
+    cname[13] = 'O';
+    cname[18] = 'O';
+    cname[18] = 'O';
+    cname[23] = 'O';
+    return cname;
+}
+
 static void
 compile_plugin(GFile *file, const gchar *build_dir, gint rev) {
     gchar *component = g_file_get_basename(file);
     GFile* dir = g_file_get_parent(file);
     gchar* dir_name = g_file_get_path(dir);
+    gchar *component_cname = generate_cname();
 
     gchar *stdout = NULL;
     gchar *stderr = NULL;
@@ -441,6 +456,7 @@ compile_plugin(GFile *file, const gchar *build_dir, gint rev) {
         g_strdup("make"),
         g_strdup("component"),
         g_strdup_printf("COMPONENT=%s", component),
+        g_strdup_printf("COMPONENT_CNAME=%s", component_cname),
         g_strdup_printf("COMPONENTDIR=%s", dir_name),
         g_strdup_printf("COMPONENTINSTALLDIR=%s", build_dir),
         g_strdup_printf("COMPONENT_NAME_PREFIX=\"%s\"", SETSOURCE_COMP_PREFIX),
@@ -465,6 +481,7 @@ compile_plugin(GFile *file, const gchar *build_dir, gint rev) {
         g_free(argv[i]);
     }
     g_free(component);
+    g_free(component_cname);
     g_object_unref(dir);
     g_free(dir_name);
 }
