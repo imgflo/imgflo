@@ -29,7 +29,7 @@
     "request": "^2.36.0",
     "websocket": "~1.0.8",
     "coffee-script": "^1.7.1",
-    "chai": "~1.8.0",
+    "chai": "^3.5.0",
     "js-yaml": "^3.0.2",
     "jsftp": "^1.5.1",
     "mocha": "^3.1.2",
