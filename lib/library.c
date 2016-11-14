@@ -445,10 +445,14 @@ compile_plugin(GFile *file, const gchar *build_dir, gint rev) {
     argv[5] = g_strdup_printf("COMPONENTINSTALLDIR=%s", build_dir);
     argv[6] = g_strdup_printf("COMPONENT_NAME_PREFIX=\"%s\"", SETSOURCE_COMP_PREFIX);
     argv[7] = g_strdup_printf("COMPONENT_NAME_SUFFIX=\"-%d\"", rev);
+
+    gchar *command = g_strjoinv(" ", argv);
+    imgflo_debug("Building component %s using command '%s'", component, command);
  
     const gboolean success = g_spawn_sync(NULL, argv, NULL,
                               G_SPAWN_DEFAULT, NULL, NULL,
                               &stdout, &stderr, &exitcode, &err);
+
     try_print_error(err);
     if (!success) {
         imgflo_error("Failed to compile operation: %s", stderr);
