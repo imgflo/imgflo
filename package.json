@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "request": "^2.36.0",
-    "websocket": "~1.0.8",
+    "websocket": "^1.0.8",
     "coffee-script": "^1.7.1",
     "chai": "^3.5.0",
     "js-yaml": "^3.0.2",
