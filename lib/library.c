@@ -436,15 +436,17 @@ compile_plugin(GFile *file, const gchar *build_dir, gint rev) {
     gchar *stderr = NULL;
     gint exitcode = 1;
     GError *err = NULL;
-    gchar **argv = g_new0(gchar *, 10);
-    argv[0] = g_strdup("/usr/bin/env");
-    argv[1] = g_strdup("make");
-    argv[2] = g_strdup("component");
-    argv[3] = g_strdup_printf("COMPONENT=%s", component);
-    argv[4] = g_strdup_printf("COMPONENTDIR=%s", dir_name);
-    argv[5] = g_strdup_printf("COMPONENTINSTALLDIR=%s", build_dir);
-    argv[6] = g_strdup_printf("COMPONENT_NAME_PREFIX=\"%s\"", SETSOURCE_COMP_PREFIX);
-    argv[7] = g_strdup_printf("COMPONENT_NAME_SUFFIX=\"-%d\"", rev);
+    gchar *argv[] = {
+        g_strdup("/usr/bin/env"),
+        g_strdup("make"),
+        g_strdup("component"),
+        g_strdup_printf("COMPONENT=%s", component),
+        g_strdup_printf("COMPONENTDIR=%s", dir_name),
+        g_strdup_printf("COMPONENTINSTALLDIR=%s", build_dir),
+        g_strdup_printf("COMPONENT_NAME_PREFIX=\"%s\"", SETSOURCE_COMP_PREFIX),
+        g_strdup_printf("COMPONENT_NAME_SUFFIX=\"-%d\"", rev),
+        NULL
+    };
 
     gchar *command = g_strjoinv(" ", argv);
     imgflo_debug("Building component %s using command '%s'", component, command);
@@ -459,8 +461,9 @@ compile_plugin(GFile *file, const gchar *build_dir, gint rev) {
     }
     g_free(stdout);
     g_free(stderr);
-    g_strfreev(argv);
-
+    for (int i=0; i<G_N_ELEMENTS(argv)-1; i++) {
+        g_free(argv[i]);
+    }
     g_free(component);
     g_object_unref(dir);
     g_free(dir_name);
