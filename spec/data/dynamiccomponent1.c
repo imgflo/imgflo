@@ -5,6 +5,9 @@
 #else
 
 #define GEGL_OP_POINT_FILTER
+#ifndef GEGL_OP_NAME
+#define GEGL_OP_NAME imgflo_dynamiccomponent1
+#endif
 #include "gegl-op.h"
 
 #ifndef IMGFLO_OP_NAME
