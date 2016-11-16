@@ -1,5 +1,6 @@
 https://github.com/mojodna/heroku-buildpack-cairo.git
 https://github.com/heroku/heroku-buildpack-nodejs
+https://github.com/heroku/heroku-buildpack-apt#dd6d1eff708fe2
 https://github.com/piotras/heroku-buildpack-gettext
 https://github.com/peterkeen/heroku-buildpack-vendorbinaries
 https://github.com/heroku/heroku-buildpack-c
