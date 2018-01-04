@@ -1,3 +1,5 @@
 brew 'pkg-config'
 brew 'glib'
 brew 'json-glib'
+brew 'gegl'
+brew 'libsoup'
