@@ -4,7 +4,7 @@ os:
 language: c
 sudo: required
 before_install:
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew bundle; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew bundle; fi
 install:
 - npm install
 script:
