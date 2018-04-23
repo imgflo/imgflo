@@ -299,6 +299,9 @@ handle_network_message(UiConnection *self, const gchar *command, JsonObject *pay
     } else if (g_strcmp0(command, "stop") == 0) {
         imgflo_info("\tNetwork STOP\n");
         network_set_running(network, FALSE);
+    } else if (g_strcmp0(command, "edges") == 0) {
+        // TODO: update subscriptions
+        send_response(ws, "network", "edges", payload);
     } else if (g_strcmp0(command, "getstatus") == 0) {
         JsonObject *info = json_object_new();
         json_object_set_string_member(info, "graph", graph_id);
