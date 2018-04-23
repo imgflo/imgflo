@@ -61,6 +61,7 @@ runtime_info_liveurl(RuntimeInfo *self, gchar *ide) {
     gchar *params = soup_form_encode(
         "protocol", "websocket",
         "address", address,
+        "type", "imgflo",
         NULL
     );
     gchar *live_url = g_strdup_printf("%s#runtime/endpoint?%s", ide, params);

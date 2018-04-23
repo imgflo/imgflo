@@ -604,7 +604,7 @@ serve_frontpage(SoupServer *server, SoupMessage *msg,
         "\n   var addr = window.location.origin.replace(\"http://\", \"ws://\");"
         "\n   addr = addr.replace(\"https://\", \"ws://\");"
         "\n   var ide = \"http://app.flowhub.io\";"
-        "\n   var url = ide+\"/#runtime/endpoint?protocol=websocket&address=\"+encodeURIComponent(addr);"
+        "\n   var url = ide+\"/#runtime/endpoint?protocol=websocket&type=imgflo&address=\"+encodeURIComponent(addr);"
         "\n   var a = document.getElementById(\"flowhub_url\");"
         "\n   a.href = url;"
         "\n</script>"
