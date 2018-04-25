@@ -2,7 +2,6 @@ os:
 - linux
 - osx
 language: c
-sudo: required
 dist: trusty
 before_install:
 - sh ./travis/install-dependencies.sh
