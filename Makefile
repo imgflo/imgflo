@@ -30,7 +30,7 @@ LIBS=gegl-0.3 libsoup-2.4
 SYSTEM_LIBS=gio-unix-2.0 json-glib-1.0 libpng
 DEPS=$(shell $(PREFIX)/env.sh pkg-config $(PKGCONFIG_ARGS) --libs --cflags $(LIBS))
 DEPS+=$(shell $(PREFIX)/env.sh pkg-config --libs --cflags $(SYSTEM_LIBS))
-TRAVIS_DEPENDENCIES=$(shell echo `cat .vendor_urls | sed -e "s/heroku/travis-${TRAVIS_OS_NAME}/" | tr -d '\n'`)
+TRAVIS_DEPENDENCIES='https://github.com/imgflo/imgflo-dependencies/releases/download/112/imgflo-dependencies-travis-linux.tgz'
 
 RUN_ARGUMENTS:=--port $(PORT) --external-port=$(EXTPORT)
 ifdef NOAUTOLAUNCH
