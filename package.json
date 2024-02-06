@@ -17,7 +17,7 @@
     "url": "http://github.com/imgflo/imgflo.git"
   },
   "bugs": "http://github.com/imgflo/imgflo/issues",
-  "homepage": "http://imgflo.org",
+  "homepage": "http://github.com/imgflo/imgflo/",
   "license": "MIT",
   "main": "index.js",
   "scripts": {
